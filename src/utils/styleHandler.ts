@@ -40,7 +40,7 @@ export class StyleHandler {
     
         try {
             await Utils.execAsync(`mkdir -p ${OUT_CSS_DIR}`);
-            
+
             await Utils.writeFile(this.getDynamicSCSS(), OUT_SCSS_DYNAMIC);
             await Utils.writeFile([ OUT_SCSS_DYNAMIC, STYLES_MAIN ].map(file => `@import '${file}';`).join("\n"), OUT_SCSS_IMPORTS);
 

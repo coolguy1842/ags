@@ -2,6 +2,8 @@ import { Bar } from "./bar/bar";
 import { OUT_CSS_IMPORTS, STYLES_MAIN } from "./utils/globals";
 import { StyleHandler } from "./utils/styleHandler";
 
+import "./options";
+
 const hyprland = await Service.import("hyprland");
 let styleHandler: StyleHandler | null = null;
 

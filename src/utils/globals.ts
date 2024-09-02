@@ -1,5 +1,7 @@
 export const TEMP_DIR = `/tmp/coolguy/ags`;
 
+export const OPTIONS_PATH = `${App.configDir}/options.json`;
+
 export const STYLES_DIR = `${App.configDir}/styles`;
 export const STYLES_MAIN = `${STYLES_DIR}/main.scss`;
 

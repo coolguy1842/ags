@@ -1,0 +1,7 @@
+{
+    "test": "{ \"option\": 123 }",
+    "test2": {
+        "test": "{ \"option\": \"test\" }",
+        "testing": "{ \"option\": {\"test1\":\"f\",\"test2\":123} }"
+    }
+}

@@ -27,6 +27,8 @@ async function reloadAGS() {
     reloading = true;
 
     try {
+        await Utils.execAsync(`mkdir -p ${outDir}`);
+
         // cleanup old js files (probably unsafe lol make sure outdir is set well)
         const files = (await Utils.execAsync(`ls ${outDir}`)).split("\n");
         for(const file of files) {
