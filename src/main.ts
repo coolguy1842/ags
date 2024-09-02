@@ -1,11 +1,9 @@
 import { Bar } from "./bar/bar";
-import { OUT_CSS_IMPORTS, STYLES_MAIN } from "./utils/globals";
+import { globals } from "./utils/globals";
+import { OptionsHandler } from "./utils/optionsHandler";
 import { StyleHandler } from "./utils/styleHandler";
 
-import "./options";
-
-const hyprland = await Service.import("hyprland");
-let styleHandler: StyleHandler | null = null;
+const hyprland = await Service.import("hyprland");;
 
 export function init() {
     cleanup();
@@ -32,11 +30,12 @@ export function init() {
         App.removeWindow(window);
     }
 
-    styleHandler = new StyleHandler(STYLES_MAIN);
+    globals.options = new OptionsHandler(globals.defaultOptions, globals.paths.OPTIONS_PATH);
+    globals.styleHandler = new StyleHandler(globals.paths.STYLES_MAIN);
 
     App.config({
         // style here makes the startup look a bit nicer
-        style: OUT_CSS_IMPORTS,
+        style: globals.paths.OUT_CSS_IMPORTS,
         windows: [
             ...hyprland.monitors.map(x => Bar(x))
         ]
@@ -45,8 +44,13 @@ export function init() {
 
 // unloads stuff for hotreloading
 export function cleanup() {
-    if(styleHandler != null) {
-        styleHandler.cleanup();
-        styleHandler = null;
+    if(globals.styleHandler != undefined) {
+        globals.styleHandler.cleanup();
+        globals.styleHandler = undefined;
+    }
+
+    if(globals.options != undefined) {
+        globals.options.cleanup();
+        globals.options = undefined;
     }
 }

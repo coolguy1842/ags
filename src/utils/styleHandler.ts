@@ -1,5 +1,5 @@
 import DirectoryMonitor from "./dirMonitorUtil";
-import { OUT_CSS_DIR, OUT_CSS_IMPORTS, OUT_SCSS_DYNAMIC, OUT_SCSS_IMPORTS, STYLES_MAIN } from "./globals";
+import { globals } from "./globals";
 
 export class StyleHandler {
     _mainFile: string;
@@ -20,6 +20,10 @@ export class StyleHandler {
 
         this._monitor.watch();
         this.reloadStyles();
+
+        globals.options?.connect("changed", () => {
+            this.reloadStyles();
+        });
     }
 
     cleanup() {
@@ -28,8 +32,11 @@ export class StyleHandler {
 
 
     getDynamicSCSS() {
+        const { bar } = globals.options!.options; 
+
         return `
-            $bar-background-color: rgba($color: #000000, $alpha: 0.68);
+            $bar-background-color: rgba($color: ${bar.background_color.value.slice(0, -2)}, $alpha: ${parseInt(bar.background_color.value.slice(-2), 16) / 255});
+            $bar-icon-color: ${bar.icon_color.value};
         `;
     }
 
@@ -39,14 +46,14 @@ export class StyleHandler {
         console.log("loading styles");
     
         try {
-            await Utils.execAsync(`mkdir -p ${OUT_CSS_DIR}`);
+            await Utils.execAsync(`mkdir -p ${globals.paths.OUT_CSS_DIR}`);
 
-            await Utils.writeFile(this.getDynamicSCSS(), OUT_SCSS_DYNAMIC);
-            await Utils.writeFile([ OUT_SCSS_DYNAMIC, STYLES_MAIN ].map(file => `@import '${file}';`).join("\n"), OUT_SCSS_IMPORTS);
+            await Utils.writeFile(this.getDynamicSCSS(), globals.paths.OUT_SCSS_DYNAMIC);
+            await Utils.writeFile([ globals.paths.OUT_SCSS_DYNAMIC, globals.paths.STYLES_MAIN ].map(file => `@import '${file}';`).join("\n"), globals.paths.OUT_SCSS_IMPORTS);
 
-            await Utils.execAsync(`sassc ${OUT_SCSS_IMPORTS} ${OUT_CSS_IMPORTS}`);
+            await Utils.execAsync(`sassc ${globals.paths.OUT_SCSS_IMPORTS} ${globals.paths.OUT_CSS_IMPORTS}`);
 
-            App.applyCss(OUT_CSS_IMPORTS, true);
+            App.applyCss(globals.paths.OUT_CSS_IMPORTS, true);
         }
         catch(err) {
             console.log(err);

@@ -1,7 +1,6 @@
 {
-    "test": "{ \"option\": 123 }",
-    "test2": {
-        "test": "{ \"option\": \"test\" }",
-        "testing": "{ \"option\": {\"test1\":\"f\",\"test2\":123} }"
+    "bar": {
+        "background_color": "{ \"option\": \"#000000C0\" }",
+        "icon_color": "{ \"option\": \"#5D93B0\" }"
     }
 }
