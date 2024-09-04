@@ -23,6 +23,7 @@ function getShouldHotReload() {
 }
 
 let imported = null;
+let importedMain = null;
 async function reloadAGS() {
     reloading = true;
 
@@ -44,12 +45,15 @@ async function reloadAGS() {
         ]);
 
         if(imported != null) {
-            imported.cleanup();
+            importedMain.cleanup();
+            
+            importedMain = null;
             imported = null;
         }
     
         imported = await import(`file://${outDir}/${outFile}`);
-        imported.init();
+        importedMain = new imported.Main();
+        importedMain.load();
     }
     catch (error) {
         console.error(error);
