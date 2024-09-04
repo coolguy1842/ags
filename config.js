@@ -1,13 +1,10 @@
-import DirectoryMonitor from "./src/utils/dirMonitorUtil.js";
+import Gio from "gi://Gio?version=2.0";
 import GLib from "gi://GLib?version=2.0";
 
 const entry = `${App.configDir}/src/main.ts`;
 const outDir = `/tmp/coolguy/ags/js`;
 
 const hotReloadFile = `${App.configDir}/hotreload`;
-
-let reloading = false;
-// let prevFiles = getFilesToWatch();
 
 function getShouldHotReload() {
     const text = Utils.readFile(hotReloadFile);
@@ -22,11 +19,41 @@ function getShouldHotReload() {
     return true;
 }
 
+// this is very dirty
+let PathMonitorImport = null;
+let pathMonitor = null;
+async function initHotReloader() {
+    const pathMonitorPath = `${App.configDir}/src/utils/pathMonitor.ts`;
+    const pathMonitorCompiledPath = `${outDir}/pathMonitor.js`;
+
+    await Utils.execAsync([
+        'bun', 'build', pathMonitorPath,
+        '--outfile', `${pathMonitorCompiledPath}`,
+        '--external', 'resource://*',
+        '--external', 'gi://*',
+    ]);
+
+    PathMonitorImport = await import(`file://${pathMonitorCompiledPath}`);
+    
+    const pathMonitorClass = PathMonitorImport["PathMonitor"];
+    const MonitorTypeFlags = PathMonitorImport["MonitorTypeFlags"];
+    pathMonitor = new pathMonitorClass(`${App.configDir}/src`, MonitorTypeFlags["FILE"] | MonitorTypeFlags["RECURSIVE"], (file, fileType, event) => {
+        if(event == Gio.FileMonitorEvent.CHANGED) return;
+
+        if(getShouldHotReload()) {
+            console.log("")
+            console.log(`reloading`);
+
+            reloadAGS();
+        }
+    });
+
+    pathMonitor.load();
+}
+
 let imported = null;
 let importedMain = null;
 async function reloadAGS() {
-    reloading = true;
-
     try {
         await Utils.execAsync(`mkdir -p ${outDir}`);
 
@@ -58,20 +85,9 @@ async function reloadAGS() {
     catch (error) {
         console.error(error);
     }
-
-    // min of 500ms before reloading code
-    setTimeout(() => { reloading = false; }, 500);
 }
 
-const monitor = new DirectoryMonitor(`${App.configDir}/src`, true, true, (_folder) => {}, (_file) => {
-    if(!reloading && getShouldHotReload()) {
-        console.log("")
-        console.log(`reloading`);
-        reloadAGS();
-    }
-});
-
 reloadAGS();
-monitor.watch();
+initHotReloader();
 
 export { };
