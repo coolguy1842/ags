@@ -1,4 +1,4 @@
-import { IOptions, options } from "src/options";
+import { IOptions, getOptions } from "src/options";
 import { paths } from "./paths";
 import { OptionsHandler } from "./utils/handlers/optionsHandler";
 import { StyleHandler } from "./utils/handlers/styleHandler";
@@ -13,6 +13,6 @@ interface IGlobals {
 export const globals: IGlobals = {
     paths: paths,
 
-    optionsHandler: new OptionsHandler(options),
+    optionsHandler: new OptionsHandler(getOptions()),
     styleHandler: new StyleHandler()
 };

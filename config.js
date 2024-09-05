@@ -19,50 +19,58 @@ function getShouldHotReload() {
     return true;
 }
 
+function initTemp() {
+    Utils.exec(`mkdir -p ${outDir}`);
+
+    // cleanup old js files (probably unsafe lol make sure outdir is set well)
+    const files = (Utils.exec(`ls ${outDir}`)).split("\n");
+    for(const file of files) {
+        Utils.exec(`rm ${outDir}/${file}`);
+    }
+}
+
 // this is very dirty
 let PathMonitorImport = null;
 let pathMonitor = null;
 async function initHotReloader() {
-    const pathMonitorPath = `${App.configDir}/src/utils/pathMonitor.ts`;
-    const pathMonitorCompiledPath = `${outDir}/pathMonitor.js`;
+    try {
+        const pathMonitorPath = `${App.configDir}/src/utils/pathMonitor.ts`;
+        const pathMonitorCompiledPath = `${outDir}/pathMonitor.js`;
 
-    await Utils.execAsync([
-        'bun', 'build', pathMonitorPath,
-        '--outfile', `${pathMonitorCompiledPath}`,
-        '--external', 'resource://*',
-        '--external', 'gi://*',
-    ]);
+        Utils.exec([
+            'bun', 'build', pathMonitorPath,
+            '--outfile', `${pathMonitorCompiledPath}`,
+            '--external', 'resource://*',
+            '--external', 'gi://*',
+        ]);
 
-    PathMonitorImport = await import(`file://${pathMonitorCompiledPath}`);
+        PathMonitorImport = await import(`file://${pathMonitorCompiledPath}`);
+        
+        const pathMonitorClass = PathMonitorImport["PathMonitor"];
+        const MonitorTypeFlags = PathMonitorImport["MonitorTypeFlags"];
     
-    const pathMonitorClass = PathMonitorImport["PathMonitor"];
-    const MonitorTypeFlags = PathMonitorImport["MonitorTypeFlags"];
-    pathMonitor = new pathMonitorClass(`${App.configDir}/src`, MonitorTypeFlags["FILE"] | MonitorTypeFlags["RECURSIVE"], (file, fileType, event) => {
-        if(event == Gio.FileMonitorEvent.CHANGED) return;
-
-        if(getShouldHotReload()) {
-            console.log("")
-            console.log(`reloading`);
-
-            reloadAGS();
-        }
-    });
-
-    pathMonitor.load();
+        pathMonitor = new pathMonitorClass(`${App.configDir}/src`, MonitorTypeFlags["FILE"] | MonitorTypeFlags["RECURSIVE"], (file, fileType, event) => {
+            if(event == Gio.FileMonitorEvent.CHANGED) return;
+    
+            if(getShouldHotReload()) {
+                console.log("")
+                console.log(`reloading`);
+    
+                reloadAGS();
+            }
+        });
+    
+        pathMonitor.load();
+    }
+    catch(err) {
+        console.log(err);
+    }
 }
 
 let imported = null;
 let importedMain = null;
 async function reloadAGS() {
     try {
-        await Utils.execAsync(`mkdir -p ${outDir}`);
-
-        // cleanup old js files (probably unsafe lol make sure outdir is set well)
-        const files = (await Utils.execAsync(`ls ${outDir}`)).split("\n");
-        for(const file of files) {
-            Utils.exec(`rm ${outDir}/${file}`);
-        }
-
         const outFile = `main.${GLib.get_monotonic_time()}.js`;
         await Utils.execAsync([
             'bun', 'build', entry,
@@ -86,6 +94,8 @@ async function reloadAGS() {
         console.error(error);
     }
 }
+
+initTemp();
 
 reloadAGS();
 initHotReloader();

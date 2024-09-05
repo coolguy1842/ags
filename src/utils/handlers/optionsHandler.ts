@@ -9,16 +9,8 @@ type OptionEvents = {
     changed: { }
 };
 
-interface OptionValidator<T> {
+export interface OptionValidator<T> {
     validate(value: T): boolean;  
-};
-
-export const OptionValidators: { [key: string]: OptionValidator<any> } = {
-    "colour": {
-        validate: (value: string) => {
-            return /^#[0-9A-F]{8}$/.test(value);
-        }
-    }
 };
 
 export class Option<T> extends EventHandler<OptionEvents> {
@@ -34,8 +26,6 @@ export class Option<T> extends EventHandler<OptionEvents> {
         this._default = value;
         this._value = value;
 
-        console.log(validator);
-
         this._validator = validator;
     }
 
@@ -48,7 +38,6 @@ export class Option<T> extends EventHandler<OptionEvents> {
         }
 
         this._value = value;
-
         this.emit("changed", {});
     }
 
@@ -92,6 +81,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
             
             if(this._ignoreChange) {
                 this._ignoreChange = false;
+                return;
             }
 
             this.loadOptions();
@@ -102,18 +92,18 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
     }
 
 
-    private reloadOptionsListeners(options: TOptions = this._options) {
+    private reloadOptionsListeners(options: TOptions = this._options, path = "") {
+        var oldPath = path;
         for(const key in options) {
+            path = `${oldPath}${oldPath.length > 0 ? "." : ""}${key}`;
             if(options[key] instanceof Option) {
                 options[key].clearListeners();
-                options[key].on("changed", () => {
-                    this.emit("option_changed", { option: key });
-                });
+                options[key].on("changed", () => this.emit("option_changed", { option: path }));
 
                 continue;
             }
 
-            this.reloadOptionsListeners(options[key]);    
+            this.reloadOptionsListeners(options[key], path);
         }
     }
 
@@ -156,12 +146,11 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
         }
         catch(err) {
             console.log(err);
-            this.saveOptions();
+            return;
         }
 
-        const loadOptionValue = (value: string): any | undefined => {
+        const loadOptionValue = (value: string): any => {
             if(!value.startsWith("option::")) return undefined;
-
             return JSON.parse(value.split("::").slice(1).join("::"));
         }
 
@@ -178,7 +167,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
                     const value = loadOptionValue(json[key]);
                     if(value == undefined) break;
 
-                    if(options[key].value != value) {
+                    if(JSON.stringify(options[key].value) != JSON.stringify(value)) {
                         options[key].value = value;
                     }
 
