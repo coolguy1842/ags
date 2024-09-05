@@ -1,6 +1,6 @@
 {
     "bar": {
-        "background_color": "{ \"option\": \"#000000C0\" }",
-        "icon_color": "{ \"option\": \"#5D93B0\" }"
+        "background_color": "option::\"#000000BF\"",
+        "icon_color": "option::\"#5D93B0FF\""
     }
 }

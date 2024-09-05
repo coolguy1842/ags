@@ -1,7 +1,8 @@
 import { IReloadable } from "src/interfaces/reloadable";
-import { globals } from "../globals";
+import { globals } from "../../globals";
 import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
+import { HEXtoCSSRGBA, HEXtoRGBA } from "../colourUtils";
 
 
 const $ = (key: string, value: string) => { return `$${key}: ${value};`; }
@@ -18,11 +19,16 @@ export class StyleHandler implements IReloadable {
         });
     }
 
+    _eventCallback?: (event: string, data: any) => Promise<void>;
+
     load(): void {
         if(this._loaded) return;
         
         this._loaded = true;
         this._monitor.load();
+
+        this._eventCallback = (event, data) => this.reloadStyles();
+        globals.optionsHandler.on("option_changed", this._eventCallback);
 
         this.reloadStyles();
     }
@@ -32,13 +38,21 @@ export class StyleHandler implements IReloadable {
 
         this._loaded = false;
         this._monitor.cleanup();
+
+        if(this._eventCallback) {
+            globals.optionsHandler.removeListener("option_changed", this._eventCallback);
+
+            this._eventCallback = undefined;
+        }
     }
 
 
     getDynamicSCSS() {
+        const { bar } = globals.optionsHandler.options;
+
         return [
-            $("bar-background-color", "rgba($color: #000000, $alpha: 0.75)"),
-            $("bar-icon-color", "#5D93B0")
+            $("bar-background-color", HEXtoCSSRGBA(bar.background_color.value)),
+            $("bar-icon-color", HEXtoCSSRGBA(bar.icon_color.value))
         ].join("\n");
     }
 

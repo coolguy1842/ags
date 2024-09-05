@@ -1,7 +1,6 @@
 import { Bar } from "./bar/bar";
 import { IReloadable } from "./interfaces/reloadable";
-import { globals } from "./utils/globals";
-import { StyleHandler } from "./utils/handlers/styleHandler";
+import { globals } from "./globals";
 
 const hyprland = await Service.import("hyprland");;
 
