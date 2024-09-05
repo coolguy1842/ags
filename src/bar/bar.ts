@@ -1,6 +1,7 @@
 import { Monitor } from "types/service/hyprland";
 import { getBarComponents } from "./components/components";
 import { globals } from "src/globals";
+import { Option } from "src/utils/handlers/optionsHandler";
 
 export function Bar(monitor: Monitor) {
     const window = Widget.Window({
@@ -8,26 +9,57 @@ export function Bar(monitor: Monitor) {
         name: `bar-${monitor.name}`,
         anchor: [ "bottom", "left", "right" ],
         exclusivity: "exclusive",
-        child: Widget.Box({
+        child: Widget.CenterBox({
             class_name: "bar",
             height_request: 32,
-            children: []
+            hpack: "fill",
+            startWidget: Widget.Box({
+                children: []
+            }),
+            centerWidget: Widget.Box({
+                children: []
+            }),
+            endWidget: Widget.Box({
+                children: []
+            })
         }),
         setup: (window) => {
             const setupFunc = () => {
-                const children = [] as typeof window.child.children;
+                const children: { [key: string]: never[] } = {
+                    left: [],
+                    center: [],
+                    right: []
+                };
 
                 const layout = globals.optionsHandler.options.bar.layout.value;
-                for(const component of layout) {
-                    children.push(getBarComponents()[component.name].create(monitor.name, component.props) as never);
+                
+                if(layout.left) {
+                    for(const component of layout.left) {
+                        children["left"].push(getBarComponents()[component.name].create(monitor.name, component.props) as never);
+                    }
                 }
 
-                window.child.children = children;
+                if(layout.center) {
+                    for(const component of layout.center) {
+                        children["center"].push(getBarComponents()[component.name].create(monitor.name, component.props) as never);
+                    }
+                }
+
+                if(layout.right) {
+                    for(const component of layout.right) {
+                        children["right"].push(getBarComponents()[component.name].create(monitor.name, component.props) as never);
+                    }
+                }
+
+
+                window.child.children[0]!.children = children["left"];
+                window.child.children[1]!.children = children["center"];
+                window.child.children[2]!.children = children["right"];
             };
 
             setupFunc();
-            globals.optionsHandler.on("option_changed", (_event, data) => {
-                if(data.option != "bar.layout") return;
+            globals.optionsHandler.connect("option_changed", (_, option: Option<any>) => {
+                if(option.id != "bar.layout") return;
 
                 setupFunc();
             });

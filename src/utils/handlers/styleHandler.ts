@@ -3,6 +3,7 @@ import { globals } from "../../globals";
 import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { HEXtoCSSRGBA, HEXtoRGBA } from "../colourUtils";
+import { Option } from "./optionsHandler";
 
 
 const $ = (key: string, value: string) => { return `$${key}: ${value};`; }
@@ -10,6 +11,8 @@ const $ = (key: string, value: string) => { return `$${key}: ${value};`; }
 export class StyleHandler implements IReloadable {
     private _loaded: boolean = false;
     private _monitor: PathMonitor;
+
+    private _optionsListenerID?: number;
 
     constructor() {
         this._monitor = new PathMonitor(`${App.configDir}/styles`, MonitorTypeFlags.FILE | MonitorTypeFlags.RECURSIVE, (file, fileType, event) => {
@@ -19,16 +22,22 @@ export class StyleHandler implements IReloadable {
         });
     }
 
-    _eventCallback?: (event: string, data: any) => Promise<void>;
-
     load(): void {
         if(this._loaded) return;
         
         this._loaded = true;
         this._monitor.load();
 
-        this._eventCallback = (event, data) => this.reloadStyles();
-        globals.optionsHandler.on("option_changed", this._eventCallback);
+        this._optionsListenerID = globals.optionsHandler.connect("option_changed", (_, option: Option<any>) => {
+            switch(option.id) {
+            case "bar.background_color":
+            case "bar.icon_color":
+                break;
+            default: return;
+            }
+
+            this.reloadStyles();
+        });
 
         this.reloadStyles();
     }
@@ -39,10 +48,10 @@ export class StyleHandler implements IReloadable {
         this._loaded = false;
         this._monitor.cleanup();
 
-        if(this._eventCallback) {
-            globals.optionsHandler.removeListener("option_changed", this._eventCallback);
+        if(this._optionsListenerID) {
+            globals.optionsHandler.disconnect(this._optionsListenerID);
 
-            this._eventCallback = undefined;
+            this._optionsListenerID = undefined;
         }
     }
 

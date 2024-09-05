@@ -3,8 +3,8 @@ import { getWorkspaceSelector } from "./workspaceSelector"
 import { getTimeAndNotificationsDisplay } from "./timeAndNotificationsDisplay";
 
 export type TBarComponents = {
-    WorkspaceSelector: IComponent,
-    TimeAndNotificationsDisplay: IComponent
+    WorkspaceSelector: ReturnType<typeof getWorkspaceSelector>,
+    TimeAndNotificationsDisplay: ReturnType<typeof getTimeAndNotificationsDisplay>
 }
 
 export function getBarComponents(): TBarComponents {

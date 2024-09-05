@@ -1,7 +1,28 @@
 {
-    "bar": {
-        "background_color": "option::\"#000000BF\"",
-        "icon_color": "option::\"#5D93B0FF\"",
-        "layout": "option::[\n    {\n        \"name\": \"WorkspaceSelector\",\n        \"props\": {}\n    },\n    {\n        \"name\": \"TimeAndNotificationsDisplay\",\n        \"props\": {}\n    }\n]"
+    "bar.background_color": "#000000BF",
+    "bar.icon_color": "#5D93B0FF",
+    "bar.layout": {
+        "left": [
+            {
+                "name": "WorkspaceSelector",
+                "props": {
+                    "test": ""
+                }
+            }
+        ],
+        "center": [
+            {
+                "name": "TimeAndNotificationsDisplay",
+                "props": {}
+            }
+        ],
+        "right": [
+            {
+                "name": "WorkspaceSelector",
+                "props": {
+                    "test": ""
+                }
+            }
+        ]
     }
 }

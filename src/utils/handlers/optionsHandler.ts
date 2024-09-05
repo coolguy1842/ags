@@ -3,31 +3,43 @@ import { EventHandler } from "./eventHandler";
 import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { paths } from "src/paths";
-import GLib from "types/@girs/glib-2.0/glib-2.0";
-
-type OptionEvents = {
-    changed: { }
-};
+import { Variable} from "resource:///com/github/Aylur/ags/variable.js";
+import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
+import { Options } from "types/variable";
 
 export interface OptionValidator<T> {
     validate(value: T): boolean;  
 };
 
-export class Option<T> extends EventHandler<OptionEvents> {
-    private _default: T;
-    private _value: T;
+export class Option<T> extends Variable<T> {
+    static {
+        registerGObject(this, { typename: `Ags_Option_${Date.now()}` });
+    }
 
+    private _id: string;
+
+    private _default: T;
     private _validator?: OptionValidator<T>;
+    private _options?: Options<T>;
 
     // relies on default being valid
-    constructor(value: T, validator?: OptionValidator<T>) {
-        super([ "changed" ]);
+    constructor(value: T, validator?: OptionValidator<T>, options?: Options<T>) {
+        super(value, options);
+
+        this._id = "";
 
         this._default = value;
-        this._value = value;
-
         this._validator = validator;
+        this._options = options;
     }
+
+    set id(id: string) { this._id = id; }
+    get id() { return this._id; }
+
+    get validator() { return this._validator; }
+    get options() { return this._options; }
+
+    get defaultValue() { return this._default; }
 
     get value() { return this._value; }
     set value(value: T) {
@@ -38,31 +50,37 @@ export class Option<T> extends EventHandler<OptionEvents> {
         }
 
         this._value = value;
-        this.emit("changed", {});
+
+        this.notify('value');
+        this.emit('changed');
     }
 
-
-    clearListeners() { this.reloadListeners(); }
-
-    toJSON() { return `option::${JSON.stringify(this.value, null, 4)}`; }
+    toJSON() { return this.value; }
     toString() { return this.value; }
 };
 
-export function option<T>(value: T, validator?: OptionValidator<T>) { return new Option<T>(value, validator); }
+export function option<T>(value: T, validator?: OptionValidator<T>, options?: Options<T>) { return new Option<T>(value, validator, options); }
 
 
 export type TOptions = {
     [key: string]: Option<any> | TOptions;
 };
 
-type OptionsHandlerEvents = {
-    option_changed: { option: string },
-    options_reloaded: { }
-    options_set: { }
-};
-
 export type OptionsHandlerCallback = (...args: any) => void;
-export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<OptionsHandlerEvents> implements IReloadable {
+export class OptionsHandler<OptionsType extends TOptions> extends Service implements IReloadable {
+    static {
+        registerGObject(this, {
+            typename: `Ags_OptionsHandler_${Date.now()}`,
+            signals: {
+                "options_reloaded": ["jsobject"],
+                "option_changed": ["jsobject"]
+            },
+            properties: {
+                "options": ["jsobject", "r"]
+            }
+        });
+    }
+
     private _loaded: boolean = false;
 
     private _pathMonitor: PathMonitor;
@@ -70,11 +88,14 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
     private _default: OptionsType;
     private _options: OptionsType;
 
-    private _ignoreChange: boolean = false;
-    private _saveTimeout?: GLib.Source;
+    private _ignoreChange: boolean;
+
+
+    get options() { return this._options; }
+
 
     constructor(options: OptionsType) {
-        super([ "option_changed", "options_reloaded", "options_set" ]);
+        super();
 
         this._pathMonitor = new PathMonitor(paths.OPTIONS_PATH, MonitorTypeFlags.FILE, (file, fileType, event) => {
             if(event == FileMonitorEvent.CHANGED) return;
@@ -89,6 +110,8 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
 
         this._default = options;
         this._options = options;
+        
+        this._ignoreChange = false;
     }
 
 
@@ -97,9 +120,13 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
         for(const key in options) {
             path = `${oldPath}${oldPath.length > 0 ? "." : ""}${key}`;
             if(options[key] instanceof Option) {
-                options[key].clearListeners();
-                options[key].on("changed", () => this.emit("option_changed", { option: path }));
+                const val = options[key];
+                const newOption = option(val.value, val.validator, val.options);
 
+                newOption.id = path;
+                newOption.connect("changed", () => this.emit("option_changed", options[key]));
+
+                options[key] = newOption;
                 continue;
             }
 
@@ -112,8 +139,6 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
         this._loaded = true;
 
         this._pathMonitor.load();
-
-        this.reloadListeners();
         this.reloadOptionsListeners();
 
         this.loadOptions();
@@ -125,15 +150,30 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
         this._loaded = false;
 
         this._pathMonitor.cleanup();
-
-        this.reloadListeners();
         this.reloadOptionsListeners();
     }
 
 
-    private stringifyOptions() { return JSON.stringify(this.options, null, 4); }
+    private simplifyOptions(options: TOptions = this._options) {
+        var out = {};
+        for(const key in options) {
+            const value = options[key];
+            if(value instanceof Option) {
+                out[value.id] = value;
+                continue;
+            }
+
+            const obj = this.simplifyOptions(value);
+            for(const k in obj) {
+                out[k] = obj[k];
+            }
+        }
+
+        return out;
+    }
+
     private saveOptions() {
-        Utils.writeFileSync(this.stringifyOptions(), paths.OPTIONS_PATH);
+        Utils.writeFileSync(JSON.stringify(this.simplifyOptions(), undefined, 4), paths.OPTIONS_PATH);
     }
 
     private loadOptions() {
@@ -149,82 +189,34 @@ export class OptionsHandler<OptionsType extends TOptions> extends EventHandler<O
             return;
         }
 
-        const loadOptionValue = (value: string): any => {
-            if(!value.startsWith("option::")) return undefined;
-            return JSON.parse(value.split("::").slice(1).join("::"));
+        for(const key in json) {
+            this.setOption(key, json[key]);
         }
 
-        const loadNestedOptions = (json: any, options: TOptions) => {
-            for(const key in json) {
-                if(!(key in options)) continue;
+        this.emit("options_reloaded", this.options);
 
-                switch(typeof json[key]) {
-                case "string":
-                    if(!(options[key] instanceof Option)) {
-                        break;
-                    }
-
-                    const value = loadOptionValue(json[key]);
-                    if(value == undefined) break;
-
-                    if(JSON.stringify(options[key].value) != JSON.stringify(value)) {
-                        options[key].value = value;
-                    }
-
-                    break;
-                case "object":
-                    if(options[key] instanceof Option) {
-                        break;
-                    }
-
-                    loadNestedOptions(json[key], options[key]);
-                    break;
-                default: break;
-                }
-            }
-        };
-        
-        loadNestedOptions(json, this._options);
-        this.emit("options_reloaded", {});
-
-        if(this._saveTimeout) {
-            clearTimeout(this._saveTimeout);
-            this._saveTimeout = undefined;
-        }
-
-        this._saveTimeout = setTimeout(() => {
-            this._ignoreChange = true;
-            this.saveOptions();
-        }, 100);
+        this._ignoreChange = true;
+        this.saveOptions();
     }
 
-    get options() { return this._options; }
-    set options(newOptions: OptionsType) {
-        const setNestedOptions = (options: TOptions, newOptions: TOptions) => {
-            for(const key in options) {
-                if(options[key] instanceof Option) {
-                    if(newOptions[key].value != options[key].value) {
-                        options[key].value = newOptions[key].value;
-                    }
-    
-                    continue;
-                }
-    
-                setNestedOptions(options[key], newOptions[key] as TOptions);
+
+    private setOption(path: string, value: any) {
+        const keys = path.split(".");
+
+        var cur: TOptions | Option<any> = this._options;
+        var i = 0;
+        while(i < keys.length) {
+            if(!(keys[i] in cur)) return;
+            cur = cur[keys[i++]];
+
+            if(cur instanceof Option) {
+                if(cur.id != path) return;
+
+                break;
             }
-        };
-
-        setNestedOptions(this._options, newOptions);
-        this.emit("options_set", {});
-
-        if(this._saveTimeout) {
-            clearTimeout(this._saveTimeout);
-            this._saveTimeout = undefined;
         }
-        
-        this._saveTimeout = setTimeout(() => {
-            this._ignoreChange = true;
-            this.saveOptions();
-        }, 100);
+
+        cur.value = value;
     }
+
 };
