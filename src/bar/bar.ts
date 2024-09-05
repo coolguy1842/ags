@@ -18,8 +18,8 @@ export function Bar(monitor: Monitor) {
                 const children = [] as typeof window.child.children;
 
                 const layout = globals.optionsHandler.options.bar.layout.value;
-                for(const name of layout) {
-                    children.push(getBarComponents()[name].create(monitor.name) as never);
+                for(const component of layout) {
+                    children.push(getBarComponents()[component.name].create(monitor.name, component.props) as never);
                 }
 
                 window.child.children = children;

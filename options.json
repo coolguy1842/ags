@@ -2,6 +2,6 @@
     "bar": {
         "background_color": "option::\"#000000BF\"",
         "icon_color": "option::\"#5D93B0FF\"",
-        "layout": "option::[\"WorkspaceSelector\"]"
+        "layout": "option::[\n    {\n        \"name\": \"WorkspaceSelector\",\n        \"props\": {}\n    },\n    {\n        \"name\": \"TimeAndNotificationsDisplay\",\n        \"props\": {}\n    }\n]"
     }
 }

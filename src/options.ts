@@ -1,11 +1,18 @@
 import { option, Option, OptionValidator, TOptions } from "./utils/handlers/optionsHandler";
 import { getBarComponents, TBarComponents } from "./bar/components/components";
 
+type TBarLayoutItem = {
+    name: keyof TBarComponents,
+    props: { [key: string]: any }
+};
+
+type TBarLayout = TBarLayoutItem[];
+
 export interface IOptions extends TOptions {
     bar: {
         background_color: Option<string>;
         icon_color: Option<string>;
-        layout: Option<(keyof TBarComponents)[]>;
+        layout: Option<TBarLayout>;
     };
 };
 
@@ -18,9 +25,9 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
             }
         },
         barComponents: {
-            validate: (value: string[]) => {
-                for(const key of value) {
-                    if(!(key in getBarComponents())) {
+            validate: (value: TBarLayout) => {
+                for(const val of value) {
+                    if(!(val.name in getBarComponents())) {
                         return false;
                     }
                 }
@@ -39,8 +46,8 @@ export function getOptions(): IOptions {
             background_color: option("#000000E0", validators.colour),
             icon_color: option("#5D93B0FF", validators.colour),
             layout: option([
-                "WorkspaceSelector"
-            ] as (keyof TBarComponents)[], validators.barComponents)
+                { name: "WorkspaceSelector", props: {} }
+            ] as TBarLayout, validators.barComponents)
         }
     };
 }; 

@@ -44,7 +44,7 @@ export class Option<T> extends EventHandler<OptionEvents> {
 
     clearListeners() { this.reloadListeners(); }
 
-    toJSON() { return `option::${JSON.stringify(this.value)}`; }
+    toJSON() { return `option::${JSON.stringify(this.value, null, 4)}`; }
     toString() { return this.value; }
 };
 
