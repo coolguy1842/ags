@@ -1,4 +1,3 @@
-import { IComponent } from "src/interfaces/IComponent";
 import { WorkspaceButton } from "../widgets/workspaceButton";
 
 const hyprland = await Service.import("hyprland");
@@ -9,7 +8,7 @@ export function getWorkspaceSelector() {
         props: {
             test: ""
         },
-        create(monitor) {
+        create(monitor: string) {
             return Widget.EventBox({
                 class_name: "bar-workspace-selector",
                 child: Widget.Box({

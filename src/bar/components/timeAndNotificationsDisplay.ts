@@ -1,11 +1,10 @@
-import { IComponent } from "src/interfaces/IComponent";
 import { globals } from "src/globals";
 
-export function getTimeAndNotificationsDisplay(): IComponent {
+export function getTimeAndNotificationsDisplay() {
     return {
         name: "TimeAndNotificationsDisplay",
         props: {},
-        create(monitor) {
+        create(monitor: string) {
             return Widget.Box({
                 class_name: "bar-time-and-notifications-display",
                 child: Widget.Label({

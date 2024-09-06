@@ -1,7 +1,13 @@
 {
     "bar.background_color": "#000000BF",
     "bar.icon_color": "#5D93B0FF",
+    "bar.layout.outer_gap": 8,
+    "bar.layout.gap": 8,
     "bar.layout.left": [
+        {
+            "name": "AppLauncherButton",
+            "props": {}
+        },
         {
             "name": "WorkspaceSelector",
             "props": {
@@ -11,16 +17,16 @@
     ],
     "bar.layout.center": [
         {
-            "name": "WorkspaceSelector",
-            "props": {
-                "test": ""
-            }
+            "name": "TimeAndNotificationsDisplay",
+            "props": {}
         }
     ],
     "bar.layout.right": [
         {
-            "name": "TimeAndNotificationsDisplay",
+            "name": "QuickMenuButton",
             "props": {}
         }
-    ]
+    ],
+    "bar.quick_menu_button.background": "#BDA4A419",
+    "bar.quick_menu_button.border_radius": 4
 }
