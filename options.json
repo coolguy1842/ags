@@ -1,28 +1,26 @@
 {
     "bar.background_color": "#000000BF",
     "bar.icon_color": "#5D93B0FF",
-    "bar.layout": {
-        "left": [
-            {
-                "name": "WorkspaceSelector",
-                "props": {
-                    "test": ""
-                }
+    "bar.layout.left": [
+        {
+            "name": "WorkspaceSelector",
+            "props": {
+                "test": ""
             }
-        ],
-        "center": [
-            {
-                "name": "TimeAndNotificationsDisplay",
-                "props": {}
+        }
+    ],
+    "bar.layout.center": [
+        {
+            "name": "WorkspaceSelector",
+            "props": {
+                "test": ""
             }
-        ],
-        "right": [
-            {
-                "name": "WorkspaceSelector",
-                "props": {
-                    "test": ""
-                }
-            }
-        ]
-    }
+        }
+    ],
+    "bar.layout.right": [
+        {
+            "name": "TimeAndNotificationsDisplay",
+            "props": {}
+        }
+    ]
 }

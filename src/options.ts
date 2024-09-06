@@ -7,17 +7,13 @@ type TBarLayoutItem<T extends keyof TBarComponents> = {
     props: TBarComponents[T]["props"]
 };
 
-type TBarLayout = {
-    left?: TBarLayoutItem<keyof TBarComponents>[],
-    center?: TBarLayoutItem<keyof TBarComponents>[],
-    right?: TBarLayoutItem<keyof TBarComponents>[]
-};
+type TBarLayout = TBarLayoutItem<keyof TBarComponents>[];
 
 function getOptionValidators(): { [key: string]: OptionValidator<any> } {
     return {
         colour: {
             validate: (value: string) => {
-                return /^#[0-9A-F]{8}$/.test(value);
+                return /^#[0-9A-F]{8}$/.test(value) ? value : undefined;
             }
         },
         barComponents: {
@@ -33,37 +29,23 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
                     
                     return false; 
                 } 
-            
-                const validateSection = (section: "left" | "center" | "right") => {
-                    var sectionArr: TBarLayoutItem<keyof TBarComponents>[] | undefined = undefined;
-                    switch(section) {
-                    case "left": sectionArr = value.left; break;
-                    case "center": sectionArr = value.center; break;
-                    case "right": sectionArr = value.right; break;
-                    }
 
-                    if(sectionArr == undefined) return true;
-                    else if(!Array.isArray(sectionArr)) return false;
-
-                    for(const val of sectionArr) {
-                        if(!(val.name in getBarComponents())) {
-                            return false;
-                        }
-
-                        if(val.props == undefined) {
-                            return false;
-                        }
-
-                        const component = getBarComponents()[val.name];
-                        if(!haveSameKeys(val.props, component.props)) {
-                            return false;
-                        }
-                    }
-
-                    return true;
+                if(value == undefined || !Array.isArray(value)) {
+                    return undefined;
                 }
 
-                return ["left", "center", "right"].every(section => validateSection(section as any));
+                for(const val of value) {
+                    if(!(val.name in getBarComponents())) {
+                        return undefined;
+                    }
+
+                    const component = getBarComponents()[val.name];
+                    if(val.props == undefined || !haveSameKeys(val.props, component.props)) {
+                        val.props = component.props;
+                    }
+                }
+
+                return value;
             }
         }
     };
@@ -73,7 +55,11 @@ export interface IOptions extends TOptions {
     bar: {
         background_color: Option<string>;
         icon_color: Option<string>;
-        layout: Option<TBarLayout>;
+        layout: {
+            left: Option<TBarLayout>;
+            center: Option<TBarLayout>;
+            right: Option<TBarLayout>;
+        }
     };
 };
 
@@ -84,15 +70,17 @@ export function getOptions(): IOptions {
         bar: {
             background_color: option("#000000E0", validators.colour),
             icon_color: option("#5D93B0FF", validators.colour),
-            layout: option(
-                {
-                    left: [
+            layout: {
+                left: option(
+                    [
                         { name: "WorkspaceSelector", props: { test: "" } },
                         { name: "TimeAndNotificationsDisplay", props: {} }
-                    ]
-                } as TBarLayout,
-                validators.barComponents
-            )
+                    ] as TBarLayout,
+                    validators.barComponents
+                ),
+                center: option([] as TBarLayout, validators.barComponents),
+                right: option([] as TBarLayout, validators.barComponents)
+            }
         },
     };
 }; 

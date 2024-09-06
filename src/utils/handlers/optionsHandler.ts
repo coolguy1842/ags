@@ -1,5 +1,4 @@
 import { IReloadable } from "src/interfaces/reloadable";
-import { EventHandler } from "./eventHandler";
 import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { paths } from "src/paths";
@@ -8,7 +7,8 @@ import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.
 import { Options } from "types/variable";
 
 export interface OptionValidator<T> {
-    validate(value: T): boolean;  
+    // validator can override if its not a bad issue like missing option
+    validate(value: T): T | undefined;
 };
 
 export class Option<T> extends Variable<T> {
@@ -44,12 +44,21 @@ export class Option<T> extends Variable<T> {
     get value() { return this._value; }
     set value(value: T) {
         if(this._validator) {
-            if(!this._validator.validate(value)) {
+            const validation = this._validator.validate(value);
+            if(validation == undefined) {
+                // check if current/fallback is invalid too
+                if(this._validator.validate(this._value) == undefined) {
+                    this._value = this._default;
+                }
+
                 return;
             }
+            
+            this._value = validation;
         }
-
-        this._value = value;
+        else {
+            this._value = value;
+        }
 
         this.notify('value');
         this.emit('changed');
@@ -156,7 +165,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private simplifyOptions(options: TOptions = this._options) {
         var out = {};
-        for(const key in options) {
+        for(const key of Object.keys(options)) {
             const value = options[key];
             if(value instanceof Option) {
                 out[value.id] = value;
@@ -216,7 +225,9 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
             }
         }
 
-        cur.value = value;
+        if(JSON.stringify(cur.value) != JSON.stringify(value)) {
+            cur.value = value;
+        }
     }
 
 };
