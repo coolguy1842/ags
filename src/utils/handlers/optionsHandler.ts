@@ -133,7 +133,10 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
                 const newOption = option(val.value, val.validator, val.options);
 
                 newOption.id = path;
-                newOption.connect("changed", () => this.emit("option_changed", options[key]));
+                newOption.connect("changed", () => {
+                    this.emit("option_changed", options[key]);
+                    this.saveOptions();
+                });
 
                 options[key] = newOption;
                 continue;

@@ -1,6 +1,7 @@
 import { Bar } from "./bar/bar";
 import { IReloadable } from "./interfaces/reloadable";
 import { globals } from "./globals";
+import { getSystemTrayWindow } from "./systemTray/systemTray";
 
 const hyprland = await Service.import("hyprland");;
 

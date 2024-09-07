@@ -2,7 +2,7 @@ import { IReloadable } from "src/interfaces/reloadable";
 import { globals } from "../../globals";
 import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
-import { HEXtoCSSRGBA, HEXtoRGBA } from "../colourUtils";
+import { HEXtoCSSRGBA, HEXtoRGBA } from "../colorUtils";
 import { Option } from "./optionsHandler";
 
 
@@ -32,9 +32,14 @@ export class StyleHandler implements IReloadable {
             switch(option.id) {
             case "bar.background_color":
             case "bar.icon_color":
-            case "bar.quick_menu_button.background":
-            case "bar.quick_menu_button.border_radius":
-            case "bar.quick_menu_button.side_padding":
+
+            case "bar.quick_menu.background":
+            case "bar.quick_menu.border_radius":
+            case "bar.quick_menu.side_padding":
+
+            case "bar.system_tray.background":
+            case "bar.system_tray.border_radius":
+            case "bar.system_tray.side_padding":
                 break;
             default: return;
             }
@@ -66,9 +71,13 @@ export class StyleHandler implements IReloadable {
             $("bar-background-color", HEXtoCSSRGBA(bar.background_color.value)),
             $("bar-icon-color", HEXtoCSSRGBA(bar.icon_color.value)),
             
-            $("bar-quick-menu-button-background-color", HEXtoCSSRGBA(bar.quick_menu_button.background.value)),
-            $("bar-quick-menu-button-border-radius", `${bar.quick_menu_button.border_radius.value}px`),
-            $("bar-quick-menu-button-side-padding", `${bar.quick_menu_button.side_padding.value}px`)
+            $("bar-quick-menu-button-background-color", HEXtoCSSRGBA(bar.quick_menu.background.value)),
+            $("bar-quick-menu-button-border-radius", `${bar.quick_menu.border_radius.value}px`),
+            $("bar-quick-menu-button-side-padding", `${bar.quick_menu.side_padding.value}px`),
+
+            $("bar-system-tray-background-color", HEXtoCSSRGBA(bar.system_tray.background.value)),
+            $("bar-system-tray-border-radius", `${bar.system_tray.border_radius.value}px`),
+            $("bar-system-tray-side-padding", `${bar.system_tray.side_padding.value}px`)
         ].join("\n");
     }
 

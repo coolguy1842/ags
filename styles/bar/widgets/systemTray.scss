@@ -1,0 +1,26 @@
+.bar-system-tray {
+    @include bar-widget;
+
+    background-color: $bar-system-tray-background-color;
+    border-radius: $bar-system-tray-border-radius;
+
+    padding: 2px $bar-system-tray-side-padding;
+}
+
+.bar-system-tray-icon {
+    @include bar-widget;
+
+    font-size: 1.2rem;
+    color: unset;
+
+    &.tray-icon-spotify {
+        color: #00C93C;
+    }
+}
+
+.bar-system-tray-button {
+    @include bar-widget;
+
+    margin-right: -6px;
+    color: unset;
+}

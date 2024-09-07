@@ -1,13 +1,13 @@
-import { getBarWidgets, TBarWidgets } from "./bar/widgets/widgets";
+import { getBarWidgets } from "./bar/widgets/widgets";
 import { option, Option, OptionValidator, TOptions } from "./utils/handlers/optionsHandler";
 import GLib from "gi://GLib?version=2.0";
 
-type TBarLayoutItem<T extends keyof TBarWidgets> = {
+type TBarLayoutItem<T extends keyof ReturnType<typeof getBarWidgets>> = {
     name: T,
-    props: TBarWidgets[T]["props"]
+    props: ReturnType<typeof getBarWidgets>[T]["props"]
 };
 
-type TBarLayout = TBarLayoutItem<keyof TBarWidgets>[];
+type TBarLayout = TBarLayoutItem<keyof ReturnType<typeof getBarWidgets>>[];
 
 function getOptionValidators(): { [key: string]: OptionValidator<any> } {
     return {
@@ -16,7 +16,7 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
                 return isNaN(value) ? undefined : value;
             }
         },
-        colour: {
+        color: {
             validate: (value: string) => {
                 return /^#[0-9A-F]{8}$/.test(value) ? value : undefined;
             }
@@ -52,6 +52,12 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
 
                 return value;
             }
+        },
+        stringArray: {
+            validate: (value: string[]) => {
+                if(value == undefined || !Array.isArray(value)) return undefined;
+                return value.every(x => typeof x == "string") ? value : undefined;
+            }
         }
     };
 }
@@ -60,18 +66,29 @@ export interface IOptions extends TOptions {
     bar: {
         background_color: Option<string>;
         icon_color: Option<string>;
+
         layout: {
             outer_gap: Option<number>;
             gap: Option<number>;
             left: Option<TBarLayout>;
             center: Option<TBarLayout>;
             right: Option<TBarLayout>;
-        },
-        quick_menu_button: {
+        };
+
+        system_tray: {
             background: Option<string>;
             side_padding: Option<number>;
-            border_radius: Option<number>
-        }
+            border_radius: Option<number>;
+            spacing: Option<number>;
+            favorites: Option<string[]>;
+        };
+        
+        quick_menu: {
+            background: Option<string>;
+            side_padding: Option<number>;
+            border_radius: Option<number>;
+            spacing: Option<number>;
+        };
     };
 };
 
@@ -80,8 +97,8 @@ export function getOptions(): IOptions {
 
     return {
         bar: {
-            background_color: option("#000000E0", validators.colour),
-            icon_color: option("#5D93B0FF", validators.colour),
+            background_color: option("#000000E0", validators.color),
+            icon_color: option("#5D93B0FF", validators.color),
             layout: {
                 outer_gap: option(8, validators.number),
                 gap: option(6, validators.number),
@@ -100,15 +117,26 @@ export function getOptions(): IOptions {
                 ),
                 right: option(
                     [
+                        { name: "SystemTray", props: {} },
+                        { name: "ColorPickerButton", props: getBarWidgets().ColorPickerButton.props },
+                        { name: "ScreenshotButton", props: getBarWidgets().ScreenshotButton.props },
                         { name: "QuickMenuButton", props: {} }
                     ] as TBarLayout,
                     validators.barWidgets
                 )
             },
-            quick_menu_button: {
-                background: option("#BDA4A419", validators.colour),
+            system_tray: {
+                background: option("#BDA4A419", validators.color),
                 side_padding: option(6, validators.number),
-                border_radius: option(4, validators.number)
+                border_radius: option(4, validators.number),
+                spacing: option(4, validators.number),
+                favorites: option([], validators.stringArray)
+            },
+            quick_menu: {
+                background: option("#BDA4A419", validators.color),
+                side_padding: option(6, validators.number),
+                border_radius: option(4, validators.number),
+                spacing: option(4, validators.number)
             }
         },
     };

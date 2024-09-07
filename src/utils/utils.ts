@@ -1,5 +1,6 @@
 import Gio from "gi://Gio?version=2.0";
 import GLib from "gi://GLib?version=2.0";
+import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
 import { FileQueryInfoFlags, FileType } from "types/@girs/gio-2.0/gio-2.0.cjs";
 
 export function arraysEqual<T>(a: T[], b: T[]) {
@@ -14,6 +15,12 @@ export function arraysEqual<T>(a: T[], b: T[]) {
 
     return true;
 }
+
+export function getTrayItemID(item: TrayItem) {
+    // hard to make unique so use all info available
+    return `${item.id}-${item.title}-${item.tooltip_markup}`.replaceAll(" ", "_");
+}
+
 
 type PathMonitorSingleType = { path: string, monitor: Gio.FileMonitor, type: FileType };
 export type PathMonitorType = (PathMonitorSingleType[]) | undefined;

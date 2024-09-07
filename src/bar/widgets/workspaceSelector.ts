@@ -2,9 +2,13 @@ import { WorkspaceButton } from "../components/workspaceButton";
 
 const hyprland = await Service.import("hyprland");
 
+type ScrollDirection = "inverted" | "normal";
+
 export function getWorkspaceSelector() {
-    const defaultProps = {
-        test: ""
+    const defaultProps: {
+        scroll_direction: ScrollDirection
+    } = {
+        scroll_direction: "normal"
     };
 
     return {
@@ -18,8 +22,8 @@ export function getWorkspaceSelector() {
                         return workspaces.map(x => WorkspaceButton(monitor, x.id));
                     })
                 }),
-                onScrollDown: () => hyprland.messageAsync("dispatch workspace m-1"),
-                onScrollUp: () => hyprland.messageAsync("dispatch workspace m+1")
+                onScrollDown: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "normal" ? "-" : "+"}1`),
+                onScrollUp: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "normal" ? "+" : "-"}1`)
             }); 
         }
     };

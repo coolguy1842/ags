@@ -1,5 +1,5 @@
 {
-    "bar.background_color": "#000000BF",
+    "bar.background_color": "#000000E0",
     "bar.icon_color": "#5D93B0FF",
     "bar.layout.outer_gap": 8,
     "bar.layout.gap": 6,
@@ -11,7 +11,7 @@
         {
             "name": "WorkspaceSelector",
             "props": {
-                "test": ""
+                "scroll_direction": "normal"
             }
         }
     ],
@@ -23,11 +23,35 @@
     ],
     "bar.layout.right": [
         {
+            "name": "ColorPickerButton",
+            "props": {
+                "color_pick_command": "bash -c 'hyprpicker -r --format=hex -a'"
+            }
+        },
+        {
+            "name": "ScreenshotButton",
+            "props": {
+                "screenshot_command": "bash -c 'wayfreeze & PID=$!; sleep .1; grim -g \"$(slurp)\" - | wl-copy; kill $PID'"
+            }
+        },
+        {
+            "name": "SystemTray",
+            "props": {}
+        },
+        {
             "name": "QuickMenuButton",
             "props": {}
         }
     ],
-    "bar.quick_menu_button.background": "#BDA4A419",
-    "bar.quick_menu_button.side_padding": 6,
-    "bar.quick_menu_button.border_radius": 4
+    "bar.system_tray.background": "#BDA4A419",
+    "bar.system_tray.side_padding": 6,
+    "bar.system_tray.border_radius": 4,
+    "bar.system_tray.spacing": 4,
+    "bar.system_tray.favorites": [
+        "chrome_status_icon_1--Vesktop"
+    ],
+    "bar.quick_menu.background": "#BDA4A419",
+    "bar.quick_menu.side_padding": 6,
+    "bar.quick_menu.border_radius": 4,
+    "bar.quick_menu.spacing": 4
 }
