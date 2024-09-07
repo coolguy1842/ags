@@ -3,14 +3,14 @@ import { getTimeAndNotificationsDisplay } from "./timeAndNotificationsDisplay";
 import { getAppLauncherButton } from "./appLauncherButton";
 import { getQuickMenuButton } from "./quickMenuButton";
 
-export type TBarComponents = {
+export type TBarWidgets = {
     AppLauncherButton: ReturnType<typeof getAppLauncherButton>,
     WorkspaceSelector: ReturnType<typeof getWorkspaceSelector>,
     TimeAndNotificationsDisplay: ReturnType<typeof getTimeAndNotificationsDisplay>,
     QuickMenuButton: ReturnType<typeof getQuickMenuButton>,
 }
 
-export function getBarComponents(): TBarComponents {
+export function getBarWidgets(): TBarWidgets {
     return {
         AppLauncherButton: getAppLauncherButton(),
         WorkspaceSelector: getWorkspaceSelector(),

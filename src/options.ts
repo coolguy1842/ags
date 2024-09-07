@@ -1,13 +1,13 @@
+import { getBarWidgets, TBarWidgets } from "./bar/widgets/widgets";
 import { option, Option, OptionValidator, TOptions } from "./utils/handlers/optionsHandler";
-import { getBarComponents, TBarComponents } from "./bar/components/components";
 import GLib from "gi://GLib?version=2.0";
 
-type TBarLayoutItem<T extends keyof TBarComponents> = {
+type TBarLayoutItem<T extends keyof TBarWidgets> = {
     name: T,
-    props: TBarComponents[T]["props"]
+    props: TBarWidgets[T]["props"]
 };
 
-type TBarLayout = TBarLayoutItem<keyof TBarComponents>[];
+type TBarLayout = TBarLayoutItem<keyof TBarWidgets>[];
 
 function getOptionValidators(): { [key: string]: OptionValidator<any> } {
     return {
@@ -21,18 +21,18 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
                 return /^#[0-9A-F]{8}$/.test(value) ? value : undefined;
             }
         },
-        barComponents: {
+        barWidgets: {
             validate: (value: TBarLayout) => {
                 if(value == undefined || !Array.isArray(value)) {
                     return undefined;
                 }
 
                 for(const val of value) {
-                    if(!(val.name in getBarComponents())) {
+                    if(!(val.name in getBarWidgets())) {
                         return undefined;
                     }
 
-                    const component = getBarComponents()[val.name];
+                    const component = getBarWidgets()[val.name];
                     if(val.props == undefined) {
                         val.props = component.props;
                     }
@@ -69,6 +69,7 @@ export interface IOptions extends TOptions {
         },
         quick_menu_button: {
             background: Option<string>;
+            side_padding: Option<number>;
             border_radius: Option<number>
         }
     };
@@ -89,23 +90,24 @@ export function getOptions(): IOptions {
                         { name: "AppLauncherButton", props: { test: "" } },
                         { name: "WorkspaceSelector", props: {} }
                     ] as TBarLayout,
-                    validators.barComponents
+                    validators.barWidgets
                 ),
                 center: option(
                     [
                         { name: "TimeAndNotificationsDisplay", props: {} }
                     ] as TBarLayout,
-                    validators.barComponents
+                    validators.barWidgets
                 ),
                 right: option(
                     [
                         { name: "QuickMenuButton", props: {} }
                     ] as TBarLayout,
-                    validators.barComponents
+                    validators.barWidgets
                 )
             },
             quick_menu_button: {
                 background: option("#BDA4A419", validators.colour),
+                side_padding: option(6, validators.number),
                 border_radius: option(4, validators.number)
             }
         },

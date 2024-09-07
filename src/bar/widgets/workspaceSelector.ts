@@ -1,14 +1,16 @@
-import { WorkspaceButton } from "../widgets/workspaceButton";
+import { WorkspaceButton } from "../components/workspaceButton";
 
 const hyprland = await Service.import("hyprland");
 
 export function getWorkspaceSelector() {
+    const defaultProps = {
+        test: ""
+    };
+
     return {
         name: "WorkspaceSelector",
-        props: {
-            test: ""
-        },
-        create(monitor: string) {
+        props: defaultProps,
+        create(monitor: string, props: typeof defaultProps) {
             return Widget.EventBox({
                 class_name: "bar-workspace-selector",
                 child: Widget.Box({

@@ -1,0 +1,8 @@
+.bar-app-launcher-button {
+    all: unset;
+
+    padding-right: 6px;
+
+    color: $bar-icon-color;
+    transition: 0.2s all cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}

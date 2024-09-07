@@ -1,14 +1,16 @@
 export function getQuickMenuButton() {
+    const defaultProps = {};
+    
     return {
         name: "QuickMenuButton",
-        props: {},
-        create(monitor: string) {
+        props: defaultProps,
+        create(monitor: string, props: typeof defaultProps) {
             return Widget.Button({
                 class_name: "bar-quick-menu-button",
-                // make the icons appear dynamically (probably with Utils.derive)
+                // TODO: make the icons appear dynamically (probably with Utils.derive)
                 label: "󰖩 󰂯  󱊣 ",
                 onClicked: () => {
-                    // open quick menu here
+                    // TODO: open quick menu here
                 }
             }); 
         }

@@ -1,14 +1,16 @@
 export function getAppLauncherButton() {
+    const defaultProps = {};
+
     return {
         name: "AppLauncherButton",
-        props: {},
-        create(monitor: string) {
+        props: defaultProps,
+        create(monitor: string, props: typeof defaultProps) {
             return Widget.Button({
                 class_name: "bar-app-launcher-button",
                 label: "",
                 // label: "󰣛"
                 onClicked: () => {
-                    // open app launcher here
+                    // TODO: open app launcher here
                 }
             }); 
         }

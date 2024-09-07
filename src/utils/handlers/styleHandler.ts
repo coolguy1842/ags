@@ -34,6 +34,7 @@ export class StyleHandler implements IReloadable {
             case "bar.icon_color":
             case "bar.quick_menu_button.background":
             case "bar.quick_menu_button.border_radius":
+            case "bar.quick_menu_button.side_padding":
                 break;
             default: return;
             }
@@ -66,7 +67,8 @@ export class StyleHandler implements IReloadable {
             $("bar-icon-color", HEXtoCSSRGBA(bar.icon_color.value)),
             
             $("bar-quick-menu-button-background-color", HEXtoCSSRGBA(bar.quick_menu_button.background.value)),
-            $("bar-quick-menu-button-border-radius", `${bar.quick_menu_button.border_radius.value}px`)
+            $("bar-quick-menu-button-border-radius", `${bar.quick_menu_button.border_radius.value}px`),
+            $("bar-quick-menu-button-side-padding", `${bar.quick_menu_button.side_padding.value}px`)
         ].join("\n");
     }
 

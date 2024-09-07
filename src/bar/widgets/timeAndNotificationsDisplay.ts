@@ -1,10 +1,12 @@
 import { globals } from "src/globals";
 
 export function getTimeAndNotificationsDisplay() {
+    const defaultProps = {};
+
     return {
         name: "TimeAndNotificationsDisplay",
-        props: {},
-        create(monitor: string) {
+        props: defaultProps,
+        create(monitor: string, props: typeof defaultProps) {
             return Widget.Box({
                 class_name: "bar-time-and-notifications-display",
                 child: Widget.Label({

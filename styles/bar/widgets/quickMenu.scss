@@ -1,0 +1,11 @@
+.bar-quick-menu-button {
+    all: unset;
+
+    background-color: $bar-quick-menu-button-background-color;
+    border-radius: $bar-quick-menu-button-border-radius;
+
+    padding: 2px $bar-quick-menu-button-side-padding;
+
+    color: $bar-icon-color;
+    transition: 0.2s all cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
