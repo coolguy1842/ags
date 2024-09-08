@@ -1,8 +1,9 @@
 import { PopupWindow } from "src/utils/PopupWindow";
 
 const SystemTrayWidget = Widget.Box({
-    css: "background-color: red;",
-    clickThrough: false,
+    width_request: 100,
+    height_request: 100,
+    css: "background-color: blue;",
     children: [
         Widget.Label("test")
     ]
@@ -11,11 +12,11 @@ const SystemTrayWidget = Widget.Box({
 const SystemTrayWindow = new PopupWindow({
     name: "system-tray-window",
     exclusivity: "exclusive",
+    setup: (self) => {
+        self.keybind("Escape", () => {
+            console.log("esc")
+        })
+    }
 }, SystemTrayWidget);
-
-export function PopupSystemTray(position: { x: number, y: number }) {
-    SystemTrayWindow.reveal(position);
-}
-
 
 export { SystemTrayWidget, SystemTrayWindow };

@@ -4,34 +4,19 @@ import Gtk from "gi://Gtk?version=3.0";
 import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
 import { register } from "resource:///com/github/Aylur/ags/widgets/widget.js";
 import { Window } from "resource:///com/github/Aylur/ags/widgets/window.js";
+import Gdk from "types/@girs/gdk-3.0/gdk-3.0";
 import { WindowProps } from "types/widgets/window";
 // import Window, { WindowProps } from "types/widgets/window";
 
-export class PopupWindow<Child extends Gtk.Widget, Attr> extends Window<Gtk.Widget, Attr> {
-    static {
-        registerGObject(this, {
-            typename: `Ags_PopupWindow_${Date.now()}`,
-            properties: {
-                'anchor': ['jsobject', 'rw'],
-                'exclusive': ['boolean', 'rw'],
-                'exclusivity': ['string', 'rw'],
-                'focusable': ['boolean', 'rw'],
-                'layer': ['string', 'rw'],
-                'margins': ['jsobject', 'rw'],
-                'monitor': ['int', 'rw'],
-                'gdkmonitor': ['jsobject', 'rw'],
-                'popup': ['boolean', 'rw'],
-                'keymode': ['string', 'rw'],
-            },
-        });
-    }
-
-
+export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _displayPosition: { x: number, y: number };
+
+    private _window: Window<Gtk.Fixed, Attr>;
 
     private _fixed: Gtk.Fixed = Widget.Fixed({});
     private _padding: Gtk.Widget[];
 
+    private _childWrapper: Gtk.EventBox;
     private _originalChild: Child;
 
     private reloadFixed() {
@@ -40,27 +25,28 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends Window<Gtk.Widg
         }
 
         this._padding = [];
-        this._fixed.move(this._originalChild, this._displayPosition.x, this._displayPosition.y);
+        this._fixed.move(this._childWrapper, this._displayPosition.x, this._displayPosition.y);
 
-        const allocation = this._originalChild.get_allocation();
-        console.log(`x: ${allocation.x}, y: ${allocation.y}, width: ${allocation.width}, height: ${allocation.height}`);
+        // const allocation = this._originalChild.get_allocation();
+        // console.log(`x: ${allocation.x}, y: ${allocation.y}, width: ${allocation.width}, height: ${allocation.height}`);
     }
 
     constructor({
-        anchor = [ "bottom", "top", "left", "right" ],
+        anchor = [ "top", "bottom", "left", "right" ],
         exclusive,
         exclusivity = 'ignore',
         focusable = false,
-        keymode = 'on-demand',
+        keymode = 'exclusive',
         layer = 'top',
         margins = [],
         monitor = -1,
         gdkmonitor,
-        popup = true,
+        popup = false,
         visible = false,
+        child = undefined,
         ...params
-    }: WindowProps<Child, Attr> = {}, child: Child) {
-        super({
+    }: WindowProps<Child, Attr> = {}, toPopup: Child) {
+        this._window = Widget.Window({
             anchor,
             exclusive,
             exclusivity,
@@ -72,18 +58,34 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends Window<Gtk.Widg
             gdkmonitor,
             popup,
             visible,
-            child: Widget.Fixed({
-                css: "background-color: red;",
-                // hexpand: true,
-                // vexpand: true,
-            }),
+            child: Widget.Fixed(),
             ...params
-        } as WindowProps<Gtk.Widget, Attr>);
+        } as WindowProps<Gtk.Fixed, Attr>);
 
-        this._fixed = super.child as Gtk.Fixed;
+        this._window.keybind("Escape", () => {
+            if(!this._window.is_visible()) return;
+            this.hide();
+        });
 
-        this._originalChild = child;
+        // this._window.on("button-press-event", (self, args) => {
+        //     console.log("clicked main");
+        // })
 
+        this._fixed = this._window.child;
+
+        this._childWrapper = Widget.EventBox({
+            visible: true,
+            onPrimaryClick: (self) => {
+                console.log("clicked box")
+            },
+            setup: (self) => {
+                self.on("leave-notify-event", () => {
+                    console.log("clicked box");
+                })
+            }
+        });
+
+        this._originalChild = toPopup;
         this._padding = [];
 
         this._displayPosition = { x: 0, y: 0 };
@@ -91,25 +93,30 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends Window<Gtk.Widg
     }
 
 
+    get window() { return this._window; }
+
     get child() { return this._originalChild; }
-
     set child(child: Child) {
-        this._fixed.remove(this._originalChild);
-        this._originalChild = child;
+        this._fixed.remove(this._childWrapper);
 
-        this._fixed.put(this._originalChild, this._displayPosition.x, this._displayPosition.y);
+        this._originalChild = child;
+        this._childWrapper.child = this._originalChild;
+
+        this._fixed.put(this._childWrapper, this._displayPosition.x, this._displayPosition.y);
         this.reloadFixed();
     }
 
 
-    reveal(position: { x: number, y: number }) {
+    show(position: { x: number, y: number }) {
+        console.log("show");
         this._displayPosition = position;
         this.reloadFixed();
 
-        this.set_visible(true);
+        this._window.set_visible(true);
     }
 
     hide() {
-        this.set_visible(false);
+        console.log("hide");
+        this._window.set_visible(false);
     }
 };

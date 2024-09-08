@@ -1,7 +1,7 @@
 import Gdk from "gi://Gdk";
 import { Box } from "resource:///com/github/Aylur/ags/widgets/box.js";
 import { globals } from "src/globals";
-import { PopupSystemTray, SystemTrayWindow } from "src/systemTray/systemTray";
+import { SystemTrayWindow } from "src/systemTray/systemTray";
 import { getTrayItemID } from "src/utils/utils";
 
 const systemTray = await Service.import("systemtray");
@@ -51,11 +51,11 @@ export function getSystemTray() {
 
                         // console.log(position);
 
-                        if(SystemTrayWindow.is_visible()) {
+                        if(SystemTrayWindow.window.is_visible()) {
                             SystemTrayWindow.hide();
                         }
                         else {
-                            SystemTrayWindow.reveal(position);
+                            SystemTrayWindow.show(position);
                         }
                     }
                 })
