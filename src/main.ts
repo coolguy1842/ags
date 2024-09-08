@@ -1,7 +1,7 @@
 import { Bar } from "./bar/bar";
 import { IReloadable } from "./interfaces/reloadable";
 import { globals } from "./globals";
-import { getSystemTrayWindow } from "./systemTray/systemTray";
+import { getSystemTrayWindow, SystemTrayWindow } from "./systemTray/systemTray";
 
 const hyprland = await Service.import("hyprland");;
 
@@ -36,7 +36,8 @@ export class Main implements IReloadable {
             // style here makes the startup look a bit nicer
             style: globals.paths.OUT_CSS_IMPORTS,
             windows: [
-                ...hyprland.monitors.map(x => Bar(x))
+                ...hyprland.monitors.map(x => Bar(x)),
+                SystemTrayWindow as any
             ]
         });
     }
