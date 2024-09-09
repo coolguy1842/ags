@@ -1,6 +1,6 @@
 import { globals } from "src/globals";
 import { PopupWindow } from "src/utils/PopupWindow";
-import { getTrayItemID } from "src/utils/utils";
+import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
 
 const systemTray = await Service.import("systemtray");
 
@@ -30,7 +30,7 @@ function updateTray(trayBox) {
                         id
                     ];
 
-                    if(favorites.value.length == systemTray.items.length) {
+                    if(getActiveFavorites(favorites.value).length == systemTray.items.length) {
                         SystemTrayWindow.hide();
                     }
                 },

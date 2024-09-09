@@ -23,10 +23,6 @@
     ],
     "bar.layout.right": [
         {
-            "name": "SystemTray",
-            "props": {}
-        },
-        {
             "name": "ColorPickerButton",
             "props": {
                 "color_pick_command": "bash -c 'hyprpicker -r --format=hex -a'"
@@ -37,6 +33,10 @@
             "props": {
                 "screenshot_command": "bash -c 'wayfreeze & PID=$!; sleep .1; grim -g \"$(slurp)\" - | wl-copy; kill $PID'"
             }
+        },
+        {
+            "name": "SystemTray",
+            "props": {}
         },
         {
             "name": "QuickMenuButton",
@@ -56,8 +56,9 @@
     "system_tray.padding": 8,
     "system_tray.spacing": 8,
     "system_tray.favorites": [
+        "obs-obs-OBS_Studio",
         "chrome_status_icon_1--Signal_Desktop",
-        "chrome_status_icon_1--Vesktop",
-        "obs-obs-OBS_Studio"
+        "chrome_status_icon_1--",
+        "spotify-client-spotify-"
     ]
 }

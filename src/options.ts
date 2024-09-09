@@ -125,9 +125,9 @@ export function getOptions(): IOptions {
                 ),
                 right: option(
                     [
-                        { name: "SystemTray", props: {} },
                         { name: "ColorPickerButton", props: getBarWidgets().ColorPickerButton.props },
                         { name: "ScreenshotButton", props: getBarWidgets().ScreenshotButton.props },
+                        { name: "SystemTray", props: {} },
                         { name: "QuickMenuButton", props: {} }
                     ] as TBarLayout,
                     validators.barWidgets

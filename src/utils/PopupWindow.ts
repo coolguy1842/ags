@@ -2,8 +2,34 @@ import Gtk from "gi://Gtk?version=3.0";
 import { Window } from "resource:///com/github/Aylur/ags/widgets/window.js";
 import { WindowProps } from "types/widgets/window";
 
+export type TPosition = {
+    x: number,
+    y: number
+};
+
+export interface PopupAnimation {
+    name: string,
+    animate(start: TPosition, end: TPosition, step: number): TPosition;
+};
+
+export const PopupAnimations: PopupAnimation[] = [
+    {
+        name: "linear",
+        animate(start: TPosition, end: TPosition, step: number) {
+            const lerp = (a: number, b: number, alpha: number) => {
+                return a + alpha * (b - a);
+            };
+
+            return {
+                x: lerp(start.x, end.x, step),
+                y: lerp(start.y, end.y, step)
+            };
+        }
+    }
+];
+
 export class PopupWindow<Child extends Gtk.Widget, Attr> {
-    private _displayPosition: { x: number, y: number };
+    private _displayPosition: TPosition;
 
     private _window: Window<Gtk.Fixed, Attr>;
     private _fixed: Gtk.Fixed = Widget.Fixed({});
@@ -12,6 +38,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _originalChild: Child;
 
     private _shouldClose: boolean;
+    private _shouldUpdate: boolean;
 
 
     private getChildAllocation() {
@@ -24,17 +51,31 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         return allocation;
     }
 
-    private reloadFixed() {
+
+    private getCorrectPosition(position: TPosition) {
         const allocation = this.getChildAllocation();
         const geometry = this._window.screen.get_monitor_geometry(this._window.monitor);
 
-        this._displayPosition.x = Math.min(geometry.width - allocation.width, this._displayPosition.x);
-        this._displayPosition.x = Math.max(0, this._displayPosition.x);
+        const computedPosition = { x: this._displayPosition.x, y: this._displayPosition.y };
 
-        this._displayPosition.y = Math.max(allocation.height, this._displayPosition.y);
-        this._displayPosition.y = Math.min(geometry.height, this._displayPosition.y);
+        computedPosition.x = Math.min(geometry.width - allocation.width, computedPosition.x);
+        computedPosition.x = Math.max(0, computedPosition.x);
 
-        this._fixed.move(this._childWrapper, this._displayPosition.x, this._displayPosition.y - (allocation.height));
+        computedPosition.y = Math.max(allocation.height, computedPosition.y);
+        computedPosition.y = Math.min(geometry.height, computedPosition.y);
+
+        return computedPosition;
+    }
+
+    private moveChild(position: TPosition, doBoundsChecks: boolean = true) {
+        this._displayPosition = position;
+
+        const allocation = this.getChildAllocation();
+        const computedPosition = this.getCorrectPosition(position);
+
+        this._shouldUpdate = false;
+
+        this._fixed.move(this._childWrapper, computedPosition.x, computedPosition.y - (allocation.height));
     }
 
     constructor({
@@ -43,7 +84,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         exclusivity = 'ignore',
         focusable = false,
         keymode = 'exclusive',
-        layer = 'top',
+        layer = 'overlay',
         margins = [],
         monitor = -1,
         gdkmonitor,
@@ -86,17 +127,29 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
         this._fixed = this._window.child;
         this._childWrapper = Widget.EventBox({
-            css: "all: unset",
+            css: "all: unset;",
             visible: true,
             setup: (self) => {
                 self.connect("button-press-event", (args) => {
                     this._shouldClose = false;
+                });
+
+                self.connect("draw", () => {
+                    if(this._shouldUpdate) {
+                        this.moveChild(this._displayPosition);
+                    }
+                    else {
+                        this._shouldUpdate = true;
+                    }
                 });
             }
         });
 
         this._originalChild = toPopup;
         this._displayPosition = { x: 0, y: 0 };
+        this._fixed.put(this._childWrapper, this._displayPosition.x, this._displayPosition.y);
+
+        this._shouldUpdate = true;
 
         this.child = this._originalChild;
     }
@@ -106,23 +159,20 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     get child() { return this._originalChild; }
     set child(child: Child) {
-        this._fixed.remove(this._childWrapper);
-
         this._originalChild = child;
         (this._childWrapper as any).child = this._originalChild;
 
-        this._fixed.put(this._childWrapper, this._displayPosition.x, this._displayPosition.y);
-        this.reloadFixed();
+        this.moveChild(this._displayPosition);
     }
 
 
-    show(monitor: number, position: { x: number, y: number }) {
-        this._displayPosition = position;
+    show(monitor: number, position: TPosition) {
         this._window.monitor = monitor;
 
-        this.reloadFixed();
-
         this._window.set_visible(true);
+        this._displayPosition = position;
+
+        this.moveChild(this._displayPosition);
     }
 
     hide() {

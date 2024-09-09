@@ -1,7 +1,7 @@
 import { Box } from "resource:///com/github/Aylur/ags/widgets/box.js";
 import { globals } from "src/globals";
 import { SystemTrayWindow } from "src/systemTray/systemTray";
-import { getTrayItemID } from "src/utils/utils";
+import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
 
 const hyprland = await Service.import("hyprland");
 const systemTray = await Service.import("systemtray");
@@ -39,7 +39,7 @@ export function getSystemTray() {
                         });
                     });
         
-                if(favoriteItems.length != systemTray.items.length) {
+                if(getActiveFavorites(favorites.value).length != systemTray.items.length) {
                     favoriteItems.push(
                         Widget.Button({
                             className: "bar-system-tray-button",
