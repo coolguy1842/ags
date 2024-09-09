@@ -42,7 +42,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _shouldClose: boolean;
     private _shouldUpdate: boolean;
 
-    private _curInterval?: GLib20.Source; 
+    private _animationInterval?: GLib20.Source; 
 
     private _animation?: {
         start: TPosition,
@@ -80,8 +80,6 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     }
 
     private moveChild(position: TPosition, doBoundsChecks: boolean = true) {
-        this._displayPosition = position;
-
         const allocation = this.getChildAllocation();
         const computedPosition = doBoundsChecks ? this.getCorrectPosition(position) : position;
 
@@ -96,7 +94,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         exclusivity = 'ignore',
         focusable = false,
         keymode = 'exclusive',
-        layer = 'overlay',
+        layer = 'top',
         margins = [],
         monitor = -1,
         gdkmonitor,
@@ -182,6 +180,39 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     }
 
 
+
+    private runAnimation(start: TPosition, end: TPosition, duration: number, updateRate: number, func: PopupAnimationFunc, boundsCheck = true): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const interval = (1000 * duration) / updateRate;
+
+            var pos = start;
+            this.moveChild(start, false);
+
+            if(this._animationInterval) {
+                clearInterval(this._animationInterval);
+            }
+
+            var step = 0;
+            this._animationInterval = setInterval(() => {
+                step += interval / updateRate;
+
+                const tempEnd = boundsCheck ? this.getCorrectPosition(end) : end;
+                pos = func.step(start, tempEnd, Math.min(1.0, step / interval))
+
+                this.moveChild(pos, false);
+
+                const posEqual = pos.x == tempEnd.x && pos.y == tempEnd.y;
+                if(posEqual || !this.window.is_visible()) {
+                    if(this._animationInterval) {
+                        clearInterval(this._animationInterval);
+                    }
+
+                    resolve(posEqual);
+                }
+            }, interval);
+        });
+    }
+
     show(monitor: number, position: TPosition) {
         this._window.monitor = monitor;
 
@@ -190,29 +221,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
         const animation = this._animation;
         if(animation) {
-            const interval = (1000 * animation.duration) / animation.updateRate;
-
-            var pos = animation.start;
-            const start = animation.start;
-
-            if(this._curInterval) {
-                clearInterval(this._curInterval);
-            }
-
-            var step = 0;
-            const endPos = this.getCorrectPosition(this._displayPosition);
-            this._curInterval = setInterval(() => {
-                step += interval / animation.updateRate;
-                pos = animation.function.step(start, endPos, Math.min(1.0, step / interval))
-
-                this.moveChild(pos, false);
-
-                if((pos.x == endPos.x && pos.y == endPos.y) || !this.window.is_visible()) {
-                    if(this._curInterval) {
-                        clearInterval(this._curInterval);
-                    }
-                }
-            }, interval);
+            this.runAnimation(animation.start, this._displayPosition, animation.duration, animation.updateRate, animation.function);
 
             return;
         }
@@ -225,31 +234,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
         const animation = this._animation;
         if(animation) {
-            const interval = (1000 * animation.reverseDuration) / animation.updateRate;
-
-            var pos = animation.start;
-            const start = this.getCorrectPosition(this._displayPosition);
-
-            var step = 0;
-            const endPos = animation.start;
-
-            if(this._curInterval) {
-                clearInterval(this._curInterval);
-            }
-
-            this._curInterval = setInterval(() => {
-                step += interval / animation.updateRate;
-                pos = animation.function.step(start, endPos, Math.min(1.0, step / interval))
-                this.moveChild(pos, false);
-
-                if((pos.x == endPos.x && pos.y == endPos.y) || !this.window.is_visible()) {
-                    if(this._curInterval) {
-                        clearInterval(this._curInterval);
-                    }
-
-                    this._window.set_visible(false);
-                }
-            }, interval);
+            this.runAnimation(this.getCorrectPosition(this._displayPosition), animation.start, animation.reverseDuration, animation.updateRate, animation.function, false).then(() => {
+                this._window.set_visible(false);
+            });
 
             return;
         }

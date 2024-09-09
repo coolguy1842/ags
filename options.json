@@ -61,9 +61,7 @@
     "system_tray.spacing": 8,
     "system_tray.favorites": [
         "obs-obs-OBS_Studio",
-        "chrome_status_icon_1--",
         "steam-Steam-",
-        "chrome_status_icon_1--Signal_Desktop",
-        "chrome_status_icon_1--Vesktop"
+        "chrome_status_icon_1--Signal_Desktop"
     ]
 }

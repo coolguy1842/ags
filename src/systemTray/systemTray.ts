@@ -56,7 +56,7 @@ const SystemTrayWidget = Widget.Box({
 
 const SystemTrayWindow = new PopupWindow({
     name: "system-tray-window",
-    exclusivity: "exclusive",
-}, SystemTrayWidget);
+    exclusivity: "exclusive"
+}, SystemTrayWidget, undefined);
 
 export { SystemTrayWidget, SystemTrayWindow };
