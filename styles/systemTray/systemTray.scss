@@ -1,3 +1,8 @@
 .system-tray {
-    // background-color: red;
+    padding: $system-tray-padding;
+
+    background-color: $system-tray-background-color;
+    border-radius: $system-tray-border-radius;
+
+    transition: 0.2s all cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }

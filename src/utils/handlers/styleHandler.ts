@@ -40,6 +40,11 @@ export class StyleHandler implements IReloadable {
             case "bar.system_tray.background":
             case "bar.system_tray.border_radius":
             case "bar.system_tray.side_padding":
+
+
+            case "system_tray.background":
+            case "system_tray.border_radius":
+            case "system_tray.padding":
                 break;
             default: return;
             }
@@ -65,7 +70,7 @@ export class StyleHandler implements IReloadable {
 
 
     getDynamicSCSS() {
-        const { bar } = globals.optionsHandler.options;
+        const { bar, system_tray } = globals.optionsHandler.options;
 
         return [
             $("bar-background-color", HEXtoCSSRGBA(bar.background_color.value)),
@@ -77,7 +82,12 @@ export class StyleHandler implements IReloadable {
 
             $("bar-system-tray-background-color", HEXtoCSSRGBA(bar.system_tray.background.value)),
             $("bar-system-tray-border-radius", `${bar.system_tray.border_radius.value}px`),
-            $("bar-system-tray-side-padding", `${bar.system_tray.side_padding.value}px`)
+            $("bar-system-tray-side-padding", `${bar.system_tray.side_padding.value}px`),
+
+
+            $("system-tray-background-color", HEXtoCSSRGBA(system_tray.background.value)),
+            $("system-tray-border-radius", `${system_tray.border_radius.value}px`),
+            $("system-tray-padding", `${system_tray.padding.value}px`)
         ].join("\n");
     }
 

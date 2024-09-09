@@ -21,6 +21,11 @@ export function getTrayItemID(item: TrayItem) {
     return `${item.id}-${item.title}-${item.tooltip_markup}`.replaceAll(" ", "_");
 }
 
+const systemTray = await Service.import("systemtray");
+export function getActiveFavorites(favorites: string[]) {
+    return systemTray.items.map(x => getTrayItemID(x)).filter(id => favorites.includes(id));
+}
+
 
 type PathMonitorSingleType = { path: string, monitor: Gio.FileMonitor, type: FileType };
 export type PathMonitorType = (PathMonitorSingleType[]) | undefined;

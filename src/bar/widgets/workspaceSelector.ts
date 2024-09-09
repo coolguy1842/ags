@@ -18,9 +18,15 @@ export function getWorkspaceSelector() {
             return Widget.EventBox({
                 class_name: "bar-workspace-selector",
                 child: Widget.Box({
-                    children: hyprland.bind("workspaces").transform(workspaces => workspaces.filter(x => x.monitor == monitor && !x.name.startsWith("special"))).as(workspaces => {
-                        return workspaces.map(x => WorkspaceButton(monitor, x.id));
-                    })
+                    children: hyprland.bind("workspaces")
+                        .transform(workspaces => 
+                            workspaces
+                                .filter(x => x.monitor == monitor && !x.name.startsWith("special"))
+                                .sort((a, b) => a.id - b.id)
+                        )
+                        .as(workspaces => {
+                            return workspaces.map(x => WorkspaceButton(monitor, x.id));
+                        })
                 }),
                 onScrollDown: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "normal" ? "-" : "+"}1`),
                 onScrollUp: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "normal" ? "+" : "-"}1`)
