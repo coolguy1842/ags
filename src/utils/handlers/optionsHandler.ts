@@ -124,25 +124,36 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
     }
 
 
-    private reloadOptionsListeners(options: TOptions = this._options, path = "") {
+    private loadOptionsListeners(reload: boolean, options: TOptions = this._options, path = "") {
         var oldPath = path;
         for(const key in options) {
             path = `${oldPath}${oldPath.length > 0 ? "." : ""}${key}`;
             if(options[key] instanceof Option) {
-                const val = options[key];
-                const newOption = option(val.value, val.validator, val.options);
+                if(reload) {
+                    const val = options[key];
 
-                newOption.id = path;
-                newOption.connect("changed", () => {
-                    this.emit("option_changed", options[key]);
-                    this.saveOptions();
-                });
+                    const newOption = option(val.value, val.validator, val.options);
+                    
+                    newOption.id = path;
+                    newOption.connect("changed", () => {
+                        this.emit("option_changed", options[key]);
+                        this.saveOptions();
+                    });
 
-                options[key] = newOption;
+                    options[key] = newOption;
+                }
+                else {
+                    options[key].id = path;
+                    options[key].connect("changed", () => {
+                        this.emit("option_changed", options[key]);
+                        this.saveOptions();
+                    });
+                }
+
                 continue;
             }
 
-            this.reloadOptionsListeners(options[key], path);
+            this.loadOptionsListeners(reload, options[key], path);
         }
     }
 
@@ -151,7 +162,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
         this._loaded = true;
 
         this._pathMonitor.load();
-        this.reloadOptionsListeners();
+        this.loadOptionsListeners(false);
 
         this.loadOptions();
         this.saveOptions();
@@ -162,7 +173,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
         this._loaded = false;
 
         this._pathMonitor.cleanup();
-        this.reloadOptionsListeners();
+        this.loadOptionsListeners(true);
     }
 
 

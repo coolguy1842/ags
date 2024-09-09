@@ -1,3 +1,6 @@
 .system-tray {
-    // background-color: red;
+    padding: $system-tray-padding;
+
+    background-color: $system-tray-background-color;
+    border-radius: $system-tray-border-radius;
 }

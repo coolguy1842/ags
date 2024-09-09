@@ -1,18 +1,18 @@
 {
-    "bar.background_color": "#000000AF",
+    "bar.background_color": "#000000E0",
     "bar.icon_color": "#5D93B0FF",
     "bar.layout.outer_gap": 8,
     "bar.layout.gap": 6,
     "bar.layout.left": [
         {
             "name": "AppLauncherButton",
-            "props": {}
+            "props": {
+                "test": ""
+            }
         },
         {
             "name": "WorkspaceSelector",
-            "props": {
-                "scroll_direction": "normal"
-            }
+            "props": {}
         }
     ],
     "bar.layout.center": [
@@ -22,6 +22,10 @@
         }
     ],
     "bar.layout.right": [
+        {
+            "name": "SystemTray",
+            "props": {}
+        },
         {
             "name": "ColorPickerButton",
             "props": {
@@ -35,10 +39,6 @@
             }
         },
         {
-            "name": "SystemTray",
-            "props": {}
-        },
-        {
             "name": "QuickMenuButton",
             "props": {}
         }
@@ -46,12 +46,18 @@
     "bar.system_tray.background": "#BDA4A419",
     "bar.system_tray.side_padding": 6,
     "bar.system_tray.border_radius": 4,
-    "bar.system_tray.spacing": 4,
-    "bar.system_tray.favorites": [
-        "chrome_status_icon_1--Vesktop"
-    ],
+    "bar.system_tray.spacing": 8,
     "bar.quick_menu.background": "#BDA4A419",
     "bar.quick_menu.side_padding": 6,
     "bar.quick_menu.border_radius": 4,
-    "bar.quick_menu.spacing": 4
+    "bar.quick_menu.spacing": 8,
+    "system_tray.background": "#000000E0",
+    "system_tray.border_radius": 8,
+    "system_tray.padding": 8,
+    "system_tray.spacing": 8,
+    "system_tray.favorites": [
+        "chrome_status_icon_1--Signal_Desktop",
+        "chrome_status_icon_1--Vesktop",
+        "obs-obs-OBS_Studio"
+    ]
 }

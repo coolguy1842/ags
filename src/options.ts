@@ -80,7 +80,6 @@ export interface IOptions extends TOptions {
             side_padding: Option<number>;
             border_radius: Option<number>;
             spacing: Option<number>;
-            favorites: Option<string[]>;
         };
         
         quick_menu: {
@@ -89,6 +88,15 @@ export interface IOptions extends TOptions {
             border_radius: Option<number>;
             spacing: Option<number>;
         };
+    };
+
+    system_tray: {
+        background: Option<string>;
+        border_radius: Option<number>;
+        padding: Option<number>;
+        spacing: Option<number>;
+
+        favorites: Option<string[]>;
     };
 };
 
@@ -129,15 +137,22 @@ export function getOptions(): IOptions {
                 background: option("#BDA4A419", validators.color),
                 side_padding: option(6, validators.number),
                 border_radius: option(4, validators.number),
-                spacing: option(4, validators.number),
-                favorites: option([], validators.stringArray)
+                spacing: option(8, validators.number)
             },
             quick_menu: {
                 background: option("#BDA4A419", validators.color),
                 side_padding: option(6, validators.number),
                 border_radius: option(4, validators.number),
-                spacing: option(4, validators.number)
+                spacing: option(8, validators.number)
             }
         },
+        system_tray: {
+            background: option('#000000E0', validators.color),
+            border_radius: option(8, validators.number),
+            padding: option(8, validators.number),
+            spacing: option(8, validators.number),
+            
+            favorites: option([], validators.stringArray)
+        }
     };
 }; 
