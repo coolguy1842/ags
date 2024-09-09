@@ -67,9 +67,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             this.hide();
         });
 
-        // this._window.on("button-press-event", (self, args) => {
-        //     console.log("clicked main");
-        // })
+        this._window.on("button-press-event", (self, args) => {
+            this.hide();
+        })
 
         this._fixed = this._window.child;
 

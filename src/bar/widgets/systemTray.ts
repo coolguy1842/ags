@@ -46,7 +46,7 @@ export function getSystemTray() {
                         
                         const position = {
                             x: allocation.x,
-                            y: 1080 - allocation.y,
+                            y: 1080 - (allocation.y + 125),
                         };
 
                         // console.log(position);
