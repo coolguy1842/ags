@@ -1,6 +1,7 @@
 import { Box } from "resource:///com/github/Aylur/ags/widgets/box.js";
 import { globals } from "src/globals";
 import { SystemTrayWindow } from "src/systemTray/systemTray";
+import { PopupAnimationFunctions } from "src/utils/PopupWindow";
 import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
 
 const hyprland = await Service.import("hyprland");
@@ -25,7 +26,7 @@ export function getSystemTray() {
                         return Widget.Button({
                             class_name: `bar-system-tray-icon bar-system-tray-item-${id} ${item.title.includes("spotify") ? "tray-icon-spotify" : ""}`,
                             child: Widget.Icon({
-                                icon: item.icon
+                                icon: item.bind("icon")
                             }),
                             onPrimaryClick: (_, event) => {
                                 item.activate(event);
@@ -44,21 +45,41 @@ export function getSystemTray() {
                         Widget.Button({
                             className: "bar-system-tray-button",
                             label: "󰄝 ",
-                            onPrimaryClick: (btn, event) => {
-                                const allocation = btn.get_allocation();
-                                const monitor = hyprland.monitors.find(x => x.name == monitorName)!;
+                            setup: (btn) => {
+                                btn.connect("button-press-event", () => {
+                                    const allocation = btn.get_allocation();
+                                    const monitor = hyprland.monitors.find(x => x.name == monitorName)!;
 
-                                const position = {
-                                    x: allocation.x,
-                                    y: monitor.height - ((allocation.height + allocation.y) + 10),
-                                };
-        
-                                if(SystemTrayWindow.window.is_visible()) {
-                                    SystemTrayWindow.hide();
-                                }
-                                else {
-                                    SystemTrayWindow.show(monitor.id, position);
-                                }
+                                    const position = {
+                                        x: allocation.x,
+                                        y: monitor.height - ((allocation.height + allocation.y) + 10),
+                                    };
+            
+                                    if(SystemTrayWindow.window.is_visible()) {
+                                        SystemTrayWindow.hide();
+                                    }
+                                    else {
+                                        const animationOptions = globals.optionsHandler.options.system_tray.animation;
+
+                                        if(animationOptions.enabled.value) {
+                                            SystemTrayWindow.animation = {
+                                                start: {
+                                                    x: position.x,
+                                                    y: monitor.height + (allocation.height + allocation.y)
+                                                },
+                                                function: PopupAnimationFunctions[0],
+                                                duration: animationOptions.duration.value,
+                                                reverseDuration: animationOptions.reverse_duration.value,
+                                                updateRate: animationOptions.update_rate.value
+                                            }
+                                        }
+                                        else {
+                                            SystemTrayWindow.animation = undefined;
+                                        }
+
+                                        SystemTrayWindow.show(monitor.id, position);
+                                    }
+                                });
                             }
                         })
                     );

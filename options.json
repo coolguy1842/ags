@@ -51,14 +51,19 @@
     "bar.quick_menu.side_padding": 6,
     "bar.quick_menu.border_radius": 4,
     "bar.quick_menu.spacing": 8,
+    "system_tray.animation.enabled": true,
+    "system_tray.animation.duration": 0.2,
+    "system_tray.animation.reverse_duration": 0.15,
+    "system_tray.animation.update_rate": 100,
     "system_tray.background": "#000000E0",
     "system_tray.border_radius": 8,
     "system_tray.padding": 8,
     "system_tray.spacing": 8,
     "system_tray.favorites": [
         "obs-obs-OBS_Studio",
-        "chrome_status_icon_1--Signal_Desktop",
         "chrome_status_icon_1--",
-        "spotify-client-spotify-"
+        "steam-Steam-",
+        "chrome_status_icon_1--Signal_Desktop",
+        "chrome_status_icon_1--Vesktop"
     ]
 }

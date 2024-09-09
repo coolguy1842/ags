@@ -16,7 +16,7 @@ function updateTray(trayBox) {
             return Widget.Button({
                 class_name: `bar-system-tray-icon bar-system-tray-item-${id} ${item.title.includes("spotify") ? "tray-icon-spotify" : ""}`,
                 child: Widget.Icon({
-                    icon: item.icon
+                    icon: item.bind("icon")
                 }),
                 onPrimaryClick: (_, event) => {
                     item.activate(event);

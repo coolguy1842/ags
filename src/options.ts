@@ -1,3 +1,4 @@
+import { value_type_get_localized_name } from "types/@girs/atk-1.0/atk-1.0.cjs";
 import { getBarWidgets } from "./bar/widgets/widgets";
 import { option, Option, OptionValidator, TOptions } from "./utils/handlers/optionsHandler";
 import GLib from "gi://GLib?version=2.0";
@@ -15,6 +16,11 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
             validate: (value: number) => {
                 return isNaN(value) ? undefined : value;
             }
+        },
+        boolean: {
+            validate: (value: boolean) => {
+                return value == true || value == false ? value : undefined;
+            }  
         },
         color: {
             validate: (value: string) => {
@@ -91,6 +97,15 @@ export interface IOptions extends TOptions {
     };
 
     system_tray: {
+        animation: {
+            enabled: Option<boolean>;
+
+            duration: Option<number>;
+            reverse_duration: Option<number>;
+
+            update_rate: Option<number>;
+        }
+
         background: Option<string>;
         border_radius: Option<number>;
         padding: Option<number>;
@@ -147,6 +162,15 @@ export function getOptions(): IOptions {
             }
         },
         system_tray: {
+            animation: {
+                enabled: option(true, validators.boolean),
+
+                duration: option(0.2, validators.number),
+                reverse_duration: option(0.15, validators.number),
+
+                update_rate: option(100, validators.number)
+            },
+
             background: option('#000000E0', validators.color),
             border_radius: option(8, validators.number),
             padding: option(8, validators.number),
