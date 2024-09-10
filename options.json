@@ -59,13 +59,13 @@
     "system_tray.background": "#000000BF",
     "system_tray.border_radius": 8,
     "system_tray.padding": 8,
-    "system_tray.spacing": 8,
+    "system_tray.spacing": 12,
     "system_tray.favorites": [
-        "obs-obs-OBS_Studio",
-        "steam-Steam-",
-        "chrome_status_icon_1--",
+        "chrome_status_icon_1--Vesktop",
         "chrome_status_icon_1--Signal_Desktop",
-        "chrome_status_icon_1--Vesktop"
+        "chrome_status_icon_1--",
+        "steam-Steam-",
+        "obs-obs-OBS_Studio"
     ],
     "system_tray.favorites_enabled": true,
     "app_launcher.animation.enabled": true,
@@ -73,6 +73,14 @@
     "app_launcher.animation.reverse_duration": 0.2,
     "app_launcher.animation.update_rate": 100,
     "app_launcher.background": "#000000BF",
+    "app_launcher.seperator_background": "#FFFFFFBF",
     "app_launcher.border_radius": 8,
-    "app_launcher.padding": 8
+    "app_launcher.padding": 16,
+    "app_launcher.spacing": 12,
+    "app_launcher.icon_spacing": 6,
+    "app_launcher.icon_size": 58,
+    "app_launcher.show_frequents": true,
+    "app_launcher.rows": 3,
+    "app_launcher.columns": 8,
+    "app_launcher.number_frequents": 8
 }

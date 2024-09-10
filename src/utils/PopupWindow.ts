@@ -44,6 +44,10 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _shouldClose: boolean;
     private _shouldUpdate: boolean;
 
+    private _onShow?: (self: PopupWindow<Child, Attr>) => void;
+    private _onHide?: (self: PopupWindow<Child, Attr>) => void;
+
+
     private _animationInterval?: GLib20.Source;
     private _animation?: {
         start: TPosition,
@@ -106,7 +110,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         visible = false,
         child = undefined,
         ...params
-    }: WindowProps<Child, Attr> = {}, toPopup: Child, animation: typeof this._animation) {
+    }: WindowProps<Child, Attr> = {}, toPopup: Child, animation: typeof this._animation, onShow?: typeof this._onShow, onHide?: typeof this._onHide) {
         this._window = Widget.Window({
             anchor,
             exclusive,
@@ -127,6 +131,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
         this._shouldClose = true;
         this._animation = animation;
+
+        this._onShow = onShow;
+        this._onHide = onHide;
 
         this._window.keybind("Escape", () => {
             if(!this._window.is_visible()) return;
@@ -270,12 +277,20 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
                 y: this._displayPosition.y
             };
 
-            this.runAnimation(start, end, animation.duration, animation.updateRate, animation.function);
+            this.runAnimation(start, end, animation.duration, animation.updateRate, animation.function).then(() => {
+                if(this._onShow) {
+                    this._onShow(this);
+                }
+            });
 
             return;
         }
 
         this.moveChild(this._displayPosition);
+        
+        if(this._onShow) {
+            this._onShow(this);
+        }
     }
 
     hide() {
@@ -300,11 +315,19 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
             this.runAnimation(start, end, animation.reverseDuration, animation.updateRate, animation.function, false).then(() => {
                 this._window.set_visible(false);
+
+                if(this._onHide) {
+                    this._onHide(this);
+                }
             });
 
             return;
         }
 
         this._window.set_visible(false);
+
+        if(this._onHide) {
+            this._onHide(this);
+        }
     }
 };

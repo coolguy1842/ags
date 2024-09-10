@@ -18,11 +18,12 @@ export function getAppLauncherButton() {
                 onClicked: () => {
                     // TODO: open app launcher here
                     const monitor = hyprland.monitors.find(x => x.name == monitorName);
+                    const { app_launcher } = globals.optionsHandler.options;
 
                     if(monitor) {
                         const position = {
                             x: monitor.width / 2,
-                            y: 200
+                            y: (app_launcher.rows.value * app_launcher.icon_size.value) + 180
                         };
 
                         if(!AppLauncherWindow.window.is_visible()) {

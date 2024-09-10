@@ -140,8 +140,21 @@ export interface IOptions extends TOptions {
         };
 
         background: Option<string>;
+        seperator_background: Option<string>;
+        
         border_radius: Option<number>;
+
         padding: Option<number>;
+        spacing: Option<number>;
+
+        icon_spacing: Option<number>;
+        icon_size: Option<number>;
+        show_frequents: Option<boolean>;
+
+        rows: Option<number>;
+        columns: Option<number>;
+
+        number_frequents: Option<number>;
     };
 };
 
@@ -226,8 +239,19 @@ export function getOptions(): IOptions {
             },
 
             background: option('#000000BF', validators.color),
+            seperator_background: option('#FFFFFFBF', validators.color),
             border_radius: option(8, validators.number),
-            padding: option(8, validators.number),
+            padding: option(16, validators.number),
+            spacing: option(12, validators.number),
+
+            icon_spacing: option(6, validators.number),
+            icon_size: option(58, validators.number),
+            show_frequents: option(true, validators.boolean),
+
+            rows: option(5, validators.number),
+            columns: option(3, validators.number),
+
+            number_frequents: option(5, validators.number)
         }
     };
 }; 

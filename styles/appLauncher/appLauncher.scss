@@ -9,10 +9,16 @@
 .app-launcher-input {
     all: unset;
 
+    min-width: 0;
+
     color: white;
     border-radius: 8px;
 }
 
 .app-launcher-item {
     all: unset;
+}
+
+.app-launcher-seperator {
+    background-color: $app-launcher-seperator-background-color;
 }

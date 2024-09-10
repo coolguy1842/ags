@@ -50,6 +50,7 @@ export class StyleHandler implements IReloadable {
             case "app_launcher.background":
             case "app_launcher.border_radius":
             case "app_launcher.padding":
+            case "app_launcher.seperator_background":
                 break;
             default: return;
             }
@@ -97,7 +98,8 @@ export class StyleHandler implements IReloadable {
 
             $("app-launcher-background-color", HEXtoCSSRGBA(app_launcher.background.value)),
             $("app-launcher-border-radius", `${app_launcher.border_radius.value}px`),
-            $("app-launcher-padding", `${app_launcher.padding.value}px`)
+            $("app-launcher-padding", `${app_launcher.padding.value}px`),
+            $("app-launcher-seperator-background-color", HEXtoCSSRGBA(app_launcher.seperator_background.value))
         ].join("\n");
     }
 
