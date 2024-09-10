@@ -1,0 +1,18 @@
+.app-launcher {
+    background-color: $app-launcher-background-color;
+    border-radius: $app-launcher-border-radius;
+    padding: $app-launcher-padding;
+
+    color: white;
+}
+
+.app-launcher-input {
+    all: unset;
+
+    color: white;
+    border-radius: 8px;
+}
+
+.app-launcher-item {
+    all: unset;
+}

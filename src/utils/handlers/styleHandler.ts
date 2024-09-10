@@ -45,6 +45,11 @@ export class StyleHandler implements IReloadable {
             case "system_tray.background":
             case "system_tray.border_radius":
             case "system_tray.padding":
+
+
+            case "app_launcher.background":
+            case "app_launcher.border_radius":
+            case "app_launcher.padding":
                 break;
             default: return;
             }
@@ -70,7 +75,7 @@ export class StyleHandler implements IReloadable {
 
 
     getDynamicSCSS() {
-        const { bar, system_tray } = globals.optionsHandler.options;
+        const { bar, system_tray, app_launcher } = globals.optionsHandler.options;
 
         return [
             $("bar-background-color", HEXtoCSSRGBA(bar.background_color.value)),
@@ -87,7 +92,12 @@ export class StyleHandler implements IReloadable {
 
             $("system-tray-background-color", HEXtoCSSRGBA(system_tray.background.value)),
             $("system-tray-border-radius", `${system_tray.border_radius.value}px`),
-            $("system-tray-padding", `${system_tray.padding.value}px`)
+            $("system-tray-padding", `${system_tray.padding.value}px`),
+
+
+            $("app-launcher-background-color", HEXtoCSSRGBA(app_launcher.background.value)),
+            $("app-launcher-border-radius", `${app_launcher.border_radius.value}px`),
+            $("app-launcher-padding", `${app_launcher.padding.value}px`)
         ].join("\n");
     }
 

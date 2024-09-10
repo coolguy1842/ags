@@ -1,5 +1,6 @@
 {
-    "bar.background_color": "#000000E0",
+    "icons.app_launcher.search": "system-search-symbolic",
+    "bar.background_color": "#000000BF",
     "bar.icon_color": "#5D93B0FF",
     "bar.layout.outer_gap": 8,
     "bar.layout.gap": 6,
@@ -55,13 +56,23 @@
     "system_tray.animation.duration": 0.2,
     "system_tray.animation.reverse_duration": 0.15,
     "system_tray.animation.update_rate": 100,
-    "system_tray.background": "#000000E0",
+    "system_tray.background": "#000000BF",
     "system_tray.border_radius": 8,
     "system_tray.padding": 8,
     "system_tray.spacing": 8,
     "system_tray.favorites": [
         "obs-obs-OBS_Studio",
         "steam-Steam-",
-        "chrome_status_icon_1--Signal_Desktop"
-    ]
+        "chrome_status_icon_1--",
+        "chrome_status_icon_1--Signal_Desktop",
+        "chrome_status_icon_1--Vesktop"
+    ],
+    "system_tray.favorites_enabled": true,
+    "app_launcher.animation.enabled": true,
+    "app_launcher.animation.duration": 0.2,
+    "app_launcher.animation.reverse_duration": 0.2,
+    "app_launcher.animation.update_rate": 100,
+    "app_launcher.background": "#000000BF",
+    "app_launcher.border_radius": 8,
+    "app_launcher.padding": 8
 }

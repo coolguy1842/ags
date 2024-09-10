@@ -2,6 +2,7 @@ import { value_type_get_localized_name } from "types/@girs/atk-1.0/atk-1.0.cjs";
 import { getBarWidgets } from "./bar/widgets/widgets";
 import { option, Option, OptionValidator, TOptions } from "./utils/handlers/optionsHandler";
 import GLib from "gi://GLib?version=2.0";
+import Gtk30 from "gi://Gtk?version=3.0";
 
 type TBarLayoutItem<T extends keyof ReturnType<typeof getBarWidgets>> = {
     name: T,
@@ -64,11 +65,24 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
                 if(value == undefined || !Array.isArray(value)) return undefined;
                 return value.every(x => typeof x == "string") ? value : undefined;
             }
+        },
+        iconName: {
+            validate: (value: string) => {
+                if(typeof value != "string") return undefined;
+
+                return Utils.lookUpIcon(value) ? value : undefined;
+            }
         }
     };
 }
 
 export interface IOptions extends TOptions {
+    icons: {
+        app_launcher: {
+            search: Option<string>
+        }
+    },
+
     bar: {
         background_color: Option<string>;
         icon_color: Option<string>;
@@ -112,15 +126,37 @@ export interface IOptions extends TOptions {
         spacing: Option<number>;
 
         favorites: Option<string[]>;
+        favorites_enabled: Option<boolean>;
+    };
+
+    app_launcher: {
+        animation: {
+            enabled: Option<boolean>;
+
+            duration: Option<number>;
+            reverse_duration: Option<number>;
+
+            update_rate: Option<number>;
+        };
+
+        background: Option<string>;
+        border_radius: Option<number>;
+        padding: Option<number>;
     };
 };
 
 export function getOptions(): IOptions {
     const validators = getOptionValidators();
-
+    
     return {
+        icons: {
+            app_launcher: {
+                search: option("system-search-symbolic", validators.iconName)
+            }
+        },
+
         bar: {
-            background_color: option("#000000E0", validators.color),
+            background_color: option("#000000BF", validators.color),
             icon_color: option("#5D93B0FF", validators.color),
             layout: {
                 outer_gap: option(8, validators.number),
@@ -171,12 +207,27 @@ export function getOptions(): IOptions {
                 update_rate: option(100, validators.number)
             },
 
-            background: option('#000000E0', validators.color),
+            background: option('#000000BF', validators.color),
             border_radius: option(8, validators.number),
             padding: option(8, validators.number),
             spacing: option(8, validators.number),
             
-            favorites: option([], validators.stringArray)
+            favorites: option([], validators.stringArray),
+            favorites_enabled: option(true, validators.boolean)
+        },
+        app_launcher: {
+            animation: {
+                enabled: option(true, validators.boolean),
+
+                duration: option(0.2, validators.number),
+                reverse_duration: option(0.2, validators.number),
+                
+                update_rate: option(100, validators.number)
+            },
+
+            background: option('#000000BF', validators.color),
+            border_radius: option(8, validators.number),
+            padding: option(8, validators.number),
         }
     };
 }; 

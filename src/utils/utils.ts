@@ -82,3 +82,15 @@ export function monitorPath(
 
     return out;
 }
+
+
+export function icon(name: string | null, fallback = "image-missing-symbolic") {
+    if (!name)
+        return fallback || ""
+
+    if (GLib.file_test(name, GLib.FileTest.EXISTS))
+        return name
+
+    print(`no icon for "${name}", fallback: "${fallback}"`)
+    return fallback;
+}

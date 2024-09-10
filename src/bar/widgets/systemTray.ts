@@ -9,7 +9,9 @@ const systemTray = await Service.import("systemtray");
 
 
 export function getSystemTray() {
-    const defaultProps = {};
+    const defaultProps = {
+        favourites_enabled: true
+    };
 
     return {
         name: "SystemTray",
@@ -17,75 +19,97 @@ export function getSystemTray() {
         create(monitorName: string, props: typeof defaultProps) {
             const updateTray = (trayBox: Box<never, unknown>) => {
                 const favorites = globals.optionsHandler.options.system_tray.favorites;
+                const favorites_enabled = globals.optionsHandler.options.system_tray.favorites_enabled;
         
-                const favoriteItems = systemTray.items
-                    .filter(x => favorites.value.includes(getTrayItemID(x)))
-                    .map(item => {
-                        const id = getTrayItemID(item);
-        
-                        return Widget.Button({
-                            class_name: `bar-system-tray-icon bar-system-tray-item-${id} ${item.title.includes("spotify") ? "tray-icon-spotify" : ""}`,
-                            child: Widget.Icon({
-                                icon: item.bind("icon")
-                            }),
-                            onPrimaryClick: (_, event) => {
-                                item.activate(event);
-                            },
-                            onSecondaryClick: (_, event) => {
-                                item.openMenu(event);
-                            },
-                            onMiddleClick: (_, _event) => {
-                                favorites.value = favorites.value.filter(x => x != id);
-                            }
-                        });
-                    });
-        
-                if(getActiveFavorites(favorites.value).length != systemTray.items.length) {
-                    favoriteItems.push(
-                        Widget.Button({
-                            className: "bar-system-tray-button",
-                            label: "󰄝 ",
-                            setup: (btn) => {
-                                btn.connect("button-press-event", () => {
-                                    const allocation = btn.get_allocation();
-                                    const monitor = hyprland.monitors.find(x => x.name == monitorName)!;
-
-                                    const position = {
-                                        x: allocation.x,
-                                        y: monitor.height - ((allocation.height + allocation.y) + 10),
-                                    };
+                if(favorites_enabled.value) {
+                    const favoriteItems = systemTray.items
+                        .filter(x => favorites.value.includes(getTrayItemID(x)))
+                        .map(item => {
+                            const id = getTrayItemID(item);
             
-                                    if(SystemTrayWindow.window.is_visible()) {
-                                        SystemTrayWindow.hide();
-                                    }
-                                    else {
-                                        const animationOptions = globals.optionsHandler.options.system_tray.animation;
+                            return Widget.Button({
+                                class_name: `bar-system-tray-icon bar-system-tray-item-${id} ${item.title.includes("spotify") ? "tray-icon-spotify" : ""}`,
+                                child: Widget.Icon({
+                                    icon: item.bind("icon")
+                                }),
+                                onPrimaryClick: (_, event) => {
+                                    item.activate(event);
+                                },
+                                onSecondaryClick: (_, event) => {
+                                    item.openMenu(event);
+                                },
+                                onMiddleClick: (_, _event) => {
+                                    favorites.value = favorites.value.filter(x => x != id);
+                                }
+                            });
+                        });
+            
+                    if(getActiveFavorites(favorites.value).length != systemTray.items.length) {
+                        favoriteItems.push(
+                            Widget.Button({
+                                className: "bar-system-tray-button",
+                                label: "󰄝 ",
+                                setup: (btn) => {
+                                    btn.connect("button-press-event", () => {
+                                        const allocation = btn.get_allocation();
+                                        const monitor = hyprland.monitors.find(x => x.name == monitorName)!;
 
-                                        if(animationOptions.enabled.value) {
-                                            SystemTrayWindow.animation = {
-                                                start: {
-                                                    x: position.x,
-                                                    y: monitor.height + (allocation.height + allocation.y)
-                                                },
-                                                function: PopupAnimationFunctions[0],
-                                                duration: animationOptions.duration.value,
-                                                reverseDuration: animationOptions.reverse_duration.value,
-                                                updateRate: animationOptions.update_rate.value
-                                            }
+                                        const position = {
+                                            x: allocation.x,
+                                            y: monitor.height - ((allocation.height + allocation.y) + 10),
+                                        };
+                
+                                        if(SystemTrayWindow.window.is_visible()) {
+                                            SystemTrayWindow.hide();
                                         }
                                         else {
-                                            SystemTrayWindow.animation = undefined;
-                                        }
+                                            const animationOptions = globals.optionsHandler.options.system_tray.animation;
 
-                                        SystemTrayWindow.show(monitor.id, position);
-                                    }
-                                });
-                            }
-                        })
-                    );
+                                            if(animationOptions.enabled.value) {
+                                                SystemTrayWindow.animation = {
+                                                    start: {
+                                                        x: position.x,
+                                                        y: monitor.height + (allocation.height + allocation.y)
+                                                    },
+                                                    function: PopupAnimationFunctions.linear,
+                                                    duration: animationOptions.duration.value,
+                                                    reverseDuration: animationOptions.reverse_duration.value,
+                                                    updateRate: animationOptions.update_rate.value
+                                                }
+                                            }
+                                            else {
+                                                SystemTrayWindow.animation = undefined;
+                                            }
+
+                                            SystemTrayWindow.show(monitor.id, position);
+                                        }
+                                    });
+                                }
+                            })
+                        );
+                    }
+
+                    trayBox.children = favoriteItems as never[];
                 }
-        
-                trayBox.children = favoriteItems as never[];
+                else {
+                    trayBox.children = systemTray.items
+                        .map(item => {
+                            const id = getTrayItemID(item);
+            
+                            return Widget.Button({
+                                class_name: `bar-system-tray-icon bar-system-tray-item-${id} ${item.title.includes("spotify") ? "tray-icon-spotify" : ""}`,
+                                child: Widget.Icon({
+                                    icon: item.bind("icon")
+                                }),
+                                onPrimaryClick: (_, event) => {
+                                    item.activate(event);
+                                },
+                                onSecondaryClick: (_, event) => {
+                                    item.openMenu(event);
+                                }
+                            });
+                        }) as never[];
+                }
             }
 
             return Widget.Box({
@@ -94,6 +118,8 @@ export function getSystemTray() {
                 children: [],
                 setup: (box) => updateTray(box)
             }).hook(globals.optionsHandler.options.system_tray.favorites, (box) => {
+                updateTray(box);
+            }).hook(globals.optionsHandler.options.system_tray.favorites_enabled, (box) => {
                 updateTray(box);
             }).hook(systemTray, (box) => {
                 updateTray(box);

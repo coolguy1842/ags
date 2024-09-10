@@ -14,8 +14,8 @@ export interface PopupAnimationFunc {
     step(start: TPosition, end: TPosition, step: number): TPosition;
 };
 
-export const PopupAnimationFunctions: PopupAnimationFunc[] = [
-    {
+export const PopupAnimationFunctions = {
+    "linear": {
         name: "linear",
         step(start, end, step) {
             const lerp = (a: number, b: number, alpha: number) => {
@@ -28,10 +28,12 @@ export const PopupAnimationFunctions: PopupAnimationFunc[] = [
             };
         }
     }
-];
+};
 
+// TODO: refactor this whole cursed class
 export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _displayPosition: TPosition;
+    private _position: TPosition;
 
     private _window: Window<Gtk.Fixed, Attr>;
     private _fixed: Gtk.Fixed = Widget.Fixed({});
@@ -42,8 +44,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _shouldClose: boolean;
     private _shouldUpdate: boolean;
 
-    private _animationInterval?: GLib20.Source; 
-
+    private _animationInterval?: GLib20.Source;
     private _animation?: {
         start: TPosition,
         duration: number,
@@ -51,6 +52,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         updateRate: number,
         function: PopupAnimationFunc
     };
+
+    private _centered: boolean;
 
 
     private getChildAllocation() {
@@ -81,6 +84,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     private moveChild(position: TPosition, doBoundsChecks: boolean = true) {
         const allocation = this.getChildAllocation();
+
         const computedPosition = doBoundsChecks ? this.getCorrectPosition(position) : position;
 
         this._shouldUpdate = false;
@@ -119,6 +123,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             ...params
         } as WindowProps<Gtk.Fixed, Attr>);
 
+        this._centered = false;
+
         this._shouldClose = true;
         this._animation = animation;
 
@@ -147,6 +153,19 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
                 self.connect("draw", () => {
                     if(this._shouldUpdate) {
+                        this._displayPosition = {
+                            x: this._position.x,
+                            y: this._position.y
+                        }
+
+                        if(this._centered) {
+                            const allocation = this.getChildAllocation();
+
+                            this._displayPosition.x -= allocation.width / 2;
+                            // this._displayPosition.y -= allocation.height / 2;
+                        }
+
+                        this._displayPosition = this.getCorrectPosition(this._displayPosition);
                         this.moveChild(this._displayPosition);
                     }
                     else {
@@ -157,7 +176,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         });
 
         this._originalChild = toPopup;
-        this._displayPosition = { x: 0, y: 0 };
+        this._position = { x: 0, y: 0 };
+        this._displayPosition = this._position;
+
         this._fixed.put(this._childWrapper, this._displayPosition.x, this._displayPosition.y);
 
         this._shouldUpdate = true;
@@ -196,6 +217,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             this._animationInterval = setInterval(() => {
                 step += interval / updateRate;
 
+                // no animations i need have to go sideways so this is a hacky workaround
+                start.x = boundsCheck ? this.getCorrectPosition(start).x : start.x;
+
                 const tempEnd = boundsCheck ? this.getCorrectPosition(end) : end;
                 pos = func.step(start, tempEnd, Math.min(1.0, step / interval))
 
@@ -213,15 +237,40 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         });
     }
 
-    show(monitor: number, position: TPosition) {
+    show(monitor: number, position: TPosition, centered: boolean = false) {
+        this._centered = centered;
         this._window.monitor = monitor;
 
         this._window.set_visible(true);
-        this._displayPosition = position;
+        this._position = position;
+        this._displayPosition = {
+            x: this._position.x,
+            y: this._position.y
+        };
 
         const animation = this._animation;
         if(animation) {
-            this.runAnimation(animation.start, this._displayPosition, animation.duration, animation.updateRate, animation.function);
+            const allocation = this.getChildAllocation();
+
+            var start = {
+                x: animation.start.x,
+                y: animation.start.y
+            };
+
+            if(this._centered) {
+                start.x -= allocation.width / 2;
+                // start.y -= allocation.height / 2;
+
+                this._displayPosition.x -= allocation.width / 2;
+                // this._displayPosition.y -= allocation.height / 2;
+            }
+
+            var end = {
+                x: this._displayPosition.x,
+                y: this._displayPosition.y
+            };
+
+            this.runAnimation(start, end, animation.duration, animation.updateRate, animation.function);
 
             return;
         }
@@ -234,7 +283,22 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
         const animation = this._animation;
         if(animation) {
-            this.runAnimation(this.getCorrectPosition(this._displayPosition), animation.start, animation.reverseDuration, animation.updateRate, animation.function, false).then(() => {
+            var start = this.getCorrectPosition(this._displayPosition);
+            var end = {
+                x: animation.start.x,
+                y: animation.start.y
+            };
+
+            if(this._centered) {
+                const allocation = this.getChildAllocation();
+
+                end.x -= allocation.width / 2;
+                // end.y -= allocation.height / 2;
+            }
+
+            end.x = this.getCorrectPosition(end).x;
+
+            this.runAnimation(start, end, animation.reverseDuration, animation.updateRate, animation.function, false).then(() => {
                 this._window.set_visible(false);
             });
 
