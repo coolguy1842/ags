@@ -30,7 +30,7 @@ export class StyleHandler implements IReloadable {
 
         this._optionsListenerID = globals.optionsHandler.connect("option_changed", (_, option: Option<any>) => {
             switch(option.id) {
-            case "bar.background_color":
+            case "bar.background":
             case "bar.icon_color":
 
             case "bar.quick_menu.background":
@@ -79,7 +79,7 @@ export class StyleHandler implements IReloadable {
         const { bar, system_tray, app_launcher } = globals.optionsHandler.options;
 
         return [
-            $("bar-background-color", HEXtoCSSRGBA(bar.background_color.value)),
+            $("bar-background-color", HEXtoCSSRGBA(bar.background.value)),
             $("bar-icon-color", HEXtoCSSRGBA(bar.icon_color.value)),
             
             $("bar-quick-menu-button-background-color", HEXtoCSSRGBA(bar.quick_menu.background.value)),

@@ -43,11 +43,10 @@ function updateAppLauncherEntries(box) {
 
     box.children = [
         ...splitToNChunks(applicationsList, app_launcher.columns.value).map(x => Widget.Box({
+            spacing: app_launcher.icon_spacing.value,
             children: x
         }))
     ];
-
-    console.log(box.children.length);
 }
 
 const launcherEntriesWidth = Utils.derive([app_launcher.icon_size, app_launcher.columns, app_launcher.icon_spacing], (icon_size, columns, icon_spacing) => {
@@ -70,7 +69,8 @@ const AppLauncherEntries = Widget.Box({
     .hook(applications, (self) => updateAppLauncherEntries(self))
     .hook(app_launcher.columns, (self) => updateAppLauncherEntries(self))
     .hook(app_launcher.rows, (self) => updateAppLauncherEntries(self))
-    .hook(app_launcher.icon_size, (self) => updateAppLauncherEntries(self));
+    .hook(app_launcher.icon_size, (self) => updateAppLauncherEntries(self))
+    .hook(app_launcher.icon_spacing, (self) => updateAppLauncherEntries(self));
 
 const AppLauncherWidget = Widget.Box({
     className: "app-launcher",
@@ -111,7 +111,7 @@ const AppLauncherWidget = Widget.Box({
 
                                     return arr;
                                 })
-                                .as(frequents => frequents.sort((a, b) => b.frequency - a.frequency).slice(0, app_launcher.number_frequents.value))
+                                .as(frequents => frequents.sort((a, b) => b.frequency - a.frequency).slice(0, app_launcher.columns.value))
                                 .transform(frequents => frequents.map(application => {
                                     if(!application) return Widget.Box();
                                     const app = applications.list.find(x => x.desktop == application.name);

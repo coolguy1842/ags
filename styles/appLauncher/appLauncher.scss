@@ -17,6 +17,9 @@
 
 .app-launcher-item {
     all: unset;
+    &:hover {
+        background-color: red;
+    }
 }
 
 .app-launcher-seperator {

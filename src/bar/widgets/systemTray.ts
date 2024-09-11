@@ -28,7 +28,7 @@ export function getSystemTray() {
                             const id = getTrayItemID(item);
             
                             return Widget.Button({
-                                class_name: `bar-system-tray-icon bar-system-tray-item-${id} ${item.title.includes("spotify") ? "tray-icon-spotify" : ""}`,
+                                class_name: `bar-system-tray-icon system-tray-icon-id-${id}`,
                                 child: Widget.Icon({
                                     icon: item.bind("icon")
                                 }),

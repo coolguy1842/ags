@@ -12,10 +12,6 @@
 
     font-size: 1.2rem;
     color: unset;
-
-    &.tray-icon-spotify {
-        color: #00C93C;
-    }
 }
 
 .bar-system-tray-button {
@@ -23,4 +19,8 @@
 
     margin-right: -6px;
     color: unset;
+}
+
+.system-tray-icon-id-spotify-client-spotify- {
+    color: #00C93C;
 }

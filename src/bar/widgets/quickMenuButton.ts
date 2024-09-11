@@ -5,12 +5,18 @@ const audio = await Service.import("audio");
 const battery = await Service.import("battery");
 const bluetooth = await Service.import("bluetooth");
 const network = await Service.import("network");
+const mpris = await Service.import("mpris");
 
 export function getQuickMenuButton() {
     const defaultProps = {};
     
     function updateLabel(button: Button<Gtk.Widget, unknown>) {
         var out = "";
+
+        // mpris
+        {
+            
+        }
 
         // network
         {

@@ -1,6 +1,6 @@
 {
     "icons.app_launcher.search": "system-search-symbolic",
-    "bar.background_color": "#000000BF",
+    "bar.background": "#000000BF",
     "bar.icon_color": "#5D93B0FF",
     "bar.layout.outer_gap": 8,
     "bar.layout.gap": 6,
@@ -37,7 +37,9 @@
         },
         {
             "name": "SystemTray",
-            "props": {}
+            "props": {
+                "favourites_enabled": true
+            }
         },
         {
             "name": "QuickMenuButton",
@@ -54,18 +56,18 @@
     "bar.quick_menu.spacing": 8,
     "system_tray.animation.enabled": true,
     "system_tray.animation.duration": 0.2,
-    "system_tray.animation.reverse_duration": 0.15,
+    "system_tray.animation.reverse_duration": 0.2,
     "system_tray.animation.update_rate": 100,
     "system_tray.background": "#000000BF",
     "system_tray.border_radius": 8,
     "system_tray.padding": 8,
     "system_tray.spacing": 12,
     "system_tray.favorites": [
-        "chrome_status_icon_1--Vesktop",
+        "obs-obs-OBS_Studio",
+        "steam-Steam-",
         "chrome_status_icon_1--Signal_Desktop",
         "chrome_status_icon_1--",
-        "steam-Steam-",
-        "obs-obs-OBS_Studio"
+        "chrome_status_icon_1--Heroic"
     ],
     "system_tray.favorites_enabled": true,
     "app_launcher.animation.enabled": true,
@@ -77,10 +79,9 @@
     "app_launcher.border_radius": 8,
     "app_launcher.padding": 16,
     "app_launcher.spacing": 12,
-    "app_launcher.icon_spacing": 6,
+    "app_launcher.icon_spacing": 16,
     "app_launcher.icon_size": 58,
     "app_launcher.show_frequents": true,
     "app_launcher.rows": 3,
-    "app_launcher.columns": 8,
-    "app_launcher.number_frequents": 8
+    "app_launcher.columns": 8
 }

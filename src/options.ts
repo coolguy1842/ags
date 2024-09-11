@@ -84,7 +84,7 @@ export interface IOptions extends TOptions {
     },
 
     bar: {
-        background_color: Option<string>;
+        background: Option<string>;
         icon_color: Option<string>;
 
         layout: {
@@ -153,8 +153,6 @@ export interface IOptions extends TOptions {
 
         rows: Option<number>;
         columns: Option<number>;
-
-        number_frequents: Option<number>;
     };
 };
 
@@ -169,7 +167,7 @@ export function getOptions(): IOptions {
         },
 
         bar: {
-            background_color: option("#000000BF", validators.color),
+            background: option("#000000BF", validators.color),
             icon_color: option("#5D93B0FF", validators.color),
             layout: {
                 outer_gap: option(8, validators.number),
@@ -215,7 +213,7 @@ export function getOptions(): IOptions {
                 enabled: option(true, validators.boolean),
 
                 duration: option(0.2, validators.number),
-                reverse_duration: option(0.15, validators.number),
+                reverse_duration: option(0.2, validators.number),
 
                 update_rate: option(100, validators.number)
             },
@@ -249,9 +247,7 @@ export function getOptions(): IOptions {
             show_frequents: option(true, validators.boolean),
 
             rows: option(5, validators.number),
-            columns: option(3, validators.number),
-
-            number_frequents: option(5, validators.number)
+            columns: option(3, validators.number)
         }
     };
 }; 
