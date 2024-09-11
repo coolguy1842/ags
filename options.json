@@ -8,7 +8,7 @@
         {
             "name": "WorkspaceSelector",
             "props": {
-                "scroll_direction": "normal"
+                "scroll_direction": "inverted"
             }
         }
     ],

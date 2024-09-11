@@ -11,37 +11,36 @@ type TBarLayout = TBarLayoutItem<keyof (typeof BarWidgets)>[];
 function getOptionValidators(): { [key: string]: OptionValidator<any> } {
     return {
         number: {
-            validate: (value: number) => {
+            validate: (value: number, previousValue?: number) => {
                 return isNaN(value) ? undefined : value;
             }
         },
         boolean: {
-            validate: (value: boolean) => {
+            validate: (value: boolean, previousValue?: boolean) => {
                 return value == true || value == false ? value : undefined;
             }  
         },
         color: {
-            validate: (value: string) => {
+            validate: (value: string, previousValue?: string) => {
                 return /^#[0-9A-F]{8}$/.test(value) ? value : undefined;
             }
         },
         barWidgets: {
-            validate: (value: TBarLayout) => {
+            validate: (value: TBarLayout, previousValue?: TBarLayout) => {
                 if(value == undefined || !Array.isArray(value)) {
                     return undefined;
                 }
 
-                for(const val of value) {
+                for(const key in value) {
+                    const val = value[key];
+
                     if(!(val.name in BarWidgets)) {
                         return undefined;
                     }
 
                     const component = BarWidgets[val.name];
-                    if(val.props == undefined) {
-                        val.props = component.defaultProps;
-                    }
-
-                    const props = component.propsValidator(val.props);
+                    
+                    const props = component.propsValidator(val.props, previousValue ? previousValue[key].props : undefined);
                     val.props = props ?? component.defaultProps;
                 }
 
@@ -49,13 +48,13 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
             }
         },
         stringArray: {
-            validate: (value: string[]) => {
+            validate: (value: string[], previousValue?: string[]) => {
                 if(value == undefined || !Array.isArray(value)) return undefined;
                 return value.every(x => typeof x == "string") ? value : undefined;
             }
         },
         iconName: {
-            validate: (value: string) => {
+            validate: (value: string, previousValue?: string) => {
                 if(typeof value != "string") return undefined;
 
                 return Utils.lookUpIcon(value) ? value : undefined;

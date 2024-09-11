@@ -1,4 +1,4 @@
-import { IBarWidget } from "src/interfaces/IBarWidget";
+import { IBarWidget } from "src/interfaces/barWidget";
 import { WorkspaceButton } from "../components/workspaceButton";
 import Gtk from "gi://Gtk?version=3.0";
 
@@ -13,30 +13,36 @@ function create(monitor: string, props: typeof defaultProps) {
     return Widget.Label("test");
 }
 
-function propsValidator(props: typeof defaultProps) {
+
+function _validateProps<TProps extends typeof defaultProps>(props: TProps, fallback: TProps): TProps | undefined {
     if(props == undefined || typeof props != "object") {
-        return undefined;
+        return fallback;
     }
 
-    const newProps = Object.assign({}, props) as typeof defaultProps;
+    const newProps = Object.assign({}, props) as TProps;
     for(const key in props) {
-        if(defaultProps[key] == undefined) {
+        if(fallback[key] == undefined) {
             delete newProps[key];
         }
     }
 
     for(const key in defaultProps) {
         if(newProps[key] == undefined) {
-            newProps[key] = defaultProps[key];
+            newProps[key] = fallback[key];
         }
     }
 
     switch(newProps.scroll_direction) {
     case "inverted": case "normal": break;
-    default: newProps.scroll_direction = defaultProps.scroll_direction;
+    default: newProps.scroll_direction = fallback.scroll_direction;
     }
 
     return newProps;
+}
+
+function propsValidator(props: typeof defaultProps, previousProps?: typeof defaultProps) {
+    const fallback = _validateProps(previousProps ?? defaultProps, defaultProps) ?? defaultProps;
+    return _validateProps(props, fallback);
 }
 
 export class WorkspaceSelector implements IBarWidget<typeof defaultProps, ReturnType<typeof create>> {

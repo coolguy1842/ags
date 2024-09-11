@@ -8,7 +8,7 @@ import { Options } from "types/variable";
 
 export interface OptionValidator<T> {
     // validator can override if its not a bad issue like missing option
-    validate(value: T): T | undefined;
+    validate(value: T, previousValue?: T): T | undefined;
 };
 
 export class Option<T> extends Variable<T> {
@@ -44,7 +44,7 @@ export class Option<T> extends Variable<T> {
     get value() { return this._value; }
     set value(value: T) {
         if(this._validator) {
-            const validation = this._validator.validate(value);
+            const validation = this._validator.validate(value, this._value);
             if(validation == undefined) {
                 // check if current/fallback is invalid too
                 if(this._validator.validate(this._value) == undefined) {
