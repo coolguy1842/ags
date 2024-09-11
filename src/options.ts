@@ -33,14 +33,14 @@ function getOptionValidators(): { [key: string]: OptionValidator<any> } {
 
                 for(const key in value) {
                     const val = value[key];
+                    const previousVal = previousValue ? previousValue[key] : undefined;
 
                     if(!(val.name in BarWidgets)) {
                         return undefined;
                     }
 
                     const component = BarWidgets[val.name];
-                    
-                    const props = component.propsValidator(val.props, previousValue ? previousValue[key].props : undefined);
+                    const props = component.propsValidator(val.props as any, previousVal?.props as any);
                     val.props = props ?? component.defaultProps;
                 }
 

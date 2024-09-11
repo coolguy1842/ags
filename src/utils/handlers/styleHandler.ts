@@ -8,6 +8,7 @@ import { Option } from "./optionsHandler";
 
 const $ = (key: string, value: string) => { return `$${key}: ${value};`; }
 
+// TODO: refactor this to work better, dont like the switch case i have
 export class StyleHandler implements IReloadable {
     private _loaded: boolean = false;
     private _monitor: PathMonitor;

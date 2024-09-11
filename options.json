@@ -8,10 +8,15 @@
         {
             "name": "WorkspaceSelector",
             "props": {
-                "scroll_direction": "inverted"
+                "scroll_direction": "normal"
             }
         }
     ],
-    "bar.layout.center": [],
+    "bar.layout.center": [
+        {
+            "name": "Clock",
+            "props": {}
+        }
+    ],
     "bar.layout.right": []
 }
