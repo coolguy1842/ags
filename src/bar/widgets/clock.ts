@@ -1,6 +1,7 @@
 import { IBarWidget } from "src/interfaces/barWidget";
-import { WorkspaceButton } from "../components/workspaceButton";
 import { globals } from "src/globals";
+
+//#region PROPS
 
 const defaultProps = {};
 
@@ -29,6 +30,8 @@ function propsValidator(props: typeof defaultProps, previousProps?: typeof defau
     const fallback = _validateProps(previousProps ?? defaultProps, defaultProps) ?? defaultProps;
     return _validateProps(props, fallback);
 }
+
+//#endregion
 
 
 function create(monitor: string, props: typeof defaultProps) {

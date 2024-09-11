@@ -4,11 +4,10 @@ import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { HEXtoCSSRGBA } from "../colorUtils";
 import { Option } from "./optionsHandler";
+import { Binding } from "types/service";
 
+const $ = (key: string, value: string) => `$${key}: ${value};`;
 
-const $ = (key: string, value: string) => { return `$${key}: ${value};`; }
-
-// TODO: refactor this to work better, dont like the switch case i have
 export class StyleHandler implements IReloadable {
     private _loaded: boolean = false;
     private _monitor: PathMonitor;
@@ -29,15 +28,11 @@ export class StyleHandler implements IReloadable {
         this._loaded = true;
         this._monitor.load();
 
-        this._optionsListenerID = globals.optionsHandler.connect("option_changed", (_, option: Option<any>) => {
-            switch(option.id) {
-            case "bar.background": case "bar.icon_color":
-                break;
-            default: return;
-            }
-
-            this.reloadStyles();
-        });
+        for(const binding of this.getBindings()) {
+            binding.connect("changed", () => {
+                this.reloadStyles();
+            });
+        }
 
         this.reloadStyles();
     }
@@ -56,6 +51,16 @@ export class StyleHandler implements IReloadable {
     }
 
 
+    getBindings() {
+        const { bar } = globals.optionsHandler.options;
+        
+        return [
+            bar.background,
+            bar.icon_color
+        ];
+    }
+
+    // TODO: make bindings able to be used here that way we dont need the getBindings hack
     getDynamicSCSS() {
         const { bar } = globals.optionsHandler.options;
 
@@ -82,7 +87,11 @@ export class StyleHandler implements IReloadable {
                 globals.paths.OUT_SCSS_IMPORTS
             );
 
-            Utils.exec(`sassc ${globals.paths.OUT_SCSS_IMPORTS} ${globals.paths.OUT_CSS_IMPORTS}`);
+            const out = Utils.exec(`sassc ${globals.paths.OUT_SCSS_IMPORTS} ${globals.paths.OUT_CSS_IMPORTS}`);
+            if(out.trim().length > 0) {
+                console.log(out);
+            }
+            
             App.applyCss(globals.paths.OUT_CSS_IMPORTS, true);
         }
         catch(err) {

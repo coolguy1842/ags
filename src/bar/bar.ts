@@ -1,6 +1,12 @@
 import { Monitor } from "types/service/hyprland";
-import { BarWidgets } from "./widgets/widgets";
 import { globals } from "src/globals";
+import { WorkspaceSelector } from "./widgets/workspaceSelector";
+import { Clock } from "./widgets/clock";
+
+export const BarWidgets = {
+    WorkspaceSelector: new WorkspaceSelector(),
+    Clock: new Clock()
+};
 
 export function Bar(monitor: Monitor) {
     const layout = globals.optionsHandler.options.bar.layout;

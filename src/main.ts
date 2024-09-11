@@ -33,7 +33,7 @@ export class Main implements IReloadable {
     
         App.config({
             // style here makes the startup look a bit nicer
-            style: globals.paths.OUT_CSS_IMPORTS,
+            // style: globals.paths.OUT_CSS_IMPORTS,
             windows: [
                 ...hyprland.monitors.map(x => Bar(x))
             ]

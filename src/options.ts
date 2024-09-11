@@ -1,4 +1,4 @@
-import { BarWidgets } from "./bar/widgets/widgets";
+import { BarWidgets } from "./bar/bar";
 import { option, Option, OptionValidator, TOptions } from "./utils/handlers/optionsHandler";
 
 type TBarLayoutItem<T extends keyof (typeof BarWidgets)> = {
