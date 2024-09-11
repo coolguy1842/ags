@@ -1,5 +1,5 @@
 import { Monitor } from "types/service/hyprland";
-import { getBarWidgets } from "./widgets/widgets";
+import { BarWidgets } from "./widgets/widgets";
 import { globals } from "src/globals";
 
 export function Bar(monitor: Monitor) {
@@ -19,13 +19,13 @@ export function Bar(monitor: Monitor) {
                 }),
                 hexpand: true,
                 spacing: layout.gap.bind(),
-                children: layout.left.bind().as(c => c.map(x => getBarWidgets()[x.name].create(monitor.name, x.props as any)))
+                children: layout.left.bind().as(c => c.map(x => BarWidgets[x.name].create(monitor.name, x.props as any)))
             }),
             centerWidget: Widget.Box({
                 hpack: "center",
                 hexpand: true,
                 spacing: layout.gap.bind(),
-                children: layout.center.bind().as(c => c.map(x => getBarWidgets()[x.name].create(monitor.name, x.props as any)))
+                children: layout.center.bind().as(c => c.map(x => BarWidgets[x.name].create(monitor.name, x.props as any)))
             }),
             endWidget: Widget.Box({
                 css: layout.outer_gap.bind().as(gap => {
@@ -35,7 +35,7 @@ export function Bar(monitor: Monitor) {
                 vpack: "center",
                 hexpand: true,
                 spacing: layout.gap.bind(),
-                children: layout.right.bind().as(c => c.map(x => getBarWidgets()[x.name].create(monitor.name, x.props as any)))
+                children: layout.right.bind().as(c => c.map(x => BarWidgets[x.name].create(monitor.name, x.props as any)))
             })
         })
     });

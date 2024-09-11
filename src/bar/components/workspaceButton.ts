@@ -5,6 +5,8 @@ const inactiveSymbol = ``;
 
 const hyprland = await Service.import("hyprland");
 
+
+
 export function WorkspaceButton(monitorName: string, workspaceID: number) {
     return Widget.Button({
         class_name: "bar-workspace-button",
