@@ -31,7 +31,15 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _wrapperAllocation: Variable<Allocation>;
 
     private moveChild(position: TPosition) {
-        this._fixed.move(this._childWrapper, position.x, position.y);
+        const displayPosition = {
+            x: position.x,
+            y: position.y
+        };
+
+        // displayPosition.y -= this._wrapperAllocation.value.height;
+        // displayPosition.x -= this._wrapperAllocation.value.width / 2;
+
+        this._fixed.move(this._childWrapper, displayPosition.x, displayPosition.y);
     }
 
     constructor({
@@ -113,7 +121,15 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
                         } as Allocation;
                     }
 
-                    return this._childWrapper.get_allocation();
+                    const is_visible = this._window.is_visible();
+                    if(!is_visible) {
+                        this._window.set_visible(true);
+                    }
+
+                    const allocation = this._childWrapper.get_allocation()
+                    this._window.set_visible(is_visible);
+
+                    return allocation;
                 }
             ]
         });
@@ -133,6 +149,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     get window() { return this._window; }
 
+    get childAllocation() { return this._wrapperAllocation; }
+
     get child() { return this._child; }
     set child(child: Child) {
         this._child = child;
@@ -140,6 +158,10 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
         this.moveChild(this._position.value);
     }
+
+
+    set ononShow(onShow: typeof this._onShow) { this._onShow = onShow; }
+    set onHide(onHide: typeof this._onHide) { this._onHide = onHide; }
 
 
     private set position(position: PopupPosition) {

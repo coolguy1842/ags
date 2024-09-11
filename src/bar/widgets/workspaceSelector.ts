@@ -56,6 +56,8 @@ export function WorkspaceButton(monitor: TBarWidgetMonitor, workspaceID: number)
 }
 
 function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
+    // console.log(hyprland.workspaces.filter(x => x.monitor == monitor.name && !x.name.startsWith("special")))
+    console.log(`name: ${monitor.name}, id: ${monitor.gtk_id}`);
     return Widget.EventBox({
         class_name: "bar-workspace-selector",
         child: Widget.Box({

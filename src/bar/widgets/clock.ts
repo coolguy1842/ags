@@ -50,8 +50,6 @@ function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
         className: "bar-clock",
         label: globals.clock.bind().transform(clock => clock.format("%a %b %d, %H:%M:%S") ?? ""),
         onClicked: (self) => {
-            console.log("test");
-
             const getAllocation = () => {
                 if(self.is_destroyed || !self.get_accessible()) {
                     return {
@@ -60,16 +58,15 @@ function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
                 };
 
                 const allocation = self.get_allocation();
-                console.log(allocation.y);
                 return {
-                    x: allocation.x,
-                    y: 1080 - allocation.y
+                    x: allocation.x + (allocation.width / 2),
+                    y: 1080 - (allocation.y + allocation.height)
                 }
             }
 
-            TestPopupWindow.show(monitor.number, new Variable(getAllocation(), {
+            const variable = new Variable(getAllocation(), {
                 poll: [
-                    500, 
+                    250, 
                     (variable) => {
                         if(self.is_destroyed || !self.get_accessible()) {
                             variable.stopPoll();
@@ -78,7 +75,20 @@ function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
                         return getAllocation();
                     }
                 ]
-            }));
+            });
+            
+            TestPopupWindow.onHide = () => {
+                variable.stopPoll();
+            };
+
+            TestPopupWindow.show(monitor.gtk_id, 
+                Utils.derive([variable, TestPopupWindow.childAllocation], (variable, childAllocation) => {
+                    return {
+                        x: variable.x - (childAllocation.width / 2),
+                        y: variable.y - childAllocation.height
+                    }
+                })
+            );
         }
     });
 }
