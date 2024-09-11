@@ -1,5 +1,7 @@
-import { IBarWidget } from "src/interfaces/barWidget";
+import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { globals } from "src/globals";
+import { PopupWindow } from "src/utils/PopupWindow";
+import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 
 //#region PROPS
 
@@ -33,11 +35,51 @@ function propsValidator(props: typeof defaultProps, previousProps?: typeof defau
 
 //#endregion
 
+const TestPopupWidget = Widget.Box({
+    children: [
+        Widget.Label("test")
+    ]    
+})
 
-function create(monitor: string, props: typeof defaultProps) {
-    return Widget.Label({
+export const TestPopupWindow = new PopupWindow({
+    name: "test-popup"
+}, TestPopupWidget);
+
+function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
+    return Widget.Button({
         className: "bar-clock",
-        label: globals.clock.bind().transform(clock => clock.format("%a %b %d, %H:%M:%S") ?? "")
+        label: globals.clock.bind().transform(clock => clock.format("%a %b %d, %H:%M:%S") ?? ""),
+        onClicked: (self) => {
+            console.log("test");
+
+            const getAllocation = () => {
+                if(self.is_destroyed || !self.get_accessible()) {
+                    return {
+                        x: 0, y: 0
+                    }
+                };
+
+                const allocation = self.get_allocation();
+                console.log(allocation.y);
+                return {
+                    x: allocation.x,
+                    y: 1080 - allocation.y
+                }
+            }
+
+            TestPopupWindow.show(monitor.number, new Variable(getAllocation(), {
+                poll: [
+                    500, 
+                    (variable) => {
+                        if(self.is_destroyed || !self.get_accessible()) {
+                            variable.stopPoll();
+                        }
+
+                        return getAllocation();
+                    }
+                ]
+            }));
+        }
     });
 }
 

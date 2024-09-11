@@ -1,6 +1,9 @@
 import GLib20 from "gi://GLib";
 import Gtk from "gi://Gtk?version=3.0";
+import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
+import { EventBox } from "resource:///com/github/Aylur/ags/widgets/eventbox.js";
 import { Window } from "resource:///com/github/Aylur/ags/widgets/window.js";
+import { Allocation } from "types/@girs/gtk-3.0/gtk-3.0.cjs";
 import { WindowProps } from "types/widgets/window";
 
 export type TPosition = {
@@ -8,92 +11,27 @@ export type TPosition = {
     y: number
 };
 
+export type PopupPosition = TPosition | Variable<TPosition>;
 
-export interface PopupAnimationFunc {
-    name: string,
-    step(start: TPosition, end: TPosition, step: number): TPosition;
-};
-
-export const PopupAnimationFunctions = {
-    "linear": {
-        name: "linear",
-        step(start, end, step) {
-            const lerp = (a: number, b: number, alpha: number) => {
-                return (1 - alpha) * a + alpha * b;
-            };
-
-            return {
-                x: lerp(start.x, end.x, step),
-                y: lerp(start.y, end.y, step)
-            };
-        }
-    }
-};
-
-// TODO: refactor this whole cursed class
 export class PopupWindow<Child extends Gtk.Widget, Attr> {
-    private _displayPosition: TPosition;
-    private _position: TPosition;
+    private _position: Variable<TPosition>;
+    private _positionListener?: number;
 
     private _window: Window<Gtk.Fixed, Attr>;
     private _fixed: Gtk.Fixed = Widget.Fixed({});
 
-    private _childWrapper: Gtk.Widget;
-    private _originalChild: Child;
+    private _childWrapper: EventBox<Gtk.Widget, unknown>;
+    private _child: Child;
 
     private _shouldClose: boolean;
-    private _shouldUpdate: boolean;
 
     private _onShow?: (self: PopupWindow<Child, Attr>) => void;
     private _onHide?: (self: PopupWindow<Child, Attr>) => void;
 
+    private _wrapperAllocation: Variable<Allocation>;
 
-    private _animationInterval?: GLib20.Source;
-    private _animation?: {
-        start: TPosition,
-        duration: number,
-        reverseDuration: number,
-        updateRate: number,
-        function: PopupAnimationFunc
-    };
-
-    private _centered: boolean;
-
-
-    private getChildAllocation() {
-        const visible = this.window.is_visible();
-        this.window.set_visible(true);
-
-        const allocation = this._childWrapper.get_allocation();
-
-        this.window.set_visible(visible);
-        return allocation;
-    }
-
-
-    private getCorrectPosition(position: TPosition) {
-        const allocation = this.getChildAllocation();
-        const geometry = this._window.screen.get_monitor_geometry(this._window.monitor);
-
-        const computedPosition = { x: position.x, y: position.y };
-
-        computedPosition.x = Math.min(geometry.width - allocation.width, computedPosition.x);
-        computedPosition.x = Math.max(0, computedPosition.x);
-
-        computedPosition.y = Math.max(allocation.height, computedPosition.y);
-        computedPosition.y = Math.min(geometry.height, computedPosition.y);
-
-        return computedPosition;
-    }
-
-    private moveChild(position: TPosition, doBoundsChecks: boolean = true) {
-        const allocation = this.getChildAllocation();
-
-        const computedPosition = doBoundsChecks ? this.getCorrectPosition(position) : position;
-
-        this._shouldUpdate = false;
-
-        this._fixed.move(this._childWrapper, computedPosition.x, computedPosition.y - (allocation.height));
+    private moveChild(position: TPosition) {
+        this._fixed.move(this._childWrapper, position.x, position.y);
     }
 
     constructor({
@@ -108,9 +46,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         gdkmonitor,
         popup = false,
         visible = false,
-        child = undefined,
         ...params
-    }: WindowProps<Child, Attr> = {}, toPopup: Child, animation: typeof this._animation, onShow?: typeof this._onShow, onHide?: typeof this._onHide) {
+    }: WindowProps<Child, Attr> = {}, child: Child, onShow?: typeof this._onShow, onHide?: typeof this._onHide) {
         this._window = Widget.Window({
             anchor,
             exclusive,
@@ -127,16 +64,16 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             ...params
         } as WindowProps<Gtk.Fixed, Attr>);
 
-        this._centered = false;
-
         this._shouldClose = true;
-        this._animation = animation;
 
         this._onShow = onShow;
         this._onHide = onHide;
 
         this._window.keybind("Escape", () => {
-            if(!this._window.is_visible()) return;
+            if(!this._window.is_visible()) {
+                return;
+            }
+
             this.hide();
         });
 
@@ -157,136 +94,78 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
                 self.connect("button-press-event", (args) => {
                     this._shouldClose = false;
                 });
-
-                self.connect("draw", () => {
-                    if(this._shouldUpdate) {
-                        this._displayPosition = {
-                            x: this._position.x,
-                            y: this._position.y
-                        }
-
-                        if(this._centered) {
-                            const allocation = this.getChildAllocation();
-
-                            this._displayPosition.x -= allocation.width / 2;
-                            // this._displayPosition.y -= allocation.height / 2;
-                        }
-
-                        this._displayPosition = this.getCorrectPosition(this._displayPosition);
-                        this.moveChild(this._displayPosition);
-                    }
-                    else {
-                        this._shouldUpdate = true;
-                    }
-                });
             }
         });
 
-        this._originalChild = toPopup;
-        this._position = { x: 0, y: 0 };
-        this._displayPosition = this._position;
+        this._wrapperAllocation = new Variable({
+            x: 0, y: 0,
+            width: 0, height: 0
+        } as Allocation, {
+            poll: [
+                500,
+                (variable) => {
+                    if(this._childWrapper.is_destroyed || !this._childWrapper.get_accessible()) {
+                        variable.stopPoll();
 
-        this._fixed.put(this._childWrapper, this._displayPosition.x, this._displayPosition.y);
+                        return {
+                            x: 0, y: 0,
+                            width: 0, height: 0
+                        } as Allocation;
+                    }
 
-        this._shouldUpdate = true;
+                    return this._childWrapper.get_allocation();
+                }
+            ]
+        });
 
-        this.child = this._originalChild;
+        this._position = new Variable({ x: 0, y: 0 });
+        this._fixed.put(this._childWrapper, 0, 0);
+        
+        this._child = child
+        this.child = this._child;
+
+
+        this._wrapperAllocation.connect("changed", () => {
+            this.moveChild(this._position.value);
+        });
     }
 
 
     get window() { return this._window; }
 
-    get animation() { return this._animation; }
-    set animation(animation: typeof this._animation) { this._animation = animation; }
-
-    get child() { return this._originalChild; }
+    get child() { return this._child; }
     set child(child: Child) {
-        this._originalChild = child;
-        (this._childWrapper as any).child = this._originalChild;
+        this._child = child;
+        (this._childWrapper as any).child = this._child;
 
-        this.moveChild(this._displayPosition);
+        this.moveChild(this._position.value);
     }
 
 
-
-    private runAnimation(start: TPosition, end: TPosition, duration: number, updateRate: number, func: PopupAnimationFunc, boundsCheck = true): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            const interval = (1000 * duration) / updateRate;
-
-            var pos = start;
-            this.moveChild(start, false);
-
-            if(this._animationInterval) {
-                clearInterval(this._animationInterval);
+    private set position(position: PopupPosition) {
+        if(position instanceof Variable) {
+            if(this._positionListener) {
+                this._position.disconnect(this._positionListener);
+                this._positionListener = undefined;
             }
 
-            var step = 0;
-            this._animationInterval = setInterval(() => {
-                step += interval / updateRate;
-
-                // no animations i need have to go sideways so this is a hacky workaround
-                start.x = boundsCheck ? this.getCorrectPosition(start).x : start.x;
-
-                const tempEnd = boundsCheck ? this.getCorrectPosition(end) : end;
-                pos = func.step(start, tempEnd, Math.min(1.0, step / interval))
-
-                this.moveChild(pos, false);
-
-                const posEqual = pos.x == tempEnd.x && pos.y == tempEnd.y;
-                if(posEqual || !this.window.is_visible()) {
-                    if(this._animationInterval) {
-                        clearInterval(this._animationInterval);
-                    }
-
-                    resolve(posEqual);
-                }
-            }, interval);
-        });
+            this._position = position;
+            this._positionListener = this._position.connect("changed", () => {
+                this.moveChild(this._position.value);
+            });
+        }
+        else {
+            this._position.value = position;
+        }
     }
 
-    show(monitor: number, position: TPosition, centered: boolean = false) {
-        this._centered = centered;
+    show(monitor: number, position: PopupPosition) {
         this._window.monitor = monitor;
 
         this._window.set_visible(true);
-        this._position = position;
-        this._displayPosition = {
-            x: this._position.x,
-            y: this._position.y
-        };
+        this.position = position;
 
-        const animation = this._animation;
-        if(animation) {
-            const allocation = this.getChildAllocation();
-
-            var start = {
-                x: animation.start.x,
-                y: animation.start.y
-            };
-
-            if(this._centered) {
-                start.x -= allocation.width / 2;
-                // start.y -= allocation.height / 2;
-
-                this._displayPosition.x -= allocation.width / 2;
-                // this._displayPosition.y -= allocation.height / 2;
-            }
-
-            var end = {
-                x: this._displayPosition.x,
-                y: this._displayPosition.y
-            };
-
-            this.runAnimation(start, end, animation.duration, animation.updateRate, animation.function).then(() => {
-                if(this._onShow) {
-                    this._onShow(this);
-                }
-            });
-
-            return;
-        }
-
-        this.moveChild(this._displayPosition);
+        this.moveChild(this._position.value);
         
         if(this._onShow) {
             this._onShow(this);
@@ -295,35 +174,6 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     hide() {
         this._shouldClose = true;
-
-        const animation = this._animation;
-        if(animation) {
-            var start = this.getCorrectPosition(this._displayPosition);
-            var end = {
-                x: animation.start.x,
-                y: animation.start.y
-            };
-
-            if(this._centered) {
-                const allocation = this.getChildAllocation();
-
-                end.x -= allocation.width / 2;
-                // end.y -= allocation.height / 2;
-            }
-
-            end.x = this.getCorrectPosition(end).x;
-
-            this.runAnimation(start, end, animation.reverseDuration, animation.updateRate, animation.function, false).then(() => {
-                this._window.set_visible(false);
-
-                if(this._onHide) {
-                    this._onHide(this);
-                }
-            });
-
-            return;
-        }
-
         this._window.set_visible(false);
 
         if(this._onHide) {

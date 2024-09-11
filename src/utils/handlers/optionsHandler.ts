@@ -164,6 +164,13 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
         this._pathMonitor.load();
         this.loadOptionsListeners(false);
 
+        var firstLoaded = true;
+        this.connect("options_reloaded", () => {
+            console.log(`options ${!firstLoaded ? "re" : ""}loaded`);
+
+            firstLoaded = false;
+        });
+
         this.loadOptions();
         this.saveOptions();
     }

@@ -1,4 +1,4 @@
-import { IBarWidget } from "src/interfaces/barWidget";
+import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 
 const hyprland = await Service.import("hyprland");
 
@@ -45,23 +45,23 @@ function propsValidator(props: typeof defaultProps, previousProps?: typeof defau
 
 //#endregion
 
-export function WorkspaceButton(monitorName: string, workspaceID: number) {
+export function WorkspaceButton(monitor: TBarWidgetMonitor, workspaceID: number) {
     return Widget.Button({
         className: "bar-workspace-button",
         label: inactiveSymbol,
         onClicked: () => hyprland.messageAsync(`dispatch workspace ${workspaceID}`),
     }).hook(hyprland, (self) => {
-        self.label = hyprland.monitors.find(x => x.name == monitorName)?.activeWorkspace.id == workspaceID ? activeSymbol : inactiveSymbol;
+        self.label = hyprland.monitors.find(x => x.name == monitor.name)?.activeWorkspace.id == workspaceID ? activeSymbol : inactiveSymbol;
     });
 }
 
-function create(monitor: string, props: typeof defaultProps) {
+function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
     return Widget.EventBox({
         class_name: "bar-workspace-selector",
         child: Widget.Box({
             children: hyprland.bind("workspaces")
                 .transform(workspaces => workspaces
-                    .filter(x => x.monitor == monitor && !x.name.startsWith("special"))
+                    .filter(x => x.monitor == monitor.name && !x.name.startsWith("special"))
                     .sort((a, b) => a.id - b.id)
                     .map(x => WorkspaceButton(monitor, x.id))
                 )

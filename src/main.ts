@@ -30,7 +30,7 @@ export class Main implements IReloadable {
     
         globals.optionsHandler.load();
         globals.styleHandler.load();
-    
+        
         App.config({
             // style here makes the startup look a bit nicer
             // style: globals.paths.OUT_CSS_IMPORTS,
