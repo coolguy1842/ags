@@ -1,13 +1,20 @@
 import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { globals } from "src/globals";
-import { PopupWindow } from "src/utils/PopupWindow";
+import { PopupWindow } from "src/utils/classes/PopupWindow";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
+import { DerivedVariable } from "src/utils/utils";
+import Gtk from "gi://Gtk?version=3.0";
+import { animations } from "src/utils/classes/PopupAnimation";
 
 //#region PROPS
 
-const defaultProps = {};
+const defaultProps = {
+    clock_format: "%a %b %d, %H:%M:%S"
+};
 
-function _validateProps<TProps extends typeof defaultProps>(props: TProps, fallback: TProps): TProps | undefined {
+type PropsType = typeof defaultProps;
+
+function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProps): TProps | undefined {
     if(props == undefined || typeof props != "object") {
         return fallback;
     }
@@ -25,10 +32,15 @@ function _validateProps<TProps extends typeof defaultProps>(props: TProps, fallb
         }
     }
 
+    const formatted = globals.clock.value.format(newProps.clock_format);
+    if(formatted == null) {
+        newProps.clock_format = fallback.clock_format;
+    }
+
     return newProps;
 }
 
-function propsValidator(props: typeof defaultProps, previousProps?: typeof defaultProps) {
+function propsValidator(props: PropsType, previousProps?: PropsType) {
     const fallback = _validateProps(previousProps ?? defaultProps, defaultProps) ?? defaultProps;
     return _validateProps(props, fallback);
 }
@@ -36,76 +48,107 @@ function propsValidator(props: typeof defaultProps, previousProps?: typeof defau
 //#endregion
 
 const TestPopupWidget = Widget.Box({
+    css: "background-color: black;",
+    widthRequest: 150,
+    height_request: 100,
     children: [
-        Widget.Label("test")
-    ]    
-})
+        Widget.Label({        
+            widthRequest: 150,
+            height_request: 100,
+            label: "test"
+        })
+    ]
+});
 
-export const TestPopupWindow = new PopupWindow({
-    name: "test-popup"
-}, TestPopupWidget);
+export const TestPopupWindow = new PopupWindow(
+    {
+        name: "test-popup",
+        keymode: "on-demand",
+        exclusivity: "exclusive"
+    },
+    TestPopupWidget
+    // {
+    //     animation: animations[0],
+    //     duration: 0.5,
+    //     refreshRate: 165,
+    //     startPosition: {
+    //         x: 1920/2,
+    //         y: -250
+    //     }
+    // }
+);
 
-function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
-    return Widget.Button({
-        className: "bar-clock",
-        label: globals.clock.bind().transform(clock => clock.format("%a %b %d, %H:%M:%S") ?? ""),
-        onClicked: (self) => {
-            const getAllocation = () => {
-                if(self.is_destroyed || !self.get_accessible()) {
-                    return {
-                        x: 0, y: 0
-                    }
-                };
 
-                const allocation = self.get_allocation();
-                return {
-                    x: allocation.x + (allocation.width / 2),
-                    y: allocation.y + allocation.height
-                }
-            }
-
-            var polling = true;
-            const variable = new Variable(getAllocation(), {
-                poll: [
-                    250, 
-                    (variable) => {
-                        if(self.is_destroyed || !self.get_accessible()) {
-                            variable.stopPoll();
-                        }
-
-                        return getAllocation();
-                    }
-                ]
-            });
-
-            const derived = Utils.derive([variable, TestPopupWindow.childAllocation], (allocation, childAllocation) => {
-                // TODO: might want some better way as this just suppressed the derive and doesnt actually stop it from listening
-                if(!polling) {
-                    return { x: 0, y: 0 };
-                }
-
-                const out = {
-                    x: allocation.x - (childAllocation.width / 2),
-                    y: allocation.y + childAllocation.height
-                };
-
-                return out;
-            });
-
-            TestPopupWindow.onHide = () => {
-                variable.stopPoll();
-                polling = false;
-            };
-
-            TestPopupWindow.show(monitor.id, derived);
-        }
-    });
-}
-
-export class Clock implements IBarWidget<typeof defaultProps, ReturnType<typeof create>> {
+export class Clock implements IBarWidget<PropsType, Gtk.Button> {
     name = "Clock";
     defaultProps = defaultProps;
 
     propsValidator = propsValidator;
-    create = create;
+    create(monitor: TBarWidgetMonitor, props: PropsType) {
+        return Widget.Button({
+            className: "bar-clock",
+            label: globals.clock.bind().transform(clock => clock.format(props.clock_format) ?? ""),
+            onClicked: (self) => {
+                const getAllocation = () => {
+                    if(self.is_destroyed || !self.get_accessible()) {
+                        return {
+                            x: 0, y: 0
+                        }
+                    };
+    
+                    const allocation = self.get_allocation();
+                    return {
+                        x: allocation.x + (allocation.width / 2),
+                        y: allocation.y + allocation.height
+                    }
+                }
+    
+                const variable = new Variable(getAllocation(), {
+                    poll: [
+                        250, 
+                        (variable) => {
+                            if(self.is_destroyed || !self.get_accessible()) {
+                                variable.stopPoll();
+                            }
+    
+                            return getAllocation();
+                        }
+                    ]
+                });
+    
+                const derived = new DerivedVariable(
+                    [
+                        variable,
+                        TestPopupWindow.childAllocation
+                    ],
+                    (allocation, childAllocation) => {
+                        const out = {
+                            x: allocation.x - (childAllocation.width / 2),
+                            y: allocation.y + childAllocation.height
+                        };
+    
+                        return out;
+                    }
+                );
+    
+                // TestPopupWindow.animationOptions!.startPosition = Utils.derive([derived], (variable) => {
+                //     return {
+                //         x: variable.x,
+                //         y: 0
+                //     };
+                // });
+
+                TestPopupWindow.onHide = () => {
+                    variable.stopPoll();
+                    derived.stop();
+                };
+    
+                // TestPopupWindow.show(monitor.id, derived);
+                TestPopupWindow.show(monitor.id, {
+                    x: derived.value.x,
+                    y: -300
+                });
+            }
+        });
+    }
 };

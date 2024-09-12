@@ -6,17 +6,22 @@ import { Window } from "resource:///com/github/Aylur/ags/widgets/window.js";
 import { Rectangle } from "types/@girs/gdk-3.0/gdk-3.0.cjs";
 import { Allocation } from "types/@girs/gtk-3.0/gtk-3.0.cjs";
 import { WindowProps } from "types/widgets/window";
-
-export type TPosition = {
-    x: number,
-    y: number
-};
+import { PopupAnimation, TPosition } from "./PopupAnimation";
+import { sleep } from "../utils";
 
 export type PopupPosition = TPosition | Variable<TPosition>;
+export type AnimationOptions = {
+    animation: PopupAnimation;
+    startPosition: PopupPosition;
+
+    duration: number;
+    refreshRate: number;
+};
 
 export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _position: Variable<TPosition>;
     private _lastPosition: TPosition;
+    private _lastDisplayPosition: TPosition;
     
     private _positionListener?: number;
 
@@ -28,64 +33,14 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     private _shouldClose: boolean;
 
+    private _animationOptions?: AnimationOptions;
+    private _animating: boolean;
+
     private _onShow?: (self: PopupWindow<Child, Attr>) => void;
     private _onHide?: (self: PopupWindow<Child, Attr>) => void;
 
     private _wrapperAllocation: Variable<Allocation>;
     private _screenBounds: Variable<Rectangle>;
-
-
-    private moveChild(position: TPosition) {
-        const displayPosition = {
-            x: Math.floor(position.x),
-            y: Math.floor(position.y)
-        };
-
-        displayPosition.y = this._screenBounds.value.height - displayPosition.y;
-
-        if(this._lastPosition.x == displayPosition.x && this._lastPosition.y == displayPosition.y) {
-            return;
-        }
-
-        this._fixed.move(this._childWrapper, displayPosition.x, displayPosition.y);
-        this._lastPosition = displayPosition;
-    }
-
-    private updateChild() {
-        if(!this._window.is_visible()) {
-            return;
-        }
-
-        this.moveChild(this._position.value);
-    }
-
-
-
-    private getScreenBounds() {
-        const screen = this._window.screen;
-
-        if(this._window.monitor >= 0) {
-            return screen.get_monitor_geometry(this._window.monitor)
-        }
-
-        return screen.get_monitor_geometry(screen.get_monitor_at_window(this._window.window));
-    }
-
-    private updateScreenBounds() {
-        const bounds = this.getScreenBounds();
-        
-        const screenBounds = this._screenBounds.value;
-        if(
-            screenBounds.x != bounds.x ||
-            screenBounds.y != bounds.y ||
-            screenBounds.height != bounds.height ||
-            screenBounds.width != bounds.width
-        ) {
-            this._screenBounds.value = bounds;
-        }
-
-        return bounds;
-    }
 
     constructor({
         anchor = [ "top", "bottom", "left", "right" ],
@@ -100,7 +55,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         popup = false,
         visible = false,
         ...params
-    }: WindowProps<Child, Attr> = {}, child: Child, onShow?: typeof this._onShow, onHide?: typeof this._onHide) {
+    }: WindowProps<Child, Attr> = {}, child: Child, animationOptions?: AnimationOptions, onShow?: typeof this._onShow, onHide?: typeof this._onHide) {
         this._window = Widget.Window({
             anchor,
             exclusive,
@@ -118,6 +73,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         } as WindowProps<Gtk.Fixed, Attr>);
 
         this._shouldClose = true;
+        this._animating = false;
+
+        this._animationOptions = animationOptions;
 
         this._onShow = onShow;
         this._onHide = onHide;
@@ -129,6 +87,10 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
             this.hide();
         });
+
+        this.window.keybind("Insert", () => {
+            this._animating = false;
+        })
 
         this._window.on("button-press-event", (self, args) => {
             if(this._shouldClose) {
@@ -204,6 +166,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
         this._position = new Variable({ x: 0, y: 0 });
         this._lastPosition = this._position.value;
+        this._lastDisplayPosition = this._position.value;
 
         this._fixed.put(this._childWrapper, 0, 0);
         
@@ -219,6 +182,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     get window() { return this._window; }
 
     get childAllocation() { return this._wrapperAllocation; }
+    get animationOptions() { return this._animationOptions; }
 
     get child() { return this._child; }
     set child(child: Child) {
@@ -229,9 +193,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     }
 
 
-    set ononShow(onShow: typeof this._onShow) { this._onShow = onShow; }
+    set onShow(onShow: typeof this._onShow) { this._onShow = onShow; }
     set onHide(onHide: typeof this._onHide) { this._onHide = onHide; }
-
 
     private set position(position: PopupPosition) {
         if(position instanceof Variable) {
@@ -250,6 +213,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         }
     }
 
+
     show(monitor: number, position: PopupPosition) {
         this._window.monitor = monitor;
         this.updateScreenBounds();
@@ -257,7 +221,25 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         this._window.set_visible(true);
         this.position = position;
 
-        this.moveChild(this._position.value);
+        if(this._animationOptions) {
+            this.animate(
+                this._animationOptions.startPosition,
+                position,
+                this._animationOptions.duration,
+                this._animationOptions.refreshRate,
+                this._animationOptions.animation.func
+            ).then((val) => {
+                if(!val) return;
+
+                if(this._onShow) {
+                    this._onShow(this);
+                }
+            });
+
+            return;
+        }
+
+        this.updateChild();
         
         if(this._onShow) {
             this._onShow(this);
@@ -266,10 +248,139 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     hide() {
         this._shouldClose = true;
+
+        if(this._animationOptions) {
+            this.animate(
+                this._lastPosition,
+                this._animationOptions.startPosition,
+                this._animationOptions.duration,
+                this._animationOptions.refreshRate,
+                this._animationOptions.animation.func
+            ).then((val) => {
+                if(!val) return;
+
+                this._window.set_visible(false);
+                
+                if(this._onHide) {
+                    this._onHide(this);
+                }
+            });
+
+            return;
+        }
+        
         this._window.set_visible(false);
 
         if(this._onHide) {
             this._onHide(this);
         }
+    }
+
+
+    async animate(
+        start: PopupPosition,
+        end: PopupPosition,
+        duration: number,
+        updateFrequency: number,
+        func: PopupAnimation["func"]
+    ): Promise<boolean> {
+        if(this._animating) return false;
+
+        this._animating = true;
+
+        const interval = (1000 * duration) / updateFrequency;
+        const addStep = 1 / updateFrequency;
+
+        let step = 0;
+
+        while(this._animating && this._window.is_visible()) {
+            step = Math.min(1.0, step + addStep);
+
+            const startPosition = start instanceof Variable ? start.value : start;
+            const endPosition = end instanceof Variable ? end.value : end;
+
+            const position = func(startPosition, endPosition, step);
+            await this.moveChild(position);
+
+            if(position.x == endPosition.x && position.y == endPosition.y) {
+                this._animating = false;
+                return true;
+            }
+
+            await sleep(interval);
+        }
+
+        this._animating = false;
+        return false;
+    }
+
+    cancelAnimation() {
+        if(!this._animating) {
+            return;
+        }
+    }
+
+
+    private updateChild() {
+        if(!this._window.is_visible() || this._animating) {
+            return;
+        }
+
+        this.moveChild(this._position.value);
+    }
+
+    private moveChild(position: TPosition) {
+        // const displayPosition = {
+        //     x: Math.floor(position.x),
+        //     y: Math.floor(position.y)
+        // };
+        const displayPosition = {
+            x: position.x,
+            y: position.y
+        };
+
+        if(this._lastPosition.x == displayPosition.x && this._lastPosition.y == displayPosition.y) {
+            return;
+        }
+
+        this._lastPosition = {
+            x: displayPosition.x,
+            y: displayPosition.y,
+        };
+
+        displayPosition.y = this._screenBounds.value.height - displayPosition.y;
+        this._lastDisplayPosition = {
+            x: displayPosition.x,
+            y: displayPosition.y
+        };
+        
+        this._fixed.move(this._childWrapper, displayPosition.x, displayPosition.y);
+    }
+
+
+    private getScreenBounds() {
+        const screen = this._window.screen;
+
+        if(this._window.monitor >= 0) {
+            return screen.get_monitor_geometry(this._window.monitor)
+        }
+
+        return screen.get_monitor_geometry(screen.get_monitor_at_window(this._window.window));
+    }
+
+    private updateScreenBounds() {
+        const bounds = this.getScreenBounds();
+        
+        const screenBounds = this._screenBounds.value;
+        if(
+            screenBounds.x != bounds.x ||
+            screenBounds.y != bounds.y ||
+            screenBounds.height != bounds.height ||
+            screenBounds.width != bounds.width
+        ) {
+            this._screenBounds.value = bounds;
+        }
+
+        return bounds;
     }
 };

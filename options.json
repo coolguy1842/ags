@@ -15,7 +15,9 @@
     "bar.layout.center": [
         {
             "name": "Clock",
-            "props": {}
+            "props": {
+                "clock_format": "%a %b %d, %H:%M:%S"
+            }
         }
     ],
     "bar.layout.right": []

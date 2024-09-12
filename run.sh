@@ -12,5 +12,4 @@ start_normal_bar() {
 killall ags
 trap 'start_normal_bar' INT
 
-# $ags_command -c ~/.config/ags-new-new/config.js $1
 $ags_command $1

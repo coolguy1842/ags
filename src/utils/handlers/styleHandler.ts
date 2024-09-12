@@ -1,6 +1,6 @@
 import { IReloadable } from "src/interfaces/reloadable";
 import { globals } from "../../globals";
-import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
+import { MonitorTypeFlags, PathMonitor } from "../classes/pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { HEXtoCSSRGBA } from "../colorUtils";
 import { Option } from "./optionsHandler";

@@ -1,7 +1,10 @@
 import Gio from "gi://Gio?version=2.0";
 import GLib from "gi://GLib?version=2.0";
 import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
+import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
+import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { FileQueryInfoFlags, FileType } from "types/@girs/gio-2.0/gio-2.0.cjs";
+import { Options } from "types/variable";
 
 export function arraysEqual<T>(a: T[], b: T[]) {
     if(a === b) return true;
@@ -94,3 +97,103 @@ export function icon(name: string | null, fallback = "image-missing-symbolic") {
     print(`no icon for "${name}", fallback: "${fallback}"`)
     return fallback;
 }
+
+
+export class DerivedVariable<
+    V,
+    const Deps extends Variable<any>[],
+    Args extends { [K in keyof Deps]: Deps[K] extends Variable<infer T> ? T : never }
+> extends Variable<V> {
+    static {
+        registerGObject(this, {
+            typename: `Ags_OptionsHandler_${Date.now()}`,
+            signals: {},
+            properties: {
+                'value': ['jsobject', 'rw'],
+                'is-listening': ['boolean', 'r'],
+                'is-polling': ['boolean', 'r'],
+            }
+        });
+    }
+
+
+    private _deps: Deps;
+    private _fn: (...args: Args) => V;
+
+    private _listeners: {
+        [ key: number ]: number
+    }
+
+    private _update(deps: Deps, fn: (...args: Args) => V) {
+        return fn(...deps.map(d => d.value) as Args);
+    }
+    
+    constructor(deps: Deps, fn: (...args: Args) => V) {
+        super(fn(...deps.map(d => d.value) as Args));
+
+        this._deps = deps;
+        this._fn = fn;
+
+        this._listeners = {};
+        for(const i in this._deps) {
+            const dep = this._deps[i];
+
+            this._listeners[i] = dep.connect('changed', () => this.value = this._update(this._deps, this._fn));
+        }
+    }
+
+    stop() {
+        for(const i in this._deps) {
+            const dep = this._deps[i];
+
+            dep.disconnect(this._listeners[i]);
+        }
+    }
+}
+
+
+// code from https://gist.github.com/pushkine/fbc7cf18e0a40ffb02b3b3a20b74f4f1
+/** MIT License github.com/pushkine/ */
+export function generateCubicBezier(x1: number, y1: number, x2: number, y2: number) {
+	if (!(x1 >= 0 && x1 <= 1 && x2 >= 0 && x2 <= 1)) {
+        throw new Error(`CubicBezier x1 & x2 values must be { 0 < x < 1 }, got { x1 : ${x1}, x2: ${x2} }`);
+    }
+    
+	const ax = 1.0 - (x2 = 3.0 * (x2 - x1) - (x1 *= 3.0)) - x1;
+	const ay = 1.0 - (y2 = 3.0 * (y2 - y1) - (y1 *= 3.0)) - y1;
+
+	let i = 0, r = 0.0, s = 0.0, d = 0.0, x = 0.0;
+	return(t: number) => {
+		for(r = t, i = 0; 32 > i; i++) {
+            if(1e-5 > Math.abs((x = r * (r * (r * ax + x2) + x1) - t))) {
+                return r * (r * (r * ay + y2) + y1);
+            }
+			else if(1e-5 > Math.abs((d = r * (r * ax * 3.0 + x2 * 2.0) + x1))) {
+                break;
+            }
+
+            r -= x / d;
+        }
+
+		if ((s = 0.0) > (r = t)) {
+            return 0;
+        }
+		else if ((d = 1.0) < r) {
+            return 1;
+        }
+		while (d > s) {
+            if (1e-5 > Math.abs((x = r * (r * (r * ax + x2) + x1)) - t)) {
+                break;
+            }
+			
+            t > x ? (s = r) : (d = r), (r = 0.5 * (d - s) + s);
+        }
+
+		return r * (r * (r * ay + y2) + y1);
+	};
+};
+
+
+export function sleep(time: number) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}  

@@ -1,9 +1,7 @@
 import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
+import Gtk from "gi://Gtk?version=3.0";
 
 const hyprland = await Service.import("hyprland");
-
-const activeSymbol = ``;
-const inactiveSymbol = ``;
 
 //#region PROPS
 
@@ -12,7 +10,9 @@ const defaultProps = {
     scroll_direction: "normal" as ScrollDirection
 };
 
-function _validateProps<TProps extends typeof defaultProps>(props: TProps, fallback: TProps): TProps | undefined {
+type PropsType = typeof defaultProps;
+
+function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProps): TProps | undefined {
     if(props == undefined || typeof props != "object") {
         return fallback;
     }
@@ -38,43 +38,44 @@ function _validateProps<TProps extends typeof defaultProps>(props: TProps, fallb
     return newProps;
 }
 
-function propsValidator(props: typeof defaultProps, previousProps?: typeof defaultProps) {
+function propsValidator(props: PropsType, previousProps?: PropsType) {
     const fallback = _validateProps(previousProps ?? defaultProps, defaultProps) ?? defaultProps;
     return _validateProps(props, fallback);
 }
 
 //#endregion
 
-export function WorkspaceButton(monitor: TBarWidgetMonitor, workspaceID: number) {
-    return Widget.Button({
-        className: "bar-workspace-button",
-        label: inactiveSymbol,
-        onClicked: () => hyprland.messageAsync(`dispatch workspace ${workspaceID}`),
-    }).hook(hyprland, (self) => {
-        self.label = hyprland.monitors.find(x => x.name == monitor.plugname)?.activeWorkspace.id == workspaceID ? activeSymbol : inactiveSymbol;
-    });
-}
-
-function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
-    return Widget.EventBox({
-        class_name: "bar-workspace-selector",
-        child: Widget.Box({
-            children: hyprland.bind("workspaces")
-                .transform(workspaces => workspaces
-                    .filter(x => x.monitor == monitor.plugname && !x.name.startsWith("special"))
-                    .sort((a, b) => a.id - b.id)
-                    .map(x => WorkspaceButton(monitor, x.id))
-                )
-        }),
-        onScrollDown: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "inverted" ? "-" : "+"}1`),
-        onScrollUp: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "inverted" ? "+" : "-"}1`)
-    }); 
-}
-
-export class WorkspaceSelector implements IBarWidget<typeof defaultProps, ReturnType<typeof create>> {
+export class WorkspaceSelector implements IBarWidget<PropsType, Gtk.EventBox> {
     name = "WorkspaceSelector";
     defaultProps = defaultProps;
 
     propsValidator = propsValidator;
-    create = create;
+    create(monitor: TBarWidgetMonitor, props: PropsType) {
+        return Widget.EventBox({
+            class_name: "bar-workspace-selector",
+            child: Widget.Box({
+                children: hyprland.bind("workspaces")
+                    .transform(workspaces => workspaces
+                        .filter(x => x.monitor == monitor.plugname && !x.name.startsWith("special"))
+                        .sort((a, b) => a.id - b.id)
+                        .map(x => this._createWorkspaceButton(monitor, x.id))
+                    )
+            }),
+            onScrollDown: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "inverted" ? "-" : "+"}1`),
+            onScrollUp: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "inverted" ? "+" : "-"}1`)
+        }); 
+    }
+
+    private _createWorkspaceButton(monitor: TBarWidgetMonitor, workspaceID: number) {
+        const activeSymbol = ``;
+        const inactiveSymbol = ``;
+        
+        return Widget.Button({
+            className: "bar-workspace-button",
+            label: inactiveSymbol,
+            onClicked: () => hyprland.messageAsync(`dispatch workspace ${workspaceID}`),
+        }).hook(hyprland, (self) => {
+            self.label = hyprland.monitors.find(x => x.name == monitor.plugname)?.activeWorkspace.id == workspaceID ? activeSymbol : inactiveSymbol;
+        });
+    }
 };

@@ -1,5 +1,5 @@
 import { IReloadable } from "src/interfaces/reloadable";
-import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
+import { MonitorTypeFlags, PathMonitor } from "../classes/pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { paths } from "src/paths";
 import { Variable} from "resource:///com/github/Aylur/ags/variable.js";

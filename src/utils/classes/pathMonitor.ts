@@ -1,6 +1,6 @@
 import Gio from "gi://Gio?version=2.0";
 import { IReloadable } from "src/interfaces/reloadable";
-import { monitorPath, PathMonitorCallbackType, PathMonitorType } from "./utils";
+import { monitorPath, PathMonitorCallbackType, PathMonitorType } from "../utils";
 import { FileType } from "types/@girs/gio-2.0/gio-2.0.cjs";
 
 export enum MonitorTypeFlags {
