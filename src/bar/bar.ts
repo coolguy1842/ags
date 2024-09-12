@@ -13,8 +13,8 @@ export function Bar(monitor: TBarWidgetMonitor) {
     const layout = globals.optionsHandler.options.bar.layout;
 
     const window = Widget.Window({
-        monitor: monitor.gtk_id,
-        name: `bar-${monitor.name}`,
+        monitor: monitor.id,
+        name: `bar-${monitor.plugname}`,
         class_name: "bar",
         anchor: [ "bottom", "left", "right" ],
         exclusivity: "exclusive",

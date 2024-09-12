@@ -51,19 +51,17 @@ export function WorkspaceButton(monitor: TBarWidgetMonitor, workspaceID: number)
         label: inactiveSymbol,
         onClicked: () => hyprland.messageAsync(`dispatch workspace ${workspaceID}`),
     }).hook(hyprland, (self) => {
-        self.label = hyprland.monitors.find(x => x.name == monitor.name)?.activeWorkspace.id == workspaceID ? activeSymbol : inactiveSymbol;
+        self.label = hyprland.monitors.find(x => x.name == monitor.plugname)?.activeWorkspace.id == workspaceID ? activeSymbol : inactiveSymbol;
     });
 }
 
 function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
-    // console.log(hyprland.workspaces.filter(x => x.monitor == monitor.name && !x.name.startsWith("special")))
-    console.log(`name: ${monitor.name}, id: ${monitor.gtk_id}`);
     return Widget.EventBox({
         class_name: "bar-workspace-selector",
         child: Widget.Box({
             children: hyprland.bind("workspaces")
                 .transform(workspaces => workspaces
-                    .filter(x => x.monitor == monitor.name && !x.name.startsWith("special"))
+                    .filter(x => x.monitor == monitor.plugname && !x.name.startsWith("special"))
                     .sort((a, b) => a.id - b.id)
                     .map(x => WorkspaceButton(monitor, x.id))
                 )

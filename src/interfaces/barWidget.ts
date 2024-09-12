@@ -1,10 +1,10 @@
 import Gtk from "gi://Gtk?version=3.0";
 
 export type TBarWidgetMonitor = {
-    name: string,
-    mon_id: number,
-    // gtk id can sometimes be different after a monitor is disconnected and connected
-    gtk_id: number
+    // plugname e.g DP-1
+    plugname: string,
+    // the id from gtk can sometimes be different after a monitor is disconnected and connected
+    id: number
 };
 
 export interface IBarWidget<TProps extends object, Child extends Gtk.Widget> {

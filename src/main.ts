@@ -11,16 +11,23 @@ export class Main implements IReloadable {
     loadMonitorLookups() {
         // not fully tested, allows for monitors to be added and removed and shows on the right monitor properly
         const screen = Gdk30.Screen.get_default();
-        const monitors = screen?.get_n_monitors() ?? 0;
+        if(screen == undefined) {
+            this._monitorLookups = {};
+            return;
+        }
+
+        const monitors = screen.get_n_monitors();
 
         const monitorLookups: { [ name: string ]: number } = {};
         for(var id = 0; id < monitors; id++) {
-            const name = screen?.get_monitor_plug_name(id) ?? undefined;
+            const name = screen.get_monitor_plug_name(id) ?? undefined;
 
             if(name) {
                 monitorLookups[name] = id;
             }
         }
+
+        this._monitorLookups =  monitorLookups;
     }
 
     reloadWindows() {
@@ -32,9 +39,8 @@ export class Main implements IReloadable {
 
         for(const window of [
             ...hyprland.monitors.map(x => Bar({
-                name: x.name,
-                mon_id: x.id,
-                gtk_id: this._monitorLookups[x.name] ?? x.id
+                plugname: x.name,
+                id: this._monitorLookups[x.name] ?? x.id
             }))
         ]) {
             App.addWindow(window);

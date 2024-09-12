@@ -60,7 +60,7 @@ function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
                 const allocation = self.get_allocation();
                 return {
                     x: allocation.x + (allocation.width / 2),
-                    y: 1080 - (allocation.y + allocation.height)
+                    y: allocation.y + allocation.height
                 }
             }
 
@@ -81,11 +81,11 @@ function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
                 variable.stopPoll();
             };
 
-            TestPopupWindow.show(monitor.gtk_id, 
+            TestPopupWindow.show(monitor.id, 
                 Utils.derive([variable, TestPopupWindow.childAllocation], (variable, childAllocation) => {
                     return {
                         x: variable.x - (childAllocation.width / 2),
-                        y: variable.y - childAllocation.height
+                        y: variable.y + childAllocation.height
                     }
                 })
             );

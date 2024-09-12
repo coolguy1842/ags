@@ -3,6 +3,7 @@ import Gtk from "gi://Gtk?version=3.0";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { EventBox } from "resource:///com/github/Aylur/ags/widgets/eventbox.js";
 import { Window } from "resource:///com/github/Aylur/ags/widgets/window.js";
+import { Rectangle } from "types/@girs/gdk-3.0/gdk-3.0.cjs";
 import { Allocation } from "types/@girs/gtk-3.0/gtk-3.0.cjs";
 import { WindowProps } from "types/widgets/window";
 
@@ -15,6 +16,8 @@ export type PopupPosition = TPosition | Variable<TPosition>;
 
 export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _position: Variable<TPosition>;
+    private _lastPosition: TPosition;
+    
     private _positionListener?: number;
 
     private _window: Window<Gtk.Fixed, Attr>;
@@ -29,18 +32,34 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _onHide?: (self: PopupWindow<Child, Attr>) => void;
 
     private _wrapperAllocation: Variable<Allocation>;
+    private _screenBounds: Variable<Rectangle>;
+
 
     private moveChild(position: TPosition) {
         const displayPosition = {
-            x: position.x,
-            y: position.y
+            x: Math.floor(position.x),
+            y: Math.floor(position.y)
         };
 
-        // displayPosition.y -= this._wrapperAllocation.value.height;
-        // displayPosition.x -= this._wrapperAllocation.value.width / 2;
+        displayPosition.y = this._screenBounds.value.height - displayPosition.y;
+
+        if(this._lastPosition.x == displayPosition.x && this._lastPosition.y == displayPosition.y) {
+            return;
+        }
 
         this._fixed.move(this._childWrapper, displayPosition.x, displayPosition.y);
+        this._lastPosition = displayPosition;
     }
+
+    private updateChild() {
+        if(!this._window.is_visible()) {
+            return;
+        }
+
+        this.moveChild(this._position.value);
+    }
+
+
 
     constructor({
         anchor = [ "top", "bottom", "left", "right" ],
@@ -114,6 +133,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
                 (variable) => {
                     if(this._childWrapper.is_destroyed || !this._childWrapper.get_accessible()) {
                         variable.stopPoll();
+                        variable.dispose();
 
                         return {
                             x: 0, y: 0,
@@ -134,16 +154,41 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             ]
         });
 
+        this._screenBounds = new Variable({
+            x: 0, y: 0,
+            width: 0, height: 0
+        } as Rectangle, {
+            poll: [
+                1000,
+                (variable) => {
+                    if(this._childWrapper.is_destroyed || !this._childWrapper.get_accessible()) {
+                        variable.stopPoll();
+                        variable.dispose();
+
+                        return {
+                            x: 0, y: 0,
+                            width: 0, height: 0
+                        } as Rectangle;
+                    }
+
+                    const screen = this._window.screen;
+                    
+                    return screen.get_monitor_geometry(screen.get_monitor_at_window(this._window.window));
+                }
+            ]
+        });
+
         this._position = new Variable({ x: 0, y: 0 });
+        this._lastPosition = this._position.value;
+
         this._fixed.put(this._childWrapper, 0, 0);
         
         this._child = child
         this.child = this._child;
 
-
-        this._wrapperAllocation.connect("changed", () => {
-            this.moveChild(this._position.value);
-        });
+        this._positionListener = this._position.connect("changed", () => this.updateChild());
+        this._wrapperAllocation.connect("changed", () => this.updateChild());
+        this._screenBounds.connect("changed", () => this.updateChild());
     }
 
 
@@ -173,7 +218,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
             this._position = position;
             this._positionListener = this._position.connect("changed", () => {
-                this.moveChild(this._position.value);
+                this.updateChild();
             });
         }
         else {
