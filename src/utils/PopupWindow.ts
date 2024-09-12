@@ -61,6 +61,32 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
 
 
+    private getScreenBounds() {
+        const screen = this._window.screen;
+
+        if(this._window.monitor >= 0) {
+            return screen.get_monitor_geometry(this._window.monitor)
+        }
+
+        return screen.get_monitor_geometry(screen.get_monitor_at_window(this._window.window));
+    }
+
+    private updateScreenBounds() {
+        const bounds = this.getScreenBounds();
+        
+        const screenBounds = this._screenBounds.value;
+        if(
+            screenBounds.x != bounds.x ||
+            screenBounds.y != bounds.y ||
+            screenBounds.height != bounds.height ||
+            screenBounds.width != bounds.width
+        ) {
+            this._screenBounds.value = bounds;
+        }
+
+        return bounds;
+    }
+
     constructor({
         anchor = [ "top", "bottom", "left", "right" ],
         exclusive,
@@ -171,9 +197,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
                         } as Rectangle;
                     }
 
-                    const screen = this._window.screen;
-                    
-                    return screen.get_monitor_geometry(screen.get_monitor_at_window(this._window.window));
+                    return this.getScreenBounds();
                 }
             ]
         });
@@ -228,7 +252,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     show(monitor: number, position: PopupPosition) {
         this._window.monitor = monitor;
-
+        this.updateScreenBounds();
+        
         this._window.set_visible(true);
         this.position = position;
 

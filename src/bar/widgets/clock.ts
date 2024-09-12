@@ -64,6 +64,7 @@ function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
                 }
             }
 
+            var polling = true;
             const variable = new Variable(getAllocation(), {
                 poll: [
                     250, 
@@ -76,19 +77,27 @@ function create(monitor: TBarWidgetMonitor, props: typeof defaultProps) {
                     }
                 ]
             });
-            
+
+            const derived = Utils.derive([variable, TestPopupWindow.childAllocation], (allocation, childAllocation) => {
+                // TODO: might want some better way as this just suppressed the derive and doesnt actually stop it from listening
+                if(!polling) {
+                    return { x: 0, y: 0 };
+                }
+
+                const out = {
+                    x: allocation.x - (childAllocation.width / 2),
+                    y: allocation.y + childAllocation.height
+                };
+
+                return out;
+            });
+
             TestPopupWindow.onHide = () => {
                 variable.stopPoll();
+                polling = false;
             };
 
-            TestPopupWindow.show(monitor.id, 
-                Utils.derive([variable, TestPopupWindow.childAllocation], (variable, childAllocation) => {
-                    return {
-                        x: variable.x - (childAllocation.width / 2),
-                        y: variable.y + childAllocation.height
-                    }
-                })
-            );
+            TestPopupWindow.show(monitor.id, derived);
         }
     });
 }
