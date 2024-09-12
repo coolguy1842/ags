@@ -20,5 +20,10 @@
             }
         }
     ],
-    "bar.layout.right": []
+    "bar.layout.right": [
+        {
+            "name": "SystemTray",
+            "props": {}
+        }
+    ]
 }

@@ -115,7 +115,7 @@ export function getOptions() {
                 ),
                 right: option(
                     [
-
+                        { name: "SystemTray", props: {} }
                     ] as TBarLayout,
                     validators.barWidgets
                 )

@@ -3,10 +3,12 @@ import { globals } from "src/globals";
 import { WorkspaceSelector } from "./widgets/workspaceSelector";
 import { Clock } from "./widgets/clock";
 import { TBarWidgetMonitor } from "src/interfaces/barWidget";
+import { SystemTray } from "./widgets/systemTray";
 
 export const BarWidgets = {
     WorkspaceSelector: new WorkspaceSelector(),
-    Clock: new Clock()
+    Clock: new Clock(),
+    SystemTray: new SystemTray()
 };
 
 export function Bar(monitor: TBarWidgetMonitor) {

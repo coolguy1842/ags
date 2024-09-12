@@ -4,7 +4,7 @@ import { PopupWindow } from "src/utils/classes/PopupWindow";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { DerivedVariable } from "src/utils/utils";
 import Gtk from "gi://Gtk?version=3.0";
-import { animations } from "src/utils/classes/PopupAnimation";
+import { PopupAnimations } from "src/utils/classes/PopupAnimation";
 
 //#region PROPS
 
@@ -67,8 +67,8 @@ export const TestPopupWindow = new PopupWindow(
     },
     TestPopupWidget,
     {
-        animation: animations[0],
-        duration: 0.5,
+        animation: PopupAnimations.Ease,
+        duration: 0.4,
         refreshRate: 165,
         startPosition: {
             x: 0,
@@ -123,7 +123,7 @@ export class Clock implements IBarWidget<PropsType, Gtk.Button> {
                     (allocation, childAllocation) => {
                         const out = {
                             x: allocation.x - (childAllocation.width / 2),
-                            y: allocation.y + childAllocation.height
+                            y: allocation.y + childAllocation.height + 10
                         };
     
                         return out;
@@ -136,6 +136,7 @@ export class Clock implements IBarWidget<PropsType, Gtk.Button> {
                         y: 0
                     };
                 });
+                
 
                 TestPopupWindow.onHide = () => {
                     variable.stopPoll();
