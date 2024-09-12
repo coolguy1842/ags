@@ -63,19 +63,18 @@ const TestPopupWidget = Widget.Box({
 export const TestPopupWindow = new PopupWindow(
     {
         name: "test-popup",
-        keymode: "on-demand",
-        exclusivity: "exclusive"
+        keymode: "on-demand"
     },
-    TestPopupWidget
-    // {
-    //     animation: animations[0],
-    //     duration: 0.5,
-    //     refreshRate: 165,
-    //     startPosition: {
-    //         x: 1920/2,
-    //         y: -250
-    //     }
-    // }
+    TestPopupWidget,
+    {
+        animation: animations[0],
+        duration: 0.5,
+        refreshRate: 165,
+        startPosition: {
+            x: 0,
+            y: 0
+        }
+    }
 );
 
 
@@ -131,23 +130,19 @@ export class Clock implements IBarWidget<PropsType, Gtk.Button> {
                     }
                 );
     
-                // TestPopupWindow.animationOptions!.startPosition = Utils.derive([derived], (variable) => {
-                //     return {
-                //         x: variable.x,
-                //         y: 0
-                //     };
-                // });
+                TestPopupWindow.animationOptions!.startPosition = Utils.derive([derived], (variable) => {
+                    return {
+                        x: variable.x,
+                        y: 0
+                    };
+                });
 
                 TestPopupWindow.onHide = () => {
                     variable.stopPoll();
                     derived.stop();
                 };
     
-                // TestPopupWindow.show(monitor.id, derived);
-                TestPopupWindow.show(monitor.id, {
-                    x: derived.value.x,
-                    y: -300
-                });
+                TestPopupWindow.show(monitor.id, derived);
             }
         });
     }

@@ -1,4 +1,3 @@
-import GLib20 from "gi://GLib";
 import Gtk from "gi://Gtk?version=3.0";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { EventBox } from "resource:///com/github/Aylur/ags/widgets/eventbox.js";
@@ -8,6 +7,7 @@ import { Allocation } from "types/@girs/gtk-3.0/gtk-3.0.cjs";
 import { WindowProps } from "types/widgets/window";
 import { PopupAnimation, TPosition } from "./PopupAnimation";
 import { sleep } from "../utils";
+import Widgets from "../widgets/widgets";
 
 export type PopupPosition = TPosition | Variable<TPosition>;
 export type AnimationOptions = {
@@ -18,15 +18,15 @@ export type AnimationOptions = {
     refreshRate: number;
 };
 
-export class PopupWindow<Child extends Gtk.Widget, Attr> {
+export class PopupWindow<Child extends Gtk.Layout, Attr> {
     private _position: Variable<TPosition>;
     private _lastPosition: TPosition;
     private _lastDisplayPosition: TPosition;
     
     private _positionListener?: number;
 
-    private _window: Window<Gtk.Fixed, Attr>;
-    private _fixed: Gtk.Fixed = Widget.Fixed({});
+    private _window: Window<Gtk.Layout, Attr>;
+    private _layout: Gtk.Layout;
 
     private _childWrapper: EventBox<Gtk.Widget, unknown>;
     private _child: Child;
@@ -68,9 +68,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             gdkmonitor,
             popup,
             visible,
-            child: Widget.Fixed(),
+            child: Widgets.Layout({}),
             ...params
-        } as WindowProps<Gtk.Fixed, Attr>);
+        } as WindowProps<Gtk.Layout, Attr>);
 
         this._shouldClose = true;
         this._animating = false;
@@ -101,7 +101,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             this._shouldClose = true;
         });
 
-        this._fixed = this._window.child;
+        this._layout = this._window.child;
         this._childWrapper = Widget.EventBox({
             css: "all: unset;",
             visible: true,
@@ -111,6 +111,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
                 });
             }
         });
+
+        this._layout.put(this._childWrapper, 0, 0);
 
         this._wrapperAllocation = new Variable({
             x: 0, y: 0,
@@ -167,8 +169,6 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         this._position = new Variable({ x: 0, y: 0 });
         this._lastPosition = this._position.value;
         this._lastDisplayPosition = this._position.value;
-
-        this._fixed.put(this._childWrapper, 0, 0);
         
         this._child = child
         this.child = this._child;
@@ -300,7 +300,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             const endPosition = end instanceof Variable ? end.value : end;
 
             const position = func(startPosition, endPosition, step);
-            await this.moveChild(position);
+            this.moveChild(position);
 
             if(position.x == endPosition.x && position.y == endPosition.y) {
                 this._animating = false;
@@ -354,7 +354,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
             y: displayPosition.y
         };
         
-        this._fixed.move(this._childWrapper, displayPosition.x, displayPosition.y);
+        this._layout.move(this._childWrapper, displayPosition.x, displayPosition.y);
     }
 
 
