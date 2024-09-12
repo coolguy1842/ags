@@ -1,5 +1,7 @@
 {
     "icons.app_launcher.search": "system-search-symbolic",
+    "bar.position": "top",
+    "bar.height": 32,
     "bar.background": "#000000BF",
     "bar.icon_color": "#5D93B0FF",
     "bar.layout.outer_gap": 8,
@@ -23,7 +25,12 @@
     "bar.layout.right": [
         {
             "name": "SystemTray",
-            "props": {}
+            "props": {
+                "spacing": 3,
+                "enable_favorites": true,
+                "favorites": [],
+                "background": "#BDA4A419"
+            }
         }
     ]
 }

@@ -219,9 +219,10 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     show(monitor: number, position: PopupPosition) {
         this._window.monitor = monitor;
-        this.updateScreenBounds();
         
         this._window.set_visible(true);
+        this.updateScreenBounds();
+        
         this.position = position;
 
         if(this._animationOptions) {
@@ -369,16 +370,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
     private updateScreenBounds() {
         const bounds = this.getScreenBounds();
-        
-        const screenBounds = this._screenBounds.value;
-        if(
-            screenBounds.x != bounds.x ||
-            screenBounds.y != bounds.y ||
-            screenBounds.height != bounds.height ||
-            screenBounds.width != bounds.width
-        ) {
-            this._screenBounds.value = bounds;
-        }
+        this._screenBounds.value = bounds;
 
         return bounds;
     }

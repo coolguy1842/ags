@@ -31,6 +31,17 @@ export class Option<T> extends Variable<T> {
         this._default = value;
         this._validator = validator;
         this._options = options;
+
+        this.value = value;
+    }
+
+
+    setValue = (value: T) => {
+        this.value = value;
+    }
+
+    getValue = (): T => {
+        return super.getValue();
     }
 
     set id(id: string) { this._id = id; }
@@ -48,18 +59,27 @@ export class Option<T> extends Variable<T> {
             if(validation == undefined) {
                 // check if current/fallback is invalid too
                 if(this._validator.validate(this._value) == undefined) {
+                    // super.value = this._default;
                     this._value = this._default;
+
+                    this.notify('value');
+                    this.emit('changed');
                 }
 
                 return;
             }
             
+            // super.value = validation;
             this._value = validation;
-        }
-        else {
-            this._value = value;
+
+            this.notify('value');
+            this.emit('changed');
+            return;
         }
 
+        // super.value = value;
+        this._value = value;
+        
         this.notify('value');
         this.emit('changed');
     }
@@ -201,6 +221,21 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
         return out;
     }
+
+    // private validateOptions(options: TOptions = this._options) {
+    //     for(const key of Object.keys(options)) {
+    //         const value = options[key];
+    //         if(value instanceof Option) {
+    //             if(!value.validator) continue;
+
+    //             value.value = value.validator.validate(value.value) ?? value.defaultValue;
+    //             continue;
+    //         }
+
+    //         this.validateOptions(value);
+    //     }
+    // }
+
 
     private saveOptions() {
         Utils.writeFileSync(JSON.stringify(this.simplifyOptions(), undefined, 4), paths.OPTIONS_PATH);
