@@ -5,7 +5,6 @@ import { BarWidgets } from "./widgets/widgets";
 export function Bar(monitor: TBarWidgetMonitor) {
     const { bar } = globals.optionsHandler.options;
 
-    console.log(bar.position.value);
     const window = Widget.Window({
         monitor: monitor.id,
         name: `bar-${monitor.plugname}`,

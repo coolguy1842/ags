@@ -20,19 +20,24 @@
             "props": {
                 "clock_format": "%a %b %d, %H:%M:%S"
             }
-        }
-    ],
-    "bar.layout.right": [
+        },
         {
             "name": "SystemTray",
             "props": {
                 "spacing": 3,
                 "enable_favorites": true,
-                "background": "#BDA4A419"
+                "background": "#BDA4A419",
+                "horizontal_padding": 4,
+                "vertical_padding": 0,
+                "border_radius": 8
             }
         }
     ],
-    "bar.tray_favorites": [
-        "chrome_status_icon_1--Vesktop"
+    "bar.layout.right": [],
+    "system_tray.background": "#000000BF",
+    "system_tray.favorites": [
+        "chrome_status_icon_1--Vesktop",
+        "chrome_status_icon_1--",
+        "chrome_status_icon_1--Signal_Desktop"
     ]
 }

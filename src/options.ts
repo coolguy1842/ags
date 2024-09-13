@@ -10,12 +10,12 @@ type TBarLayout = TBarLayoutItem<keyof (typeof BarWidgets)>[];
 
 // TODO: add options for min and max range of number
 export class NumberValidator<T extends number> implements OptionValidator<T> {
-    private _min?: T;
-    private _max?: T;
+    private _min?: number;
+    private _max?: number;
 
     constructor(options?: {
-        min?: T,
-        max?: T
+        min?: number,
+        max?: number
     }) {
         this._min = options?.min;
         this._max = options?.max;
@@ -24,8 +24,8 @@ export class NumberValidator<T extends number> implements OptionValidator<T> {
     validate(value: T, previousValue?: T) {
         if(isNaN(value)) return undefined;
 
-        if(this._min && value < this._min) return this._min;
-        if(this._max && value > this._max) return this._max;
+        if(this._min && value < this._min) return this._min as T;
+        if(this._max && value > this._max) return this._max as T;
 
         return value;
     }
@@ -38,9 +38,26 @@ export class BooleanValidator<T extends boolean> implements OptionValidator<T> {
 };
 
 // TODO: add options for length of the color (e.g 4 byte or 3 byte hex)
+enum HEXColorType {
+    RGB,
+    RGBA
+};
+
 export class HEXColorValidator<T extends string> implements OptionValidator<T> {
+    private _colorType: HEXColorType;
+    
+    constructor(colorType: HEXColorType = HEXColorType.RGBA) {
+        this._colorType = colorType;
+    }
+
     validate(value: T, previousValue?: T) {
-        return /^#[0-9A-F]{8}$/.test(value) ? value : undefined;
+        switch(this._colorType) {
+        case HEXColorType.RGB:
+            return /^#[0-9A-F]{6}$/.test(value) ? value : undefined;
+        case HEXColorType.RGBA:
+            return /^#[0-9A-F]{8}$/.test(value) ? value : undefined;
+        default: return undefined;
+        }
     }
 };
 
@@ -127,9 +144,12 @@ export interface IOptions extends TOptions {
             center: Option<TBarLayout>;
             right: Option<TBarLayout>;
         };
-
-        tray_favorites: Option<string[]>
     };
+
+    system_tray: {
+        background: Option<string>;
+        favorites: Option<string[]>;
+    }
 };
 
 export function getOptions(): IOptions {
@@ -169,8 +189,10 @@ export function getOptions(): IOptions {
                     new BarLayoutValidator()
                 )
             },
-
-            tray_favorites: option([] as string[], new StringArrayValidator())
+        },
+        system_tray: {
+            background: option("#000000BF", new HEXColorValidator()),
+            favorites: option([] as string[], new StringArrayValidator())
         }
     };
 }; 

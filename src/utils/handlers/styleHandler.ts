@@ -2,7 +2,7 @@ import { IReloadable } from "src/interfaces/reloadable";
 import { globals } from "../../globals";
 import { MonitorTypeFlags, PathMonitor } from "../classes/pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
-import { HEXtoCSSRGBA } from "../colorUtils";
+import { HEXtoSCSSRGBA } from "../colorUtils";
 import { Option } from "./optionsHandler";
 import { Binding } from "types/service";
 
@@ -52,21 +52,25 @@ export class StyleHandler implements IReloadable {
 
 
     getBindings() {
-        const { bar } = globals.optionsHandler.options;
+        const { bar, system_tray } = globals.optionsHandler.options;
         
         return [
             bar.background,
-            bar.icon_color
+            bar.icon_color,
+
+            system_tray.background
         ];
     }
 
     // TODO: make bindings able to be used here that way we dont need the getBindings hack
     getDynamicSCSS() {
-        const { bar } = globals.optionsHandler.options;
+        const { bar, system_tray } = globals.optionsHandler.options;
 
         return [
-            $("bar-background-color", HEXtoCSSRGBA(bar.background.value)),
-            $("bar-icon-color", HEXtoCSSRGBA(bar.icon_color.value)),
+            $("bar-background-color", HEXtoSCSSRGBA(bar.background.value)),
+            $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value)),
+
+            $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value)),
         ].join("\n");
     }
 

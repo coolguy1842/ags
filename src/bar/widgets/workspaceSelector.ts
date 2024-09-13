@@ -1,13 +1,17 @@
 import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import Gtk from "gi://Gtk?version=3.0";
+import { ValueInEnumValidator } from "src/options";
 
 const hyprland = await Service.import("hyprland");
 
 //#region PROPS
 
-type ScrollDirection = "inverted" | "normal";
+enum ScrollDirection {
+    INVERTED = "inverted",
+    NORMAL = "normal"
+};
 const defaultProps = {
-    scroll_direction: "normal" as ScrollDirection
+    scroll_direction: ScrollDirection.NORMAL
 };
 
 type PropsType = typeof defaultProps;
@@ -30,11 +34,7 @@ function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProp
         }
     }
 
-    switch(newProps.scroll_direction) {
-    case "inverted": case "normal": break;
-    default: newProps.scroll_direction = fallback.scroll_direction;
-    }
-
+    newProps.scroll_direction = new ValueInEnumValidator(ScrollDirection).validate(newProps.scroll_direction) ?? fallback.scroll_direction;
     return newProps;
 }
 
