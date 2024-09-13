@@ -58,7 +58,9 @@ export class StyleHandler implements IReloadable {
             bar.background,
             bar.icon_color,
 
-            system_tray.background
+            system_tray.background,
+            system_tray.padding,
+            system_tray.border_radius
         ];
     }
 
@@ -71,6 +73,8 @@ export class StyleHandler implements IReloadable {
             $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value)),
 
             $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value)),
+            $("system-tray-padding", `${system_tray.padding.value}px`),
+            $("system-tray-border-radius", `${system_tray.border_radius.value}px`),
         ].join("\n");
     }
 

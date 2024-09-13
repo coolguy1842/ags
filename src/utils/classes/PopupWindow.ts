@@ -153,35 +153,31 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
         this._layout.put(this._childWrapper, 0, 0);
 
-        this._wrapperAllocation = new Variable({
-            x: 0, y: 0,
-            width: 0, height: 0
-        } as Allocation, {
+
+        const checkWrapper = () => {
+            const visible = this._window.is_visible();
+            if(!visible) {
+                this._window.set_visible(true);
+            }
+
+            const allocation = this._childWrapper.get_allocation();
+            if(!visible) {
+                this._window.set_visible(false);
+            }
+
+            return allocation;
+        }
+
+        this._wrapperAllocation = new Variable({ x: 0, y: 0, width: 0, height: 0 } as Allocation, {
             poll: [
-                500,
-                (variable) => {
-                    if(this._childWrapper.is_destroyed || !this._childWrapper.get_accessible()) {
-                        variable.stopPoll();
-                        variable.dispose();
-
-                        return {
-                            x: 0, y: 0,
-                            width: 0, height: 0
-                        } as Allocation;
-                    }
-
-                    const is_visible = this._window.is_visible();
-                    if(!is_visible) {
-                        this._window.set_visible(true);
-                    }
-
-                    const allocation = this._childWrapper.get_allocation()
-                    this._window.set_visible(is_visible);
-
-                    return allocation;
+                100, () => {
+                    return checkWrapper();
                 }
             ]
         });
+        this._childWrapper.connect("draw", () => {
+            this._wrapperAllocation.value = checkWrapper();
+        })
 
         this._screenBounds = new Variable({
             x: 0, y: 0,

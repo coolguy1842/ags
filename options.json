@@ -20,7 +20,9 @@
             "props": {
                 "clock_format": "%a %b %d, %H:%M:%S"
             }
-        },
+        }
+    ],
+    "bar.layout.right": [
         {
             "name": "SystemTray",
             "props": {
@@ -28,18 +30,15 @@
                 "enable_favorites": true,
                 "background": "#BDA4A419",
                 "horizontal_padding": 4,
-                "vertical_padding": 0,
-                "border_radius": 8
+                "vertical_padding": 2,
+                "border_radius": 8,
+                "icon_size": 14
             }
         }
     ],
-    "bar.layout.right": [],
     "system_tray.background": "#000000BF",
-    "system_tray.favorites": [
-        "chrome_status_icon_1--Vesktop",
-        "chrome_status_icon_1--",
-        "chrome_status_icon_1--Signal_Desktop",
-        "spotify-client-spotify-",
-        "nm-applet-Network-"
-    ]
+    "system_tray.favorites": [],
+    "system_tray.icon_size": 14,
+    "system_tray.padding": 8,
+    "system_tray.border_radius": 12
 }

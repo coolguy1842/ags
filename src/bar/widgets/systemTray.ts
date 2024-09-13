@@ -1,6 +1,6 @@
 import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
-import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
-import { DerivedVariable, getTrayItemID } from "src/utils/utils";
+import { systemTray, TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
+import { DerivedVariable, getActiveFavorites, getTrayItemID } from "src/utils/utils";
 import { PopupWindow } from "src/utils/classes/PopupWindow";
 import { PopupAnimations, TPosition } from "src/utils/classes/PopupAnimation";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
@@ -11,6 +11,7 @@ import { BarPosition, BooleanValidator, HEXColorValidator, NumberValidator } fro
 import { globals } from "src/globals";
 import Box from "types/widgets/box";
 import { HEXtoCSSRGBA } from "src/utils/colorUtils";
+import { Binding } from "types/service";
 
 const tray = await Service.import("systemtray");
 
@@ -22,6 +23,8 @@ const defaultProps = {
     
     spacing: 3,
     border_radius: 8,
+
+    icon_size: 50,
     
     horizontal_padding: 4,
     vertical_padding: 2,
@@ -56,6 +59,8 @@ function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProp
     newProps.horizontal_padding = new NumberValidator({ min: 0, max: 32 }).validate(newProps.horizontal_padding) ?? fallback.horizontal_padding;
     newProps.vertical_padding = new NumberValidator({ min: 0, max: 12 }).validate(newProps.vertical_padding) ?? fallback.vertical_padding;
 
+    newProps.icon_size = new NumberValidator({ min: 0, max: 60 }).validate(newProps.icon_size) ?? fallback.icon_size;
+
     return newProps;
 }
 
@@ -76,7 +81,7 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
     name = "SystemTray";
     defaultProps = defaultProps;
 
-    private _updateTray(trayBox: Box<Gtk.Widget, unknown>, trayType: TrayType = TrayType.FAVORITES, onMiddleClick: (item: TrayItem) => void) {
+    private _updateTray(trayBox: Box<Gtk.Widget, unknown>, trayType: TrayType = TrayType.FAVORITES, iconSize: number | Binding<any, any, number>, onMiddleClick: (item: TrayItem) => void) {
         const { system_tray } = globals.optionsHandler.options;
 
         const items = tray.items
@@ -88,7 +93,7 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 default: return false;
                 }
             })
-            .map(item => this.trayButton(item, onMiddleClick));
+            .map(item => this.trayButton(item, iconSize, onMiddleClick));
         trayBox.children = items;
     }
 
@@ -105,6 +110,10 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
             system_tray.favorites.value = system_tray.favorites.value.filter(x => x != getTrayItemID(item));
         }
 
+        const updateTrayFn = (self: Box<Gtk.Widget, unknown>) => {
+            this._updateTray(self, trayType, props.icon_size, onMiddleClick);
+        }
+
         return Widget.Box({
             class_name: "bar-system-tray",
             // seems to be a little more on the right so add 1px to left padding
@@ -119,20 +128,21 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
             children: [
                 Widget.Box({
                     spacing: props.spacing,
-                    setup: (self) => this._updateTray(self, trayType, onMiddleClick)
+                    setup: updateTrayFn
                 })
-                    .hook(tray, self => this._updateTray(self, trayType, onMiddleClick))
-                    .hook(system_tray.favorites, self => this._updateTray(self, trayType, onMiddleClick)),
+                    .hook(tray, updateTrayFn)
+                    .hook(system_tray.favorites, updateTrayFn),
                     
-                props.enable_favorites ? this.trayPopupFavoritesButton(monitor.id) : Widget.Box()
+                props.enable_favorites ? this.trayPopupFavoritesButton(monitor.id, props) : Widget.Box()
             ]
         }); 
     }
 
-    private trayButton(item: TrayItem, onMiddleClick: (item: TrayItem) => void) {
+    private trayButton(item: TrayItem, iconSize: number | Binding<any, any, number>, onMiddleClick: (item: TrayItem) => void) {
         return Widget.Button({
             classNames: [ "bar-system-tray-item", `bar-system-tray-item-id-${getTrayItemID(item)}` ],
             child: Widget.Icon({
+                size: iconSize,
                 icon: item.bind("icon")
             }),
             onPrimaryClick: (self, event) => {
@@ -145,7 +155,7 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
         })
     }
 
-    private trayPopupFavoritesButton(monitorID: number) {
+    private trayPopupFavoritesButton(monitorID: number, props: PropsType) {
         const button = Widget.Button({
             className: "bar-system-tray-popup-favorites-button",
             label: "󰄝 "
@@ -215,11 +225,11 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 }
                 }
                 
-                // out.x = Math.min(out.x, (screenBounds.width - childAllocation.width) - screenPadding);
-                // out.x = Math.max(out.x, screenPadding);
+                out.x = Math.min(out.x, (screenBounds.width - childAllocation.width) - screenPadding);
+                out.x = Math.max(out.x, screenPadding);
 
-                // out.y = Math.min(out.y, screenBounds.height - screenPadding);
-                // out.y = Math.max(out.y, screenPadding);
+                out.y = Math.min(out.y, screenBounds.height - screenPadding);
+                out.y = Math.max(out.y, screenPadding);
 
                 return out;
             };
@@ -258,6 +268,7 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 endDerived.stop();
             };
 
+            this._systemTrayPopupWindow.child.spacing = props.spacing;
             this._systemTrayPopupWindow.show(monitorID, endDerived);
         }
 
@@ -279,7 +290,10 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
             ]
         }
 
-        return new PopupWindow(
+        const updateTrayFn = (self: Box<Gtk.Widget, unknown>) => {
+            this._updateTray(self, trayType, system_tray.icon_size.bind(), onMiddleClick);
+        }
+        const popupWindow = new PopupWindow(
             {
                 name: "system-tray-popup",
                 keymode: "on-demand"
@@ -287,10 +301,10 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
             },
             Widget.Box({
                 className: "system-tray",
-                setup: (self) => this._updateTray(self, trayType, onMiddleClick)
+                setup: updateTrayFn
             })
-                .hook(tray, self => this._updateTray(self, trayType, onMiddleClick))
-                .hook(system_tray.favorites, self => this._updateTray(self, trayType, onMiddleClick)),
+                .hook(tray, updateTrayFn)
+                .hook(system_tray.favorites, updateTrayFn),
             {
                 animation: PopupAnimations.Ease,
                 duration: 0.4,
@@ -301,5 +315,17 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 }
             }
         );
+
+
+        const tryHide = () => {
+            if(getActiveFavorites(system_tray.favorites.value).length == systemTray.items.length) {
+                popupWindow?.hide();
+            }
+        }
+
+        system_tray.favorites.connect("changed", () => tryHide());
+        systemTray.connect("changed", () => tryHide());
+
+        return popupWindow;
     }
 };

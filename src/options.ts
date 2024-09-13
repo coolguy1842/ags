@@ -149,6 +149,11 @@ export interface IOptions extends TOptions {
     system_tray: {
         background: Option<string>;
         favorites: Option<string[]>;
+
+        icon_size: Option<number>;
+
+        padding: Option<number>;
+        border_radius: Option<number>;
     }
 };
 
@@ -192,7 +197,12 @@ export function getOptions(): IOptions {
         },
         system_tray: {
             background: option("#000000BF", new HEXColorValidator()),
-            favorites: option([] as string[], new StringArrayValidator())
+            favorites: option([] as string[], new StringArrayValidator()),
+
+            icon_size: option(12, new NumberValidator({ min: 1, max: 30 })),
+
+            padding: option(8, new NumberValidator({ min: 0, max: 30 })),
+            border_radius: option(12, new NumberValidator({ min: 0, max: 24 }))
         }
     };
 }; 
