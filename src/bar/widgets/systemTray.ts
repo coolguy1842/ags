@@ -166,13 +166,10 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                     }
                 };
     
-                const parentAllocation = button.parent.parent.get_allocation();
                 const allocation = button.get_allocation();
-
-                // const barPosition = globals.optionsHandler.options.bar.position.value;
                 const position = {
-                    x: (parentAllocation.x + allocation.x) + (allocation.width / 2),
-                    y: (parentAllocation.y + allocation.y) + allocation.height
+                    x: allocation.x + (allocation.width / 2),
+                    y: allocation.y + allocation.height
                 };
 
                 return position;
@@ -218,11 +215,11 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 }
                 }
                 
-                out.x = Math.min(out.x, (screenBounds.width - childAllocation.width) - screenPadding);
-                out.x = Math.max(out.x, screenPadding);
+                // out.x = Math.min(out.x, (screenBounds.width - childAllocation.width) - screenPadding);
+                // out.x = Math.max(out.x, screenPadding);
 
-                out.y = Math.min(out.y, screenBounds.height - screenPadding);
-                out.y = Math.max(out.y, screenPadding);
+                // out.y = Math.min(out.y, screenBounds.height - screenPadding);
+                // out.y = Math.max(out.y, screenPadding);
 
                 return out;
             };
