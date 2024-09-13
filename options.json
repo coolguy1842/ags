@@ -1,6 +1,6 @@
 {
     "icons.app_launcher.search": "system-search-symbolic",
-    "bar.position": "top",
+    "bar.position": "bottom",
     "bar.height": 32,
     "bar.background": "#000000BF",
     "bar.icon_color": "#5D93B0FF",
@@ -28,9 +28,11 @@
             "props": {
                 "spacing": 3,
                 "enable_favorites": true,
-                "favorites": [],
                 "background": "#BDA4A419"
             }
         }
+    ],
+    "bar.tray_favorites": [
+        "chrome_status_icon_1--Vesktop"
     ]
 }

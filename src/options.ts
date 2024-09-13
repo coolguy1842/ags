@@ -10,8 +10,24 @@ type TBarLayout = TBarLayoutItem<keyof (typeof BarWidgets)>[];
 
 // TODO: add options for min and max range of number
 export class NumberValidator<T extends number> implements OptionValidator<T> {
+    private _min?: T;
+    private _max?: T;
+
+    constructor(options?: {
+        min?: T,
+        max?: T
+    }) {
+        this._min = options?.min;
+        this._max = options?.max;
+    }
+
     validate(value: T, previousValue?: T) {
-        return isNaN(value) ? undefined : value;
+        if(isNaN(value)) return undefined;
+
+        if(this._min && value < this._min) return this._min;
+        if(this._max && value > this._max) return this._max;
+
+        return value;
     }
 };
 
@@ -84,7 +100,7 @@ export class ValueInEnumValidator<E extends Enum<E>, Key extends keyof E> implem
 
 
 
-enum BarPosition {
+export enum BarPosition {
     TOP = "top",
     BOTTOM = "bottom"
 };
@@ -111,6 +127,8 @@ export interface IOptions extends TOptions {
             center: Option<TBarLayout>;
             right: Option<TBarLayout>;
         };
+
+        tray_favorites: Option<string[]>
     };
 };
 
@@ -124,7 +142,7 @@ export function getOptions(): IOptions {
 
         bar: {
             position: option(BarPosition.BOTTOM, new ValueInEnumValidator(BarPosition)),
-            height: option(32, new NumberValidator()),
+            height: option(32, new NumberValidator({ min: 12, max: 60 })),
 
             background: option("#000000BF", new HEXColorValidator()),
             icon_color: option("#5D93B0FF", new HEXColorValidator()),
@@ -150,7 +168,9 @@ export function getOptions(): IOptions {
                     ] as TBarLayout,
                     new BarLayoutValidator()
                 )
-            }
+            },
+
+            tray_favorites: option([] as string[], new StringArrayValidator())
         }
     };
 }; 

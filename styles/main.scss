@@ -1,4 +1,5 @@
-@import "./bar/bar.scss";
+@import "./bar";
+@import "./systemTray";
 
 .background {
     background-color: rgba($color: #000000, $alpha: 0.0);
