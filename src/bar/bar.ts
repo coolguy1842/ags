@@ -17,12 +17,15 @@ export function Bar(monitor: TBarWidgetMonitor) {
                 css: bar.layout.outer_gap.bind().as(gap => {
                     return `margin-left: ${gap}px;`;
                 }),
+                hpack: "start",
+                vpack: "center",
                 hexpand: true,
                 spacing: bar.layout.gap.bind(),
                 children: bar.layout.left.bind().as(c => c.map(x => BarWidgets[x.name].create(monitor, x.props as any)))
             }),
             centerWidget: Widget.Box({
                 hpack: "center",
+                vpack: "center",
                 hexpand: true,
                 spacing: bar.layout.gap.bind(),
                 children: bar.layout.center.bind().as(c => c.map(x => BarWidgets[x.name].create(monitor, x.props as any)))

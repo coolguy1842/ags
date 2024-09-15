@@ -8,6 +8,7 @@ import { WindowProps } from "types/widgets/window";
 import { PopupAnimation, TPosition } from "./PopupAnimation";
 import { sleep } from "../utils";
 import Widgets from "../widgets/widgets";
+import { IReloadable } from "src/interfaces/reloadable";
 
 export type PopupPosition = TPosition | Variable<TPosition>;
 export type AnimationOptions = {
@@ -18,10 +19,17 @@ export type AnimationOptions = {
     refreshRate: number;
 };
 
-export class PopupWindow<Child extends Gtk.Widget, Attr> {
+export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable {
+    private _onLoad?: (self: PopupWindow<Child, Attr>) => void;
+    private _loaded: boolean;
+
     private _position: Variable<TPosition>;
     private _lastPosition: TPosition;
     private _lastDisplayPosition: TPosition;
+
+
+    private _activeListeners: { variable: any, listener: number }[];
+
     
     private _positionListener?: number;
 
@@ -39,7 +47,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     private _onShow?: (self: PopupWindow<Child, Attr>) => void;
     private _onHide?: (self: PopupWindow<Child, Attr>) => void;
 
-    private _wrapperAllocation: Variable<Allocation>;
+    private _wrapperAllocation: Variable<Rectangle>;
     private _screenBounds: Variable<Rectangle>;
 
 
@@ -54,7 +62,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         this._child = child;
         (this._childWrapper as any).child = this._child;
 
-        this.moveChild(this._position.value);
+        this.updateChild();
     }
 
     get onShow() { return this._onShow; }
@@ -81,6 +89,21 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     }
 
 
+    private _getWrapperAllocation() {
+        const visible = this._window.is_visible();
+        if(!visible) {
+            this._window.set_visible(true);
+        }
+
+        const allocation = this._childWrapper.get_allocation();
+        if(!visible) {
+            this._window.set_visible(false);
+        }
+
+        return allocation;
+    }
+
+
     constructor({
         anchor = [ "top", "bottom", "left", "right" ],
         exclusive,
@@ -94,7 +117,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         popup = false,
         visible = false,
         ...params
-    }: WindowProps<Child, Attr> = {}, child: Child, animationOptions?: AnimationOptions, onShow?: typeof this._onShow, onHide?: typeof this._onHide) {
+    }: WindowProps<Child, Attr> = {}, child: Child, animationOptions?: AnimationOptions, onShow?: typeof this._onShow, onHide?: typeof this._onHide, onLoad?: typeof this._onLoad) {
         this._window = Widget.Window({
             anchor,
             exclusive,
@@ -115,6 +138,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         this._animating = false;
 
         this._animationOptions = animationOptions;
+
+        this._onLoad = onLoad;
 
         this._onShow = onShow;
         this._onHide = onHide;
@@ -152,68 +177,64 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         });
 
         this._layout.put(this._childWrapper, 0, 0);
+        this._child = child;
 
+        this._wrapperAllocation = new Variable(this._getWrapperAllocation(), { poll: [ 100, () => this._getWrapperAllocation() ] });
+        this._wrapperAllocation.stopPoll();
 
-        const checkWrapper = () => {
-            const visible = this._window.is_visible();
-            if(!visible) {
-                this._window.set_visible(true);
-            }
-
-            const allocation = this._childWrapper.get_allocation();
-            if(!visible) {
-                this._window.set_visible(false);
-            }
-
-            return allocation;
-        }
-
-        this._wrapperAllocation = new Variable({ x: 0, y: 0, width: 0, height: 0 } as Allocation, {
-            poll: [
-                100, () => {
-                    return checkWrapper();
-                }
-            ]
-        });
-        this._childWrapper.connect("draw", () => {
-            this._wrapperAllocation.value = checkWrapper();
-        })
-
-        this._screenBounds = new Variable({
-            x: 0, y: 0,
-            width: 0, height: 0
-        } as Rectangle, {
-            poll: [
-                1000,
-                (variable) => {
-                    if(this._childWrapper.is_destroyed || !this._childWrapper.get_accessible()) {
-                        variable.stopPoll();
-                        variable.dispose();
-
-                        return {
-                            x: 0, y: 0,
-                            width: 0, height: 0
-                        } as Rectangle;
-                    }
-
-                    return this.getScreenBounds();
-                }
-            ]
-        });
+        this._screenBounds = new Variable(this.getScreenBounds(), { poll: [ 1000, () => this.getScreenBounds() ] });
+        this._screenBounds.stopPoll();
 
         this._position = new Variable({ x: 0, y: 0 });
         this._lastPosition = this._position.value;
         this._lastDisplayPosition = this._position.value;
-        
-        this._child = child
-        this.child = this._child;
 
-        this._positionListener = this._position.connect("changed", () => this.updateChild());
-        this._wrapperAllocation.connect("changed", () => this.updateChild());
-        this._screenBounds.connect("changed", () => this.updateChild());
+        this._activeListeners = [];
+        this._loaded = false;
     }
 
+    load(): void {
+        if(this._loaded) return;
+
+        this._wrapperAllocation.startPoll();
+        this._activeListeners.push({
+            variable: this._childWrapper,
+            listener: this._childWrapper.connect("draw", () => {
+                this._wrapperAllocation.value = this._getWrapperAllocation();
+            })
+        })
+
+        this._position = new Variable({ x: 0, y: 0 });
+        this._lastPosition = this._position.value;
+        this._lastDisplayPosition = this._position.value;
+
+        this._activeListeners.push({ variable: this._position,          listener: this._position         .connect("changed", () => this.updateChild()) });
+        this._activeListeners.push({ variable: this._wrapperAllocation, listener: this._wrapperAllocation.connect("changed", () => this.updateChild()) });
+        this._activeListeners.push({ variable: this._screenBounds,      listener: this._screenBounds     .connect("changed", () => this.updateChild()) });
+
+        this.child = this._child;
+
+        this._loaded = true;
+
+        if(this._onLoad) {
+            this._onLoad(this);
+        }
+    }
+
+    cleanup(): void {
+        if(!this._loaded) return;
+
+        for(const listener of this._activeListeners) {
+            listener.variable.disconnect(listener.listener);
+        }
+
+        this._loaded = false;
+    }
+
+
     show(monitor: number, position: PopupPosition) {
+        if(!this._loaded) return;
+
         this._window.monitor = monitor;
         
         this._window.set_visible(true);
@@ -247,6 +268,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     }
 
     hide() {
+        if(!this._loaded) return;
+
         this._shouldClose = true;
 
         if(this._animationOptions) {
@@ -284,7 +307,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
         updateFrequency: number,
         func: PopupAnimation["func"]
     ): Promise<boolean> {
-        if(this._animating) return false;
+        if(!this._loaded || this._animating) return false;
 
         this._animating = true;
 
@@ -315,6 +338,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     }
 
     cancelAnimation() {
+        if(!this._loaded) return;
+        
         if(!this._animating) {
             return;
         }
@@ -322,7 +347,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
 
 
     private updateChild() {
-        if(!this._window.is_visible() || this._animating) {
+        if(!this._loaded || !this._window.is_visible() || this._animating) {
             return;
         }
 
@@ -330,6 +355,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> {
     }
 
     private moveChild(position: TPosition) {
+        if(!this._loaded) return;
+        
         const displayPosition = {
             x: Math.floor(position.x),
             y: Math.floor(position.y)

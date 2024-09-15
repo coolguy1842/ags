@@ -1,7 +1,8 @@
+import { globals } from "./globals";
 import { Bar } from "./bar/bar";
 import { IReloadable } from "./interfaces/reloadable";
-import { globals } from "./globals";
 import Gdk30 from "gi://Gdk";
+import { TrayFavoritesPopupWindow } from "./popupWindows/systemTray";
 
 const hyprland = await Service.import("hyprland");
 
@@ -77,9 +78,13 @@ export class Main implements IReloadable {
         });
 
         this.reloadWindows();
+
+        TrayFavoritesPopupWindow.load();
     }
 
     cleanup(): void {
+        TrayFavoritesPopupWindow.cleanup();
+
         globals.styleHandler.cleanup();
         globals.optionsHandler.cleanup();
     }

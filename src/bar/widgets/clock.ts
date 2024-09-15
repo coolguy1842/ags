@@ -1,5 +1,5 @@
-import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { globals } from "src/globals";
+import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { PopupWindow } from "src/utils/classes/PopupWindow";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { DerivedVariable } from "src/utils/utils";

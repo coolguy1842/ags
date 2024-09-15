@@ -1,17 +1,18 @@
+import { globals } from "src/globals";
 import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
-import { systemTray, TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
+import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
 import { DerivedVariable, getActiveFavorites, getTrayItemID } from "src/utils/utils";
-import { PopupWindow } from "src/utils/classes/PopupWindow";
-import { PopupAnimations, TPosition } from "src/utils/classes/PopupAnimation";
+import { TPosition } from "src/utils/classes/PopupAnimation";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 
 import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk";
 import { BarPosition, BooleanValidator, HEXColorValidator, NumberValidator } from "src/options";
-import { globals } from "src/globals";
 import Box from "types/widgets/box";
 import { HEXtoCSSRGBA } from "src/utils/colorUtils";
-import { Binding } from "types/service";
+import { updateTray } from "src/components/trayComponents";
+import { TrayType } from "../enums/trayType";
+import { TrayFavoritesPopupWindow } from "src/popupWindows/systemTray";
 
 const tray = await Service.import("systemtray");
 
@@ -71,56 +72,43 @@ function propsValidator(props: PropsType, previousProps?: PropsType) {
 
 //#endregion
 
-enum TrayType {
-    ALL,
-    FAVORITES,
-    NON_FAVORITES
-}
-
 export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
     name = "SystemTray";
     defaultProps = defaultProps;
-
-    private _updateTray(trayBox: Box<Gtk.Widget, unknown>, trayType: TrayType = TrayType.FAVORITES, iconSize: number | Binding<any, any, number>, onMiddleClick: (item: TrayItem) => void) {
-        const { system_tray } = globals.optionsHandler.options;
-
-        const items = tray.items
-            .filter(item => {
-                switch(trayType) {
-                case TrayType.ALL: return true;
-                case TrayType.FAVORITES: return system_tray.favorites.value.includes(getTrayItemID(item));
-                case TrayType.NON_FAVORITES: return !system_tray.favorites.value.includes(getTrayItemID(item));
-                default: return false;
-                }
-            })
-            .map(item => this.trayButton(item, iconSize, onMiddleClick));
-        trayBox.children = items;
-    }
 
     propsValidator = propsValidator;
     create(monitor: TBarWidgetMonitor, props: PropsType) {
         const { system_tray } = globals.optionsHandler.options;
         const trayType = props.enable_favorites ? TrayType.FAVORITES : TrayType.ALL;
 
-        if(!this._systemTrayPopupWindow) {
-            this._systemTrayPopupWindow = this.createTrayPopupWindow();
-        }
-
         const onMiddleClick = (item: TrayItem) => {
             system_tray.favorites.value = system_tray.favorites.value.filter(x => x != getTrayItemID(item));
         }
 
         const updateTrayFn = (self: Box<Gtk.Widget, unknown>) => {
-            this._updateTray(self, trayType, props.icon_size, onMiddleClick);
+            updateTray(self, trayType, system_tray.favorites.value, props.icon_size, onMiddleClick);
+        }
+
+        const popupButton = this.trayPopupFavoritesButton(monitor.id, props);
+        const updatePopupFn = (self: Box<Gtk.Widget, unknown>) => {
+            if(!props.enable_favorites) {
+                popupButton.set_visible(false);
+                return;
+            }
+
+            if(getActiveFavorites(system_tray.favorites.value).length == tray.items.length) {
+                popupButton.set_visible(false);
+                return;
+            }
+
+            popupButton.set_visible(true);
         }
 
         return Widget.Box({
             class_name: "bar-system-tray",
-            // seems to be a little more on the right so add 1px to left padding
             css: `
                 background-color: ${HEXtoCSSRGBA(props.background)};
                 padding: ${props.vertical_padding}px ${props.horizontal_padding}px;
-                padding-left: ${props.horizontal_padding + 1}px;
                 border-radius: ${props.border_radius}px;
             `,
             spacing: props.spacing,
@@ -132,40 +120,19 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 })
                     .hook(tray, updateTrayFn)
                     .hook(system_tray.favorites, updateTrayFn),
-                    
-                props.enable_favorites ? this.trayPopupFavoritesButton(monitor.id, props) : Widget.Box()
-            ]
-        }); 
-    }
-
-    private trayButton(item: TrayItem, iconSize: number | Binding<any, any, number>, onMiddleClick: (item: TrayItem) => void) {
-        return Widget.Button({
-            classNames: [ "bar-system-tray-item", `bar-system-tray-item-id-${getTrayItemID(item)}` ],
-            child: Widget.Icon({
-                size: iconSize,
-                icon: item.bind("icon")
-            }),
-            onPrimaryClick: (self, event) => {
-                item.activate(event);
-            },
-            onSecondaryClick: (self, event) => {
-                item.menu?.popup_at_widget(self, Gdk.Gravity.CENTER, Gdk.Gravity.SOUTH_WEST, event);
-            },
-            onMiddleClick: () => onMiddleClick(item)
-        })
+                popupButton
+            ],
+            setup: updatePopupFn
+        }).hook(tray, updatePopupFn).hook(system_tray.favorites, updatePopupFn);
     }
 
     private trayPopupFavoritesButton(monitorID: number, props: PropsType) {
         const button = Widget.Button({
             className: "bar-system-tray-popup-favorites-button",
-            label: "󰄝 "
+            label: "󰄝 "
         });
 
         button.on_clicked = () => {
-            if(!this._systemTrayPopupWindow) {
-                this._systemTrayPopupWindow = this.createTrayPopupWindow();
-            }
-
             const barPosition = globals.optionsHandler.options.bar.position;
             const barHeight = globals.optionsHandler.options.bar.height;
 
@@ -239,8 +206,8 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                     barPosition,
                     barHeight,
                     position,
-                    this._systemTrayPopupWindow.childAllocation,
-                    this._systemTrayPopupWindow.screenBounds
+                    TrayFavoritesPopupWindow.childAllocation,
+                    TrayFavoritesPopupWindow.screenBounds
                 ],
                 deriveFunction
             );
@@ -249,8 +216,8 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 [
                     endDerived,
                     barPosition,
-                    this._systemTrayPopupWindow.childAllocation,
-                    this._systemTrayPopupWindow.screenBounds,
+                    TrayFavoritesPopupWindow.childAllocation,
+                    TrayFavoritesPopupWindow.screenBounds,
                 ],
                 (derived, barPos, childAllocation, screenBounds) => {
                     return {
@@ -260,72 +227,18 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 }
             );
     
-            this._systemTrayPopupWindow.animationOptions!.startPosition = startDerived;
-            this._systemTrayPopupWindow.onHide = () => {
+            TrayFavoritesPopupWindow.animationOptions!.startPosition = startDerived;
+            TrayFavoritesPopupWindow.onHide = () => {
                 position.stopPoll();
 
                 startDerived.stop();
                 endDerived.stop();
             };
 
-            this._systemTrayPopupWindow.child.spacing = props.spacing;
-            this._systemTrayPopupWindow.show(monitorID, endDerived);
+            TrayFavoritesPopupWindow.child.spacing = props.spacing;
+            TrayFavoritesPopupWindow.show(monitorID, endDerived);
         }
 
         return button;
-    }
-
-
-    private _systemTrayPopupWindow?: PopupWindow<Box<Gtk.Widget, unknown>, unknown>;
-    private createTrayPopupWindow() {
-        const { system_tray } = globals.optionsHandler.options;
-        const trayType = TrayType.NON_FAVORITES;
-
-        const onMiddleClick = (item: TrayItem) => {
-            system_tray.favorites.value = [
-                ...new Set([
-                    ...system_tray.favorites.value,
-                    getTrayItemID(item)
-                ])
-            ]
-        }
-
-        const updateTrayFn = (self: Box<Gtk.Widget, unknown>) => {
-            this._updateTray(self, trayType, system_tray.icon_size.bind(), onMiddleClick);
-        }
-        const popupWindow = new PopupWindow(
-            {
-                name: "system-tray-popup",
-                keymode: "on-demand"
-                // exclusivity: "exclusive"
-            },
-            Widget.Box({
-                className: "system-tray",
-                setup: updateTrayFn
-            })
-                .hook(tray, updateTrayFn)
-                .hook(system_tray.favorites, updateTrayFn),
-            {
-                animation: PopupAnimations.Ease,
-                duration: 0.4,
-                refreshRate: 165,
-                startPosition: {
-                    x: 0,
-                    y: 0
-                }
-            }
-        );
-
-
-        const tryHide = () => {
-            if(getActiveFavorites(system_tray.favorites.value).length == systemTray.items.length) {
-                popupWindow?.hide();
-            }
-        }
-
-        system_tray.favorites.connect("changed", () => tryHide());
-        systemTray.connect("changed", () => tryHide());
-
-        return popupWindow;
     }
 };
