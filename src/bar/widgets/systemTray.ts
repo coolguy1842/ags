@@ -227,7 +227,6 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 }
             );
     
-            TrayFavoritesPopupWindow.animationOptions!.startPosition = startDerived;
             TrayFavoritesPopupWindow.onHide = () => {
                 position.stopPoll();
 
@@ -236,7 +235,7 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
             };
 
             TrayFavoritesPopupWindow.child.spacing = props.spacing;
-            TrayFavoritesPopupWindow.show(monitorID, endDerived);
+            TrayFavoritesPopupWindow.show(monitorID, startDerived, endDerived);
         }
 
         return button;

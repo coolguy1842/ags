@@ -53,11 +53,7 @@ function createTrayFavoritesPopupWindow() {
         {
             animation: PopupAnimations.Ease,
             duration: 0.4,
-            refreshRate: 165,
-            startPosition: {
-                x: 0,
-                y: 0
-            }
+            refreshRate: 165
         },
         undefined,
         undefined,

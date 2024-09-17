@@ -20,7 +20,9 @@
             "props": {
                 "clock_format": "%a %b %d, %H:%M:%S"
             }
-        },
+        }
+    ],
+    "bar.layout.right": [
         {
             "name": "SystemTray",
             "props": {
@@ -34,14 +36,18 @@
             }
         }
     ],
-    "bar.layout.right": [],
     "system_tray.background": "#000000BF",
     "system_tray.favorites": [
         "chrome_status_icon_1--Signal_Desktop",
         "proton-vpn-app-protonvpn-app-",
+        "qBittorrent-qBittorrent-DL_speed:_552.4_KiB/s\nUP_speed:_0_B/s",
+        "steam-Steam-",
+        "chrome_status_icon_1--Vesktop",
         "chrome_status_icon_1--Heroic",
+        "qBittorrent-qBittorrent-DL_speed:_991.8_KiB/s\nUP_speed:_0_B/s",
         "chrome_status_icon_1--",
-        "spotify-client-spotify-"
+        "qBittorrent-qBittorrent-DL_speed:_0_B/s\nUP_speed:_0_B/s",
+        "vrmonitor-vrmonitor-SteamVR_Status"
     ],
     "system_tray.icon_size": 14,
     "system_tray.padding": 8,

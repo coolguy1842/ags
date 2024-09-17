@@ -69,11 +69,7 @@ export const TestPopupWindow = new PopupWindow(
     {
         animation: PopupAnimations.Ease,
         duration: 0.4,
-        refreshRate: 165,
-        startPosition: {
-            x: 0,
-            y: 0
-        }
+        refreshRate: 165
     }
 );
 
@@ -130,7 +126,7 @@ export class Clock implements IBarWidget<PropsType, Gtk.Button> {
                     }
                 );
     
-                TestPopupWindow.animationOptions!.startPosition = Utils.derive([derived], (variable) => {
+                const startPosition = new DerivedVariable([derived], (variable) => {
                     return {
                         x: variable.x,
                         y: 0
@@ -140,10 +136,12 @@ export class Clock implements IBarWidget<PropsType, Gtk.Button> {
 
                 TestPopupWindow.onHide = () => {
                     variable.stopPoll();
+
+                    startPosition.stop();
                     derived.stop();
                 };
     
-                TestPopupWindow.show(monitor.id, derived);
+                TestPopupWindow.show(monitor.id, startPosition, derived);
             }
         });
     }
