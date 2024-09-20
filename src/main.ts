@@ -38,13 +38,18 @@ export class Main implements IReloadable {
 
         this.loadMonitorLookups();
 
-        for(const window of [
-            ...hyprland.monitors.map(x => Bar({
-                plugname: x.name,
-                id: this._monitorLookups[x.name] ?? x.id
-            }))
-        ]) {
-            App.addWindow(window);
+        for(const monitor of hyprland.monitors) {
+            const id = this._monitorLookups[monitor.name] ?? monitor.id;
+            if(App.windows.find(x => x.name == `bar-${monitor.id}`)) {
+                continue;
+            }
+
+            const bar = Bar({
+                plugname: monitor.name,
+                id
+            });
+
+            App.addWindow(bar);
         }
     }
 

@@ -21,7 +21,8 @@ export function arraysEqual<T>(a: T[], b: T[]) {
 
 export function getTrayItemID(item: TrayItem) {
     // hard to make unique so use all info available
-    return `${item.id}-${item.title}-${item.tooltip_markup}`.replaceAll(" ", "_");
+    // TODO: tooltip_markup can change, must find a better way for unique ids
+    return `${item.id}-${item.title}-${item.menu?.dbusObject}-${item.tooltip_markup}`.replaceAll(" ", "_");
 }
 
 const systemTray = await Service.import("systemtray");

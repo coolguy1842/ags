@@ -25,9 +25,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
 
     private _position: Variable<TPosition>;
     private _lastPosition: TPosition;
-    private _lastDisplayPosition: TPosition;
 
-    private _lastShowStartPosition: TPosition;
+    private _lastShowStartPosition: PopupPosition;
 
 
     private _activeListeners: { variable: any, listener: number }[];
@@ -44,7 +43,6 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
     private _shouldClose: boolean;
 
     private _animationOptions?: AnimationOptions;
-    private _animating: boolean;
 
     private _onShow?: (self: PopupWindow<Child, Attr>) => void;
     private _onHide?: (self: PopupWindow<Child, Attr>) => void;
@@ -139,7 +137,6 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         } as WindowProps<Gtk.Layout, Attr>);
 
         this._shouldClose = true;
-        this._animating = false;
 
         this._animationOptions = animationOptions;
 
@@ -157,7 +154,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         });
 
         this.window.keybind("Insert", () => {
-            this._animating = false;
+            this.cancelAnimation();
         })
 
         this._window.on("button-press-event", (self, event) => {
@@ -194,7 +191,6 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
 
         this._position = new Variable({ x: 0, y: 0 });
         this._lastPosition = this._position.value;
-        this._lastDisplayPosition = this._position.value;
         this._lastShowStartPosition = { x: 0, y: 0 };
 
         this._activeListeners = [];
@@ -214,7 +210,6 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
 
         this._position = new Variable({ x: 0, y: 0 });
         this._lastPosition = this._position.value;
-        this._lastDisplayPosition = this._position.value;
 
         this._activeListeners.push({ variable: this._position,          listener: this._position         .connect("changed", () => this.updateChild()) });
         this._activeListeners.push({ variable: this._wrapperAllocation, listener: this._wrapperAllocation.connect("changed", () => this.updateChild()) });
@@ -224,7 +219,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
 
         this._loaded = true;
         this._hiding = false;
-        this._animationCancelInfo = undefined;
+
+        this._animationLooping = false;
+        this._currentAnimationInfo = undefined;
 
         if(this._onLoad) {
             this._onLoad(this);
@@ -233,6 +230,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
 
     cleanup(): void {
         if(!this._loaded) return;
+
+        this.cancelAnimation();
 
         for(const listener of this._activeListeners) {
             listener.variable.disconnect(listener.listener);
@@ -251,29 +250,23 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         this.updateScreenBounds();
         
         this.position = end;
-        this._lastShowStartPosition = {
-            x: (start instanceof Variable ? start.value.x : start.x),
-            y: (start instanceof Variable ? start.value.y : start.y)
-        };
+        this._lastShowStartPosition = start;
 
         if(this._animationOptions) {
-            console.log("showing");
             this.animate(
                 "show",
                 start,
                 end,
                 this._animationOptions.duration,
                 this._animationOptions.refreshRate,
-                this._animationOptions.animation.func
-            ).then((val) => {
-                if(!val) return;
-
-                if(this._onShow) {
-                    this._onShow(this);
-                }
-            }).catch((err) => {
-                console.log(`show cancelled`);
-            });
+                this._animationOptions.animation.func,
+                () => {
+                    if(this._onShow) {
+                        this._onShow(this);
+                    }
+                },
+                () => {}
+            );
 
             return;
         }
@@ -292,28 +285,23 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         if(this._animationOptions) {
             this.animate(
                 "hide",
-                this._lastPosition,
+                { x: this._lastPosition.x, y: this._lastPosition.y },
                 endPosition,
                 this._animationOptions.duration,
                 this._animationOptions.refreshRate,
-                this._animationOptions.animation.func
-            ).then((val) => {
-                this._hiding = false;
-
-                if(!val) {
-                    return;
+                this._animationOptions.animation.func,
+                () => {
+                    this._hiding = false;
+                    this._window.set_visible(false);
+                    
+                    if(this._onHide) {
+                        this._onHide(this);
+                    }
+                },
+                () => {
+                    this._hiding = false;
                 }
-
-                this._window.set_visible(false);
-                
-                if(this._onHide) {
-                    this._onHide(this);
-                }
-            }).catch((err) => {
-                console.log(`hide cancelled`);
-
-                this._hiding = false;
-            });
+            );
 
             return;
         }
@@ -327,102 +315,128 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         this._hiding = false;
     }
 
-    private _animationCancelInfo?: {
-        resolve: (value: boolean) => void;
-        onCancel?: () => void;
+    private _currentAnimationInfo?: {
+        name: string,
+
+        start: PopupPosition,
+        end: PopupPosition,
+        
+        duration: number,
+        updateFrequency: number,
+        
+        alpha: number,
+        addAlpha: number,
+
+        func: PopupAnimation["func"],
+
+        onComplete: () => void,
+        onCancel: () => void
     };
+
+    private _animationLooping: boolean = false;
+    async runAnimationLoop() {
+        if(this._animationLooping) return;
+
+        this._animationLooping = true;
+        while(this._animationLooping) {
+            if(!this._currentAnimationInfo) {
+                break;
+            }
+
+            let { name, duration, updateFrequency, start, end, alpha, addAlpha, onComplete } = this._currentAnimationInfo;
+            if(alpha > 1.0) {
+                onComplete();
+                
+                this._currentAnimationInfo.onCancel = () => {};
+                this.cancelAnimation();
+
+                break;
+            }
+
+
+            const startPosition = start instanceof Variable ? start.value : start;
+            const endPosition = end instanceof Variable ? end.value : end;
+
+            const position = this._currentAnimationInfo.func(startPosition, endPosition, Math.min(alpha, 1.0));
+            this.moveChild(position);
+
+            this._currentAnimationInfo.alpha += addAlpha;
+            await sleep((1000 * duration) / updateFrequency);
+        }
+
+        this._animationLooping = false;        
+    }
 
     async animate(
         name: string,
-        start: PopupPosition,
-        end: PopupPosition,
-        duration: number,
-        updateFrequency: number,
+        animationStart: PopupPosition,
+        animationEnd: PopupPosition,
+        animationDuration: number,
+        animationUpdateFrequency: number,
         func: PopupAnimation["func"],
-        onCancel?: () => void
-    ): Promise<boolean> {
-        if(!this._loaded) return false;
-        if(this._animating) {
-            await this.cancelAnimation();
+        onComplete: () => void,
+        onCancel: () => void
+    ) {
+        if(!this._loaded) return;
+        if(this._animationLooping) {
+            this.cancelAnimation();
         }
 
+        this._currentAnimationInfo = {
+            name,
 
-        const cancelPromise = new Promise<boolean>(async (resolve, reject) => {
-            this._animationCancelInfo = {
-                resolve: reject,
-                onCancel
-            };
+            start: animationStart,
+            end: animationEnd,
+            
+            duration: animationDuration,
+            updateFrequency: animationUpdateFrequency,
 
-            while(this._animationCancelInfo) {
-                await sleep(2);
-            }
+            alpha: 0,
+            addAlpha: 1 / animationUpdateFrequency,
 
-            resolve(false);
-        });
+            func,
 
-        const animationPromise = new Promise(async (resolve, reject) => {
-            this._animating = true;
+            onComplete,
+            onCancel
+        };
 
-            const interval = (1000 * duration) / updateFrequency;
-            const addStep = 1 / updateFrequency;
-
-            let step = 0;
-            while(this._animating && this._window.is_visible()) {
-                console.log(`${name} f`);
-                step = Math.min(1.0, step + addStep);
-
-                const startPosition = start instanceof Variable ? start.value : start;
-                const endPosition = end instanceof Variable ? end.value : end;
-
-                const position = func(startPosition, endPosition, step);
-                this.moveChild(position);
-
-                if(position.x == endPosition.x && position.y == endPosition.y) {
-                    this._animating = false;
-
-                    resolve(true);
-
-                    this._animationCancelInfo = undefined;
-
-                    return true;
-                }
-
-                await sleep(interval);
-            }
-
-            this._animating = false;
-            this._animationCancelInfo = undefined;
-
-            resolve(false);
-
-            return false;
-        });
-
-        return Promise.race([ animationPromise, cancelPromise ]) as Promise<boolean>;
+        this.runAnimationLoop();
     }
 
     cancelAnimation() {
         if(!this._loaded) return;
-        if(!this._animating) return;
 
-        this._animating = false;
-
-        if(this._animationCancelInfo) {
-            this._animationCancelInfo.resolve(false);
-            if(this._animationCancelInfo.onCancel) {
-                this._animationCancelInfo.onCancel();
-            }
-
-            this._animationCancelInfo = undefined;
+        if(this._currentAnimationInfo) {
+            this._currentAnimationInfo.onCancel();
         }
+
+        this._animationLooping = false;
+        this._currentAnimationInfo = undefined;
     }
 
-
     private updateChild() {
-        if(!this._loaded || !this._window.is_visible() || this._animating) {
+        if(!this._loaded || !this._window.is_visible()) {
             return;
         }
 
+        if(this._currentAnimationInfo) {
+            if(this._currentAnimationInfo.name != "moving") {
+                return;
+            }
+        }
+
+        const pos = this._position instanceof Variable ? this._position.value : this._position;
+        if(Math.abs(this._lastPosition.x - pos.x) <= 1 && Math.abs(this._lastPosition.y - pos.y) <= 1) {
+            return;
+        }
+
+        if(this._animationOptions) {
+            const { animation, duration, refreshRate } = this._animationOptions;
+            this.animate("moving", { x: this._lastPosition.x, y: this._lastPosition.y }, this._position, duration / 2, refreshRate, animation.func, () => {}, () => {});
+
+            return;
+        }
+        
         this.moveChild(this._position.value);
     }
 
@@ -444,11 +458,6 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         };
 
         displayPosition.y = this._screenBounds.value.height - displayPosition.y;
-        this._lastDisplayPosition = {
-            x: displayPosition.x,
-            y: displayPosition.y
-        };
-        
         this._layout.move(this._childWrapper, displayPosition.x, displayPosition.y);
     }
 

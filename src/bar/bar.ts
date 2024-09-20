@@ -7,7 +7,7 @@ export function Bar(monitor: TBarWidgetMonitor) {
 
     const window = Widget.Window({
         monitor: monitor.id,
-        name: `bar-${monitor.plugname}`,
+        name: `bar-${monitor.id}`,
         class_name: "bar",
         anchor: [ bar.position.value, "left", "right" ],
         exclusivity: "exclusive",

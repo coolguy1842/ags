@@ -216,13 +216,14 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 [
                     endDerived,
                     barPosition,
+                    barHeight,
                     TrayFavoritesPopupWindow.childAllocation,
                     TrayFavoritesPopupWindow.screenBounds,
                 ],
-                (derived, barPos, childAllocation, screenBounds) => {
+                (derived, barPos, barHeight, childAllocation, screenBounds) => {
                     return {
                         x: derived.x,
-                        y: barPos == BarPosition.TOP ? screenBounds.height + childAllocation.height : 0
+                        y: barPos == BarPosition.TOP ? screenBounds.height + childAllocation.height : barHeight
                     };
                 }
             );

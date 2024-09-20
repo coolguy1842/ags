@@ -7,7 +7,6 @@ import Box from "types/widgets/box";
 
 import Gdk from "gi://Gdk";
 import Gtk from "gi://Gtk?version=3.0";
-import { Option } from "src/utils/handlers/optionsHandler";
 
 const tray = await Service.import("systemtray");
 
