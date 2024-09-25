@@ -23,6 +23,7 @@ export class Globals implements IReloadable {
     private _paths?: typeof pathsList;
 
     private _clock?: Variable<GLib.DateTime>;
+    private _searchInput?: Variable<string>;
 
     private _optionsHandler?: OptionsHandler<ReturnType<typeof getOptions>>;
     private _styleHandler?: StyleHandler;
@@ -37,7 +38,8 @@ export class Globals implements IReloadable {
         if(this._loaded) return;
 
         this._paths = pathsList;
-
+        
+        this._searchInput = new Variable("");
         this._clock = new Variable(GLib.DateTime.new_now_local(), {
             poll: [1000, () => GLib.DateTime.new_now_local()],
         });
@@ -72,6 +74,7 @@ export class Globals implements IReloadable {
         this._styleHandler?.cleanup();
         this._optionsHandler?.cleanup();
 
+        this._searchInput = undefined;
         this._clock = undefined;
         this._paths = undefined;
 
@@ -80,7 +83,9 @@ export class Globals implements IReloadable {
 
 
     get paths() { return this._paths; }
+
     get clock() { return this._clock; }
+    get searchInput() { return this._searchInput; }
 
     get optionsHandler() { return this._optionsHandler; }
     get styleHandler() { return this._styleHandler; }

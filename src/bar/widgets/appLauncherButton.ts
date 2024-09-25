@@ -3,10 +3,13 @@ import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { DerivedVariable } from "src/utils/utils";
 
 import Gtk from "gi://Gtk?version=3.0";
+import { StringValidator } from "src/options";
 
 //#region PROPS
 
-const defaultProps = {};
+const defaultProps = {
+    icon: "󰣇 "
+};
 
 type PropsType = typeof defaultProps;
 
@@ -28,6 +31,8 @@ function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProp
         }
     }
 
+    props.icon = new StringValidator().validate(props.icon, fallback.icon) ?? fallback.icon;
+
     return newProps;
 }
 
@@ -46,7 +51,7 @@ export class AppLauncherButton implements IBarWidget<PropsType, Gtk.Button> {
     create(monitor: TBarWidgetMonitor, props: PropsType) {
         return Widget.Button({
             class_name: "bar-app-launcher-button",
-            label: "󰣇 ",
+            label: props.icon,
             onClicked: (self) => {
                 const AppLauncherPopupWindow = globals.popupWindows?.AppLauncher;
                 if(!AppLauncherPopupWindow) return;
@@ -79,6 +84,10 @@ export class AppLauncherButton implements IBarWidget<PropsType, Gtk.Button> {
                 );
 
                 AppLauncherPopupWindow.onHide = () => {
+                    if(globals.searchInput) {
+                        globals.searchInput.value = "";
+                    }
+                    
                     startDerived.stop();
                     endDerived.stop();
                 };

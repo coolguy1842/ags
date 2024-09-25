@@ -165,7 +165,10 @@ export interface IOptions extends TOptions {
 
     app_launcher: {
         background: Option<string>;
+        padding: Option<number>;
+        border_radius: Option<number>;
 
+        spacing: Option<number>;
         icon_size: Option<number>;
 
         rows: Option<number>;
@@ -218,12 +221,15 @@ export function getOptions(): IOptions {
             icon_size: option(12, new NumberValidator({ min: 1, max: 30 })),
 
             padding: option(8, new NumberValidator({ min: 0, max: 30 })),
-            border_radius: option(12, new NumberValidator({ min: 0, max: 24 }))
+            border_radius: option(12, new NumberValidator({ min: 0, max: 50 }))
         },
         app_launcher: {
             background: option("#000000BF", new HEXColorValidator()),
-            
-            icon_size: option(32, new NumberValidator({ min: 1, max: 120 })),
+            padding: option(12, new NumberValidator({ min: 0, max: 32 })),
+            border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
+
+            spacing: option(8, new NumberValidator({ min: 0, max: 50 })),
+            icon_size: option(32, new NumberValidator({ min: 1, max: 80 })),
 
             rows: option(3, new NumberValidator({ min: 1, max: 6 })),
             columns: option(5, new NumberValidator({ min: 1, max: 6 }))

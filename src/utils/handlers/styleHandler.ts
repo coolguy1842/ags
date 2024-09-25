@@ -52,7 +52,7 @@ export class StyleHandler implements IReloadable {
 
 
     getBindings() {
-        const { bar, system_tray } = globals.optionsHandler!.options;
+        const { bar, system_tray, app_launcher } = globals.optionsHandler!.options;
         
         return [
             bar.background,
@@ -60,13 +60,16 @@ export class StyleHandler implements IReloadable {
 
             system_tray.background,
             system_tray.padding,
-            system_tray.border_radius
+            system_tray.border_radius,
+
+            app_launcher.background,
+            app_launcher.padding
         ];
     }
 
     // TODO: make bindings able to be used here that way we dont need the getBindings hack
     getDynamicSCSS() {
-        const { bar, system_tray } = globals.optionsHandler!.options;
+        const { bar, system_tray, app_launcher } = globals.optionsHandler!.options;
 
         return [
             $("bar-background-color", HEXtoSCSSRGBA(bar.background.value)),
@@ -75,6 +78,10 @@ export class StyleHandler implements IReloadable {
             $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value)),
             $("system-tray-padding", `${system_tray.padding.value}px`),
             $("system-tray-border-radius", `${system_tray.border_radius.value}px`),
+
+            $("app-launcher-background-color", HEXtoSCSSRGBA(app_launcher.background.value)),
+            $("app-launcher-padding", `${app_launcher.padding.value}px`),
+            $("app-launcher-border-radius", `${app_launcher.border_radius.value}px`),
         ].join("\n");
     }
 
