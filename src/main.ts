@@ -2,12 +2,21 @@ import { globals } from "./globals";
 import { Bar } from "./bar/bar";
 import { IReloadable } from "./interfaces/reloadable";
 import Gdk30 from "gi://Gdk";
-import { TrayFavoritesPopupWindow } from "./popupWindows/systemTray";
 
 const hyprland = await Service.import("hyprland");
 
 export class Main implements IReloadable {
+    private _loaded: boolean = false;
     private _monitorLookups: { [name: string]: number } = {};
+
+    get loaded() { return this._loaded; }
+    set loaded(loaded: boolean) {
+        if(this._loaded == loaded) return;
+        
+        if(loaded) this.load();
+        else this.cleanup();
+    } 
+
 
     loadMonitorLookups() {
         // not fully tested, allows for monitors to be added and removed and shows on the right monitor properly
@@ -38,9 +47,10 @@ export class Main implements IReloadable {
 
         this.loadMonitorLookups();
 
+        const addedMonitors: number[] = [];
         for(const monitor of hyprland.monitors) {
             const id = this._monitorLookups[monitor.name] ?? monitor.id;
-            if(App.windows.find(x => x.name == `bar-${monitor.id}`)) {
+            if(addedMonitors.includes(id)) {
                 continue;
             }
 
@@ -50,6 +60,7 @@ export class Main implements IReloadable {
             });
 
             App.addWindow(bar);
+            addedMonitors.push(id);
         }
     }
 
@@ -73,24 +84,18 @@ export class Main implements IReloadable {
             }
         });
     
-        globals.optionsHandler.load();
-        globals.styleHandler.load();
-    
+        globals.load();
+
         App.config({
             // style here makes the startup look a bit nicer
-            style: globals.paths.OUT_CSS_IMPORTS,
+            style: globals.paths!.OUT_CSS_IMPORTS,
             windows: []
         });
 
         this.reloadWindows();
-
-        TrayFavoritesPopupWindow.load();
     }
 
     cleanup(): void {
-        TrayFavoritesPopupWindow.cleanup();
-
-        globals.styleHandler.cleanup();
-        globals.optionsHandler.cleanup();
+        globals.cleanup();
     }
 };

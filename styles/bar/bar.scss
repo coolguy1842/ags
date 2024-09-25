@@ -1,3 +1,7 @@
 .bar {
     background-color: $bar-background-color;
 }
+
+.bar-button {
+    @include bar-widget;   
+}

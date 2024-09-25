@@ -120,6 +120,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
     private _ignoreChange: boolean;
 
 
+    get loaded() { return this._loaded; }
     get options() { return this._options; }
 
 

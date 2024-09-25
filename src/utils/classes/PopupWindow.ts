@@ -52,7 +52,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
 
     private _hiding = false;
 
-
+    get loaded() { return this._loaded; }
     get window() { return this._window; }
 
     get childAllocation() { return this._wrapperAllocation; }
@@ -232,6 +232,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         if(!this._loaded) return;
 
         this.cancelAnimation();
+        if(this.onHide) {
+            this.onHide(this);
+        }
 
         for(const listener of this._activeListeners) {
             listener.variable.disconnect(listener.listener);
@@ -281,6 +284,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
     hide(endPosition: PopupPosition = this._lastShowStartPosition) {
         if(!this._loaded || this._hiding) return;
         this._hiding = true;
+        this.window.click_through = true;
 
         if(this._animationOptions) {
             this.animate(
@@ -291,6 +295,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
                 this._animationOptions.refreshRate,
                 this._animationOptions.animation.func,
                 () => {
+                    this.window.click_through = false;
+
                     this._hiding = false;
                     this._window.set_visible(false);
                     
@@ -299,6 +305,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
                     }
                 },
                 () => {
+                    this.window.click_through = false;
+                    
                     this._hiding = false;
                 }
             );
@@ -312,6 +320,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
             this._onHide(this);
         }
         
+        this.window.click_through = false;
         this._hiding = false;
     }
 

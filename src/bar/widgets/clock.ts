@@ -32,7 +32,7 @@ function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProp
         }
     }
 
-    const formatted = globals.clock.value.format(newProps.clock_format);
+    const formatted = globals.clock!.value.format(newProps.clock_format);
     if(formatted == null) {
         newProps.clock_format = fallback.clock_format;
     }
@@ -82,7 +82,7 @@ export class Clock implements IBarWidget<PropsType, Gtk.Button> {
     create(monitor: TBarWidgetMonitor, props: PropsType) {
         return Widget.Button({
             className: "bar-clock",
-            label: globals.clock.bind().transform(clock => clock.format(props.clock_format) ?? ""),
+            label: globals.clock!.bind().transform(clock => clock.format(props.clock_format) ?? ""),
             onClicked: (self) => {
                 const getAllocation = () => {
                     if(self.is_destroyed || !self.get_accessible()) {

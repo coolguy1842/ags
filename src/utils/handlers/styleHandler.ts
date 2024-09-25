@@ -8,6 +8,8 @@ const $ = (key: string, value: string) => `$${key}: ${value};`;
 
 export class StyleHandler implements IReloadable {
     private _loaded: boolean = false;
+    get loaded() { return this._loaded; }
+
     private _monitor: PathMonitor;
 
     private _optionsListenerID?: number;
@@ -42,7 +44,7 @@ export class StyleHandler implements IReloadable {
         this._monitor.cleanup();
 
         if(this._optionsListenerID) {
-            globals.optionsHandler.disconnect(this._optionsListenerID);
+            globals.optionsHandler!.disconnect(this._optionsListenerID);
 
             this._optionsListenerID = undefined;
         }
@@ -50,7 +52,7 @@ export class StyleHandler implements IReloadable {
 
 
     getBindings() {
-        const { bar, system_tray } = globals.optionsHandler.options;
+        const { bar, system_tray } = globals.optionsHandler!.options;
         
         return [
             bar.background,
@@ -64,7 +66,7 @@ export class StyleHandler implements IReloadable {
 
     // TODO: make bindings able to be used here that way we dont need the getBindings hack
     getDynamicSCSS() {
-        const { bar, system_tray } = globals.optionsHandler.options;
+        const { bar, system_tray } = globals.optionsHandler!.options;
 
         return [
             $("bar-background-color", HEXtoSCSSRGBA(bar.background.value)),
@@ -79,26 +81,28 @@ export class StyleHandler implements IReloadable {
     async reloadStyles() {
         if(!this._loaded) return;
 
+        const { paths } = globals;
+
         console.log("loading styles");
     
         try {
-            Utils.exec(`mkdir -p ${globals.paths.OUT_CSS_DIR}`);
+            Utils.exec(`mkdir -p ${paths!.OUT_CSS_DIR}`);
 
-            Utils.writeFileSync(this.getDynamicSCSS(), globals.paths.OUT_SCSS_DYNAMIC);
+            Utils.writeFileSync(this.getDynamicSCSS(), paths!.OUT_SCSS_DYNAMIC);
             Utils.writeFileSync(
-                [ globals.paths.OUT_SCSS_DYNAMIC, globals.paths.STYLES_MAIN ]
+                [ paths!.OUT_SCSS_DYNAMIC, paths!.STYLES_MAIN ]
                     .map(file => `@import '${file}';`)
                     .join("\n"),
 
-                globals.paths.OUT_SCSS_IMPORTS
+                paths!.OUT_SCSS_IMPORTS
             );
 
-            const out = Utils.exec(`sassc ${globals.paths.OUT_SCSS_IMPORTS} ${globals.paths.OUT_CSS_IMPORTS}`);
+            const out = Utils.exec(`sassc ${paths!.OUT_SCSS_IMPORTS} ${paths!.OUT_CSS_IMPORTS}`);
             if(out.trim().length > 0) {
                 console.log(out);
             }
             
-            App.applyCss(globals.paths.OUT_CSS_IMPORTS, true);
+            App.applyCss(paths!.OUT_CSS_IMPORTS, true);
         }
         catch(err) {
             console.log(err);

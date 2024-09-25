@@ -8,6 +8,10 @@
     "bar.layout.gap": 6,
     "bar.layout.left": [
         {
+            "name": "AppLauncherButton",
+            "props": {}
+        },
+        {
             "name": "WorkspaceSelector",
             "props": {
                 "scroll_direction": "normal"
@@ -24,6 +28,18 @@
     ],
     "bar.layout.right": [
         {
+            "name": "ColorPickerButton",
+            "props": {
+                "color_pick_command": "bash -c 'hyprpicker -r --format=hex -a'"
+            }
+        },
+        {
+            "name": "ScreenshotButton",
+            "props": {
+                "screenshot_command": "bash -c 'grim -g \"$(slurp)\" - | wl-copy'"
+            }
+        },
+        {
             "name": "SystemTray",
             "props": {
                 "spacing": 4,
@@ -38,11 +54,23 @@
     ],
     "system_tray.background": "#000000BF",
     "system_tray.favorites": [
-        "chrome_status_icon_1--/com/canonical/dbusmenu-",
+        "obs-obs-/MenuBar-OBS_Studio",
         "chrome_status_icon_1--/com/canonical/dbusmenu-Signal_Desktop",
-        "chrome_status_icon_1--/com/canonical/dbusmenu-Vesktop"
+        "proton-vpn-app-protonvpn-app-/org/ayatana/NotificationItem/proton_vpn_app/Menu-",
+        "chrome_status_icon_1--/com/canonical/dbusmenu-Heroic",
+        "steam-Steam-/org/ayatana/NotificationItem/steam/Menu-",
+        "chrome_status_icon_1--/com/canonical/dbusmenu-",
+        "qBittorrent-qBittorrent-/MenuBar-DL_speed:_525.8_KiB/s\nUP_speed:_372.7_KiB/s",
+        "chrome_status_icon_1--/com/canonical/dbusmenu-Connected._Sydney,_Australia",
+        "chrome_status_icon_1--/com/canonical/dbusmenu-Connected._Brisbane,_Australia",
+        "chrome_status_icon_1--/com/canonical/dbusmenu-Vesktop",
+        "chrome_status_icon_1--/com/canonical/dbusmenu-Disconnected"
     ],
     "system_tray.icon_size": 14,
     "system_tray.padding": 8,
-    "system_tray.border_radius": 12
+    "system_tray.border_radius": 12,
+    "app_launcher.background": "#000000BF",
+    "app_launcher.icon_size": 32,
+    "app_launcher.rows": 3,
+    "app_launcher.columns": 5
 }

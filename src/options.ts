@@ -84,6 +84,13 @@ export class BarLayoutValidator<T extends TBarLayout> implements OptionValidator
     }
 };
 
+export class StringValidator<T extends string> implements OptionValidator<T> {
+    validate(value: T, previousValue?: T) {
+        if(value == undefined) return undefined;
+        return typeof value == "string" ? value : undefined;
+    }
+};
+
 export class StringArrayValidator<T extends string[]> implements OptionValidator<T> {
     validate(value: T, previousValue?: T) {
         if(value == undefined || !Array.isArray(value)) return undefined;
@@ -154,7 +161,16 @@ export interface IOptions extends TOptions {
 
         padding: Option<number>;
         border_radius: Option<number>;
-    }
+    };
+
+    app_launcher: {
+        background: Option<string>;
+
+        icon_size: Option<number>;
+
+        rows: Option<number>;
+        columns: Option<number>;
+    };
 };
 
 export function getOptions(): IOptions {
@@ -203,6 +219,14 @@ export function getOptions(): IOptions {
 
             padding: option(8, new NumberValidator({ min: 0, max: 30 })),
             border_radius: option(12, new NumberValidator({ min: 0, max: 24 }))
+        },
+        app_launcher: {
+            background: option("#000000BF", new HEXColorValidator()),
+            
+            icon_size: option(32, new NumberValidator({ min: 1, max: 120 })),
+
+            rows: option(3, new NumberValidator({ min: 1, max: 6 })),
+            columns: option(5, new NumberValidator({ min: 1, max: 6 }))
         }
     };
 }; 

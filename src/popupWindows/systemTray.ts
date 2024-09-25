@@ -10,7 +10,7 @@ import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
 
 const tray = await Service.import("systemtray");
 
-function createTrayFavoritesPopupWidget(favorites: Option<string[]>, icon_size: number | Binding<any, any, number>) {
+function createTrayFavoritesPopupWidget(self: PopupWindow<any, any>, favorites: Option<string[]>, icon_size: number | Binding<any, any, number>) {
     const onMiddleClick = (item: TrayItem) => {
         favorites.value = [
             ...new Set([
@@ -27,10 +27,9 @@ function createTrayFavoritesPopupWidget(favorites: Option<string[]>, icon_size: 
 
     const tryHide = () => {
         if(getActiveFavorites(favorites.value).length == tray.items.length) {
-            TrayFavoritesPopupWindow.hide();
+            self.hide();
         }
     }
-
 
     const widget = Widget.Box({
         className: "system-tray",
@@ -42,7 +41,7 @@ function createTrayFavoritesPopupWidget(favorites: Option<string[]>, icon_size: 
     return widget;
 }
 
-function createTrayFavoritesPopupWindow() {
+export function createTrayFavoritesPopupWindow() {
     const popupWindow = new PopupWindow(
         {
             name: "system-tray-popup",
@@ -58,13 +57,11 @@ function createTrayFavoritesPopupWindow() {
         undefined,
         undefined,
         (self) => {
-            const { system_tray } = globals.optionsHandler.options;
+            const { system_tray } = globals.optionsHandler!.options;
 
-            self.child = createTrayFavoritesPopupWidget(system_tray.favorites, system_tray.icon_size.bind());
+            self.child = createTrayFavoritesPopupWidget(self, system_tray.favorites, system_tray.icon_size.bind());
         }
     );
 
     return popupWindow;
 }
-
-export const TrayFavoritesPopupWindow = createTrayFavoritesPopupWindow();

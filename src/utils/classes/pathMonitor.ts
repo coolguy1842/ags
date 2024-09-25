@@ -15,8 +15,10 @@ export enum MonitorTypeFlags {
 };
 
 export class PathMonitor implements IReloadable {
-    private _path: string;
     private _loaded: boolean = false;
+    get loaded() { return this._loaded; }
+
+    private _path: string;
 
     private _flags: MonitorTypeFlags;
 

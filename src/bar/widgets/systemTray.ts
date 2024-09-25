@@ -12,7 +12,6 @@ import Box from "types/widgets/box";
 import { HEXtoCSSRGBA } from "src/utils/colorUtils";
 import { updateTray } from "src/components/trayComponents";
 import { TrayType } from "../enums/trayType";
-import { TrayFavoritesPopupWindow } from "src/popupWindows/systemTray";
 
 const tray = await Service.import("systemtray");
 
@@ -78,7 +77,7 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
 
     propsValidator = propsValidator;
     create(monitor: TBarWidgetMonitor, props: PropsType) {
-        const { system_tray } = globals.optionsHandler.options;
+        const { system_tray } = globals.optionsHandler!.options;
         const trayType = props.enable_favorites ? TrayType.FAVORITES : TrayType.ALL;
 
         const onMiddleClick = (item: TrayItem) => {
@@ -133,8 +132,17 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
         });
 
         button.on_clicked = () => {
-            const barPosition = globals.optionsHandler.options.bar.position;
-            const barHeight = globals.optionsHandler.options.bar.height;
+            const TrayFavoritesPopupWindow = globals.popupWindows?.SystemTray;
+            if(!TrayFavoritesPopupWindow) return;
+
+            if(TrayFavoritesPopupWindow.window.is_visible()) {
+                TrayFavoritesPopupWindow.hide();
+
+                return;
+            }
+
+            const barPosition = globals.optionsHandler!.options.bar.position;
+            const barHeight = globals.optionsHandler!.options.bar.height;
 
             const getPosition = () => {
                 if(button.is_destroyed || !button.get_accessible()) {

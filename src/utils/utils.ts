@@ -154,4 +154,13 @@ export class DerivedVariable<
 
 export function sleep(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
-}  
+}
+
+export function splitToNChunks<T>(array: T[], n: number) {
+    let out: T[][] = [];
+    for(var i = 0; i < array.length; i += n) {
+        out.push(array.slice(i, i + n));
+    }
+
+    return out;
+}

@@ -3,7 +3,7 @@ import { TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { BarWidgets } from "./widgets/widgets";
 
 export function Bar(monitor: TBarWidgetMonitor) {
-    const { bar } = globals.optionsHandler.options;
+    const { bar } = globals.optionsHandler!.options;
 
     const window = Widget.Window({
         monitor: monitor.id,
