@@ -116,6 +116,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private _default: OptionsType;
     private _options: OptionsType;
+    private _prevOptions: string;
 
     private _ignoreChange: boolean;
 
@@ -140,6 +141,8 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
         this._default = options;
         this._options = options;
+
+        this._prevOptions = "";
         
         this._ignoreChange = false;
     }
@@ -223,21 +226,6 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
         return out;
     }
 
-    // private validateOptions(options: TOptions = this._options) {
-    //     for(const key of Object.keys(options)) {
-    //         const value = options[key];
-    //         if(value instanceof Option) {
-    //             if(!value.validator) continue;
-
-    //             value.value = value.validator.validate(value.value) ?? value.defaultValue;
-    //             continue;
-    //         }
-
-    //         this.validateOptions(value);
-    //     }
-    // }
-
-
     private saveOptions() {
         Utils.writeFileSync(JSON.stringify(this.simplifyOptions(), undefined, 4), paths.OPTIONS_PATH);
     }
@@ -259,6 +247,11 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
             this.setOption(key, json[key]);
         }
 
+        if(this._prevOptions == JSON.stringify(this._options)) {
+            return;
+        }
+
+        this._prevOptions = JSON.stringify(this._options);
         this.emit("options_reloaded", this.options);
 
         this._ignoreChange = true;

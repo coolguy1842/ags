@@ -1,6 +1,5 @@
 import Gtk from "gi://Gtk?version=3.0";
 import { Binding } from "resource:///com/github/Aylur/ags/service.js";
-import { Application } from "resource:///com/github/Aylur/ags/service/applications.js";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { globals } from "src/globals";
 import { PopupAnimations } from "src/utils/classes/PopupAnimation";
