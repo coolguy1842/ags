@@ -59,11 +59,15 @@ export class StyleHandler implements IReloadable {
             bar.icon_color,
 
             system_tray.background,
-            system_tray.padding,
             system_tray.border_radius,
+            system_tray.padding,
 
             app_launcher.background,
-            app_launcher.padding
+            app_launcher.border_radius,
+            app_launcher.padding,
+
+            app_launcher.search.background,
+            app_launcher.search.border_radius
         ];
     }
 
@@ -76,12 +80,15 @@ export class StyleHandler implements IReloadable {
             $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value)),
 
             $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value)),
-            $("system-tray-padding", `${system_tray.padding.value}px`),
             $("system-tray-border-radius", `${system_tray.border_radius.value}px`),
+            $("system-tray-padding", `${system_tray.padding.value}px`),
 
             $("app-launcher-background-color", HEXtoSCSSRGBA(app_launcher.background.value)),
-            $("app-launcher-padding", `${app_launcher.padding.value}px`),
             $("app-launcher-border-radius", `${app_launcher.border_radius.value}px`),
+            $("app-launcher-padding", `${app_launcher.padding.value}px`),
+
+            $("app-launcher-search-background-color", HEXtoSCSSRGBA(app_launcher.search.background.value)),
+            $("app-launcher-search-border-radius", `${app_launcher.search.border_radius.value}px`),
         ].join("\n");
     }
 

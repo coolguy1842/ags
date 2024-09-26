@@ -168,6 +168,11 @@ export interface IOptions extends TOptions {
         padding: Option<number>;
         border_radius: Option<number>;
 
+        search: {
+            background: Option<string>;
+            border_radius: Option<number>;
+        }
+
         spacing: Option<number>;
         icon_size: Option<number>;
 
@@ -228,11 +233,16 @@ export function getOptions(): IOptions {
             padding: option(12, new NumberValidator({ min: 0, max: 32 })),
             border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
 
+            search: {
+                background: option("#000000BF", new HEXColorValidator()),
+                border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
+            },
+
             spacing: option(8, new NumberValidator({ min: 0, max: 50 })),
             icon_size: option(32, new NumberValidator({ min: 1, max: 80 })),
 
-            rows: option(3, new NumberValidator({ min: 1, max: 6 })),
-            columns: option(5, new NumberValidator({ min: 1, max: 6 }))
+            rows: option(3, new NumberValidator({ min: 1, max: 15 })),
+            columns: option(5, new NumberValidator({ min: 1, max: 15 }))
         }
     };
 }; 

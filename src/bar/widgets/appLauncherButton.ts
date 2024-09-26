@@ -56,6 +56,12 @@ export class AppLauncherButton implements IBarWidget<PropsType, Gtk.Button> {
                 const AppLauncherPopupWindow = globals.popupWindows?.AppLauncher;
                 if(!AppLauncherPopupWindow) return;
 
+                if(AppLauncherPopupWindow.window.is_visible()) {
+                    AppLauncherPopupWindow.hide();
+
+                    return;
+                }                
+
                 const endDerived = new DerivedVariable(
                     [
                         AppLauncherPopupWindow.screenBounds,

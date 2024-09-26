@@ -173,42 +173,6 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                 ]
             });
     
-            const deriveFunction = (barPos: BarPosition, barHeight: number, position: TPosition, childAllocation: Gdk.Rectangle, screenBounds: Gdk.Rectangle) => {
-                const screenPadding = 10;
-                var out = {
-                    x: screenPadding,
-                    y: screenPadding
-                };
-
-                switch(barPos) {
-                case BarPosition.TOP: {
-                    out = {
-                        x: position.x - (childAllocation.width / 2),
-                        y: screenBounds.height - (barHeight + screenPadding)
-                    };
-    
-                    break;
-                }
-                // case isnt needed here, just have it to specify what its for
-                case BarPosition.BOTTOM: default: {
-                    out = {
-                        x: position.x - (childAllocation.width / 2),
-                        y: position.y + childAllocation.height + screenPadding
-                    };
-
-                    break;
-                }
-                }
-                
-                out.x = Math.min(out.x, (screenBounds.width - childAllocation.width) - screenPadding);
-                out.x = Math.max(out.x, screenPadding);
-
-                out.y = Math.min(out.y, screenBounds.height - screenPadding);
-                out.y = Math.max(out.y, screenPadding);
-
-                return out;
-            };
-
             const endDerived = new DerivedVariable(
                 [
                     barPosition,
@@ -217,7 +181,41 @@ export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
                     TrayFavoritesPopupWindow.childAllocation,
                     TrayFavoritesPopupWindow.screenBounds
                 ],
-                deriveFunction
+                (barPos, barHeight, position, childAllocation, screenBounds) => {
+                    const screenPadding = 10;
+                    var out = {
+                        x: screenPadding,
+                        y: screenPadding
+                    };
+    
+                    switch(barPos) {
+                    case BarPosition.TOP: {
+                        out = {
+                            x: position.x - (childAllocation.width / 2),
+                            y: screenBounds.height - (barHeight + screenPadding)
+                        };
+        
+                        break;
+                    }
+                    // case isnt needed here, just have it to specify what its for
+                    case BarPosition.BOTTOM: default: {
+                        out = {
+                            x: position.x - (childAllocation.width / 2),
+                            y: position.y + childAllocation.height + screenPadding
+                        };
+    
+                        break;
+                    }
+                    }
+                    
+                    out.x = Math.min(out.x, (screenBounds.width - childAllocation.width) - screenPadding);
+                    out.x = Math.max(out.x, screenPadding);
+    
+                    out.y = Math.min(out.y, screenBounds.height - screenPadding);
+                    out.y = Math.max(out.y, screenPadding);
+    
+                    return out;
+                }    
             );
 
             const startDerived = new DerivedVariable(

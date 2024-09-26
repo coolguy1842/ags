@@ -21,6 +21,7 @@ export type AnimationOptions = {
 
 export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable {
     private _onLoad?: (self: PopupWindow<Child, Attr>) => void;
+    private _onCleanup?: (self: PopupWindow<Child, Attr>) => void;
     private _loaded: boolean;
 
     private _position: Variable<TPosition>;
@@ -119,7 +120,15 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         popup = false,
         visible = false,
         ...params
-    }: WindowProps<Child, Attr> = {}, child: Child, animationOptions?: AnimationOptions, onShow?: typeof this._onShow, onHide?: typeof this._onHide, onLoad?: typeof this._onLoad) {
+    }:  WindowProps<Child, Attr> = {},
+        child: Child,
+        animationOptions?: AnimationOptions,
+        callbacks?: {
+            onShow?: (self: PopupWindow<Child, Attr>) => void,
+            onHide?: (self: PopupWindow<Child, Attr>) => void,
+            onLoad?: (self: PopupWindow<Child, Attr>) => void,
+            onCleanup?: (self: PopupWindow<Child, Attr>) => void
+        }) {
         this._window = Widget.Window({
             anchor,
             exclusive,
@@ -140,10 +149,11 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
 
         this._animationOptions = animationOptions;
 
-        this._onLoad = onLoad;
+        this._onLoad = callbacks?.onLoad;
+        this._onCleanup = callbacks?.onCleanup;
 
-        this._onShow = onShow;
-        this._onHide = onHide;
+        this._onShow = callbacks?.onShow;
+        this._onHide = callbacks?.onHide;
 
         this._window.keybind("Escape", () => {
             if(!this._window.is_visible()) {
@@ -234,6 +244,10 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> implements IReloadable 
         this.cancelAnimation();
         if(this.onHide) {
             this.onHide(this);
+        }
+
+        if(this._onCleanup) {
+            this._onCleanup(this);
         }
 
         for(const listener of this._activeListeners) {

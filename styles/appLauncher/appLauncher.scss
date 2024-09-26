@@ -9,7 +9,21 @@
     @include app-launcher-widget;
 }
 
+
+$app-launcher-search-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0) inset;
 .app-launcher-search-input {
-    outline: none;
-    border: none;
+    all: unset;
+
+    min-height: 28px;
+    padding-left: 8px;
+    padding-right: 8px;
+
+    background-color: $app-launcher-search-background-color;
+
+    border-radius: $app-launcher-search-border-radius;
+    box-shadow: $app-launcher-search-box-shadow;
+}
+
+.app-launcher-search-input:focus {
+    box-shadow: $app-launcher-search-box-shadow;
 }

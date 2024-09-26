@@ -42,6 +42,8 @@ function createTrayFavoritesPopupWidget(self: PopupWindow<any, any>, favorites: 
 }
 
 export function createTrayFavoritesPopupWindow() {
+    const { system_tray } = globals.optionsHandler!.options;
+
     const popupWindow = new PopupWindow(
         {
             name: "system-tray-popup",
@@ -54,12 +56,10 @@ export function createTrayFavoritesPopupWindow() {
             duration: 0.4,
             refreshRate: 165
         },
-        undefined,
-        undefined,
-        (self) => {
-            const { system_tray } = globals.optionsHandler!.options;
-
-            self.child = createTrayFavoritesPopupWidget(self, system_tray.favorites, system_tray.icon_size.bind());
+        {
+            onLoad: (self) => {
+                self.child = createTrayFavoritesPopupWidget(self, system_tray.favorites, system_tray.icon_size.bind());
+            },
         }
     );
 
