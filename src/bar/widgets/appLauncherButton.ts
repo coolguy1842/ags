@@ -4,6 +4,7 @@ import { DerivedVariable } from "src/utils/utils";
 
 import Gtk from "gi://Gtk?version=3.0";
 import { StringValidator } from "src/options";
+import { toggleAppLauncher } from "src/popupWindows/appLauncher";
 
 //#region PROPS
 
@@ -53,52 +54,9 @@ export class AppLauncherButton implements IBarWidget<PropsType, Gtk.Button> {
             class_name: "bar-app-launcher-button",
             label: props.icon,
             onClicked: (self) => {
-                const AppLauncherPopupWindow = globals.popupWindows?.AppLauncher;
-                if(!AppLauncherPopupWindow) return;
+                if(!globals.popupWindows?.AppLauncher) return;
 
-                if(AppLauncherPopupWindow.window.is_visible()) {
-                    AppLauncherPopupWindow.hide();
-
-                    return;
-                }                
-
-                const endDerived = new DerivedVariable(
-                    [
-                        AppLauncherPopupWindow.screenBounds,
-                        AppLauncherPopupWindow.childAllocation
-                    ],
-                    (screenBounds, childAllocation) => {
-                        return {
-                            x: (screenBounds.width / 2) - (childAllocation.width / 2),
-                            y: screenBounds.height - 15
-                        }
-                    }
-                );
-
-                const startDerived = new DerivedVariable(
-                    [
-                        endDerived,
-                        AppLauncherPopupWindow.screenBounds,
-                        AppLauncherPopupWindow.childAllocation
-                    ],
-                    (end, screenBounds, childAllocation) => {
-                        return {
-                            x: end.x,
-                            y: screenBounds.height + childAllocation.height
-                        }
-                    }
-                );
-
-                AppLauncherPopupWindow.onHide = () => {
-                    if(globals.searchInput) {
-                        globals.searchInput.value = "";
-                    }
-                    
-                    startDerived.stop();
-                    endDerived.stop();
-                };
-
-                AppLauncherPopupWindow.show(monitor.id, startDerived, endDerived);
+                toggleAppLauncher(globals.popupWindows.AppLauncher, monitor.id);
             }
         });
     }

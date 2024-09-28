@@ -25,7 +25,7 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
     const input = globals.searchInput?.value ?? "";
     var children: Gtk.Widget[] = [];
 
-    if(/^\s*-?\d+( ?([-\+\/\*]|(\*\*)){1} ?-?\d+){1,}$/.test(input)) {
+    if(/^\s*-?(\d+|(\d?\.\d+))( ?([-\+\/\*]|(\*\*)){1} ?-?(\d+|(\d?\.\d+))){1,}$/.test(input)) {
         children.push(
             AppLauncherItem(
                 Widget.Label({
@@ -35,6 +35,21 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
                 }),
                 async () => {
                     console.log(Utils.execAsync(`wl-copy ${eval(input)}`));
+                    globals.popupWindows?.AppLauncher?.hide();
+                }
+            )
+        )
+    }
+    else if(/^[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/.test(input)) {
+        children.push(
+            AppLauncherItem(
+                Widget.Label({
+                    hpack: "center",
+                    label: `${input}`,
+                    width_request: widget.width_request
+                }),
+                async () => {
+                    console.log(Utils.execAsync(`xdg-open "https://${input}"`));
                     globals.popupWindows?.AppLauncher?.hide();
                 }
             )
@@ -125,4 +140,50 @@ export function createAppLauncherPopupWindow() {
     );
 
     return popupWindow;
+}
+
+export function toggleAppLauncher(appLauncher: PopupWindow<any, any>, monitor: number) {
+    if(appLauncher.window.is_visible() && appLauncher.window.monitor == monitor) {
+        appLauncher.hide();
+
+        return;
+    }                
+
+    const endDerived = new DerivedVariable(
+        [
+            appLauncher.screenBounds,
+            appLauncher.childAllocation
+        ],
+        (screenBounds, childAllocation) => {
+            return {
+                x: (screenBounds.width / 2) - (childAllocation.width / 2),
+                y: screenBounds.height - 15
+            }
+        }
+    );
+
+    const startDerived = new DerivedVariable(
+        [
+            endDerived,
+            appLauncher.screenBounds,
+            appLauncher.childAllocation
+        ],
+        (end, screenBounds, childAllocation) => {
+            return {
+                x: end.x,
+                y: screenBounds.height + childAllocation.height
+            }
+        }
+    );
+
+    appLauncher.onHide = () => {
+        if(globals.searchInput) {
+            globals.searchInput.value = "";
+        }
+        
+        startDerived.stop();
+        endDerived.stop();
+    };
+
+    appLauncher.show(monitor, startDerived, endDerived);
 }

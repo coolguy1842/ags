@@ -1,10 +1,13 @@
+import Gdk from "gi://Gdk";
+import Gio20 from "gi://Gio";
 import Gio from "gi://Gio?version=2.0";
 import GLib from "gi://GLib?version=2.0";
+import Gtk30 from "gi://Gtk?version=3.0";
 import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
 import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
+import { globals } from "src/globals";
 import { FileQueryInfoFlags, FileType } from "types/@girs/gio-2.0/gio-2.0.cjs";
-import { Options } from "types/variable";
 
 export function arraysEqual<T>(a: T[], b: T[]) {
     if(a === b) return true;
@@ -163,4 +166,15 @@ export function splitToNChunks<T>(array: T[], n: number) {
     }
 
     return out;
+}
+
+
+const hyprland = await Service.import("hyprland");
+export function getCurrentMonitor() {
+    // only hyprland
+    const monitor = hyprland.monitors.find(x => x.focused);
+    if(monitor == undefined) return 0;
+
+    if(!globals.monitorLookups) return 0;
+    return globals.monitorLookups[monitor.name] ?? monitor.id;
 }
