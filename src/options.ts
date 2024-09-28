@@ -1,80 +1,133 @@
-import { value_type_get_localized_name } from "types/@girs/atk-1.0/atk-1.0.cjs";
-import { getBarWidgets } from "./bar/widgets/widgets";
+import { BarWidgets } from "./bar/widgets/widgets";
 import { option, Option, OptionValidator, TOptions } from "./utils/handlers/optionsHandler";
-import GLib from "gi://GLib?version=2.0";
-import Gtk30 from "gi://Gtk?version=3.0";
 
-type TBarLayoutItem<T extends keyof ReturnType<typeof getBarWidgets>> = {
+type TBarLayoutItem<T extends keyof (typeof BarWidgets)> = {
     name: T,
-    props: ReturnType<typeof getBarWidgets>[T]["props"]
+    props: (typeof BarWidgets)[T]["defaultProps"]
 };
 
-type TBarLayout = TBarLayoutItem<keyof ReturnType<typeof getBarWidgets>>[];
+type TBarLayout = TBarLayoutItem<keyof (typeof BarWidgets)>[];
 
-function getOptionValidators(): { [key: string]: OptionValidator<any> } {
-    return {
-        number: {
-            validate: (value: number) => {
-                return isNaN(value) ? undefined : value;
-            }
-        },
-        boolean: {
-            validate: (value: boolean) => {
-                return value == true || value == false ? value : undefined;
-            }  
-        },
-        color: {
-            validate: (value: string) => {
-                return /^#[0-9A-F]{8}$/.test(value) ? value : undefined;
-            }
-        },
-        barWidgets: {
-            validate: (value: TBarLayout) => {
-                if(value == undefined || !Array.isArray(value)) {
-                    return undefined;
-                }
+// TODO: add options for min and max range of number
+export class NumberValidator<T extends number> implements OptionValidator<T> {
+    private _min?: number;
+    private _max?: number;
 
-                for(const val of value) {
-                    if(!(val.name in getBarWidgets())) {
-                        return undefined;
-                    }
+    constructor(options?: {
+        min?: number,
+        max?: number
+    }) {
+        this._min = options?.min;
+        this._max = options?.max;
+    }
 
-                    const component = getBarWidgets()[val.name];
-                    if(val.props == undefined) {
-                        val.props = component.props;
-                    }
+    validate(value: T, previousValue?: T) {
+        if(isNaN(value)) return undefined;
 
-                    for(const key in component.props) {
-                        if(!(key in val.props)) {
-                            val.props[key] = component.props[key];
-                        }
-                    }
+        if(this._min && value < this._min) return this._min as T;
+        if(this._max && value > this._max) return this._max as T;
 
-                    for(const key in val.props) {
-                        if(!(key in component.props)) {
-                            delete val.props[key];
-                        }
-                    }
-                }
+        return value;
+    }
+};
 
-                return value;
-            }
-        },
-        stringArray: {
-            validate: (value: string[]) => {
-                if(value == undefined || !Array.isArray(value)) return undefined;
-                return value.every(x => typeof x == "string") ? value : undefined;
-            }
-        },
-        iconName: {
-            validate: (value: string) => {
-                if(typeof value != "string") return undefined;
+export class BooleanValidator<T extends boolean> implements OptionValidator<T> {
+    validate(value: T, previousValue?: T) {
+        return typeof value == "boolean" ? value : undefined;
+    }
+};
 
-                return Utils.lookUpIcon(value) ? value : undefined;
-            }
+// TODO: add options for length of the color (e.g 4 byte or 3 byte hex)
+enum HEXColorType {
+    RGB,
+    RGBA
+};
+
+export class HEXColorValidator<T extends string> implements OptionValidator<T> {
+    private _colorType: HEXColorType;
+    
+    constructor(colorType: HEXColorType = HEXColorType.RGBA) {
+        this._colorType = colorType;
+    }
+
+    validate(value: T, previousValue?: T) {
+        switch(this._colorType) {
+        case HEXColorType.RGB:
+            return /^#[0-9A-F]{6}$/.test(value) ? value : undefined;
+        case HEXColorType.RGBA:
+            return /^#[0-9A-F]{8}$/.test(value) ? value : undefined;
+        default: return undefined;
         }
-    };
-}
+    }
+};
+
+export class BarLayoutValidator<T extends TBarLayout> implements OptionValidator<T> {
+    validate(value: T, previousValue?: T) {
+        if(value == undefined || !Array.isArray(value)) {
+            return undefined;
+        }
+
+        for(const key in value) {
+            const val = value[key];
+            const previousVal = previousValue ? previousValue[key] : undefined;
+
+            if(!(val.name in BarWidgets)) {
+                return undefined;
+            }
+
+            const component = BarWidgets[val.name];
+            const props = component.propsValidator(val.props as any, previousVal?.props as any);
+            val.props = props ?? component.defaultProps;
+        }
+
+        return value;
+    }
+};
+
+export class StringValidator<T extends string> implements OptionValidator<T> {
+    validate(value: T, previousValue?: T) {
+        if(value == undefined) return undefined;
+        return typeof value == "string" ? value : undefined;
+    }
+};
+
+export class StringArrayValidator<T extends string[]> implements OptionValidator<T> {
+    validate(value: T, previousValue?: T) {
+        if(value == undefined || !Array.isArray(value)) return undefined;
+        return value.every(x => typeof x == "string") ? value : undefined;
+    }
+};
+
+export class IconNameValidator<T extends string> implements OptionValidator<T> {
+    validate(value: T, previousValue?: T) {
+        if(typeof value != "string") return undefined;
+        return Utils.lookUpIcon(value) ? value : undefined;
+    }
+};
+
+type Enum<E> = Record<keyof E, number | string> & { [k: number]: string };
+export class ValueInEnumValidator<E extends Enum<E>, Key extends keyof E> implements OptionValidator<E[Key]> {
+    private _enumValue: E;
+
+    constructor(enumValue: E) {
+        this._enumValue = enumValue;
+    }
+
+    validate(value: E[Key], previousValue?: E[Key]) {
+        if(Object.values(this._enumValue).includes(value as any)) {
+            return value; 
+        }
+
+        return undefined;
+    }
+};
+
+
+
+export enum BarPosition {
+    TOP = "top",
+    BOTTOM = "bottom"
+};
 
 export interface IOptions extends TOptions {
     icons: {
@@ -84,72 +137,44 @@ export interface IOptions extends TOptions {
     },
 
     bar: {
+        position: Option<BarPosition>;
+        height: Option<number>;
+
         background: Option<string>;
         icon_color: Option<string>;
 
         layout: {
             outer_gap: Option<number>;
             gap: Option<number>;
+
             left: Option<TBarLayout>;
             center: Option<TBarLayout>;
             right: Option<TBarLayout>;
         };
-
-        system_tray: {
-            background: Option<string>;
-            side_padding: Option<number>;
-            border_radius: Option<number>;
-            spacing: Option<number>;
-        };
-        
-        quick_menu: {
-            background: Option<string>;
-            side_padding: Option<number>;
-            border_radius: Option<number>;
-            spacing: Option<number>;
-        };
     };
 
     system_tray: {
-        animation: {
-            enabled: Option<boolean>;
-
-            duration: Option<number>;
-            reverse_duration: Option<number>;
-
-            update_rate: Option<number>;
-        }
-
         background: Option<string>;
-        border_radius: Option<number>;
-        padding: Option<number>;
-        spacing: Option<number>;
-
         favorites: Option<string[]>;
-        favorites_enabled: Option<boolean>;
+
+        icon_size: Option<number>;
+
+        padding: Option<number>;
+        border_radius: Option<number>;
     };
 
     app_launcher: {
-        animation: {
-            enabled: Option<boolean>;
-
-            duration: Option<number>;
-            reverse_duration: Option<number>;
-
-            update_rate: Option<number>;
-        };
-
         background: Option<string>;
-        seperator_background: Option<string>;
-        
+        padding: Option<number>;
         border_radius: Option<number>;
 
-        padding: Option<number>;
-        spacing: Option<number>;
+        search: {
+            background: Option<string>;
+            border_radius: Option<number>;
+        }
 
-        icon_spacing: Option<number>;
+        spacing: Option<number>;
         icon_size: Option<number>;
-        show_frequents: Option<boolean>;
 
         rows: Option<number>;
         columns: Option<number>;
@@ -157,97 +182,67 @@ export interface IOptions extends TOptions {
 };
 
 export function getOptions(): IOptions {
-    const validators = getOptionValidators();
-    
     return {
         icons: {
             app_launcher: {
-                search: option("system-search-symbolic", validators.iconName)
+                search: option("system-search-symbolic", new IconNameValidator())
             }
         },
 
         bar: {
-            background: option("#000000BF", validators.color),
-            icon_color: option("#5D93B0FF", validators.color),
+            position: option(BarPosition.BOTTOM, new ValueInEnumValidator(BarPosition)),
+            height: option(32, new NumberValidator({ min: 12, max: 60 })),
+
+            background: option("#000000BF", new HEXColorValidator()),
+            icon_color: option("#5D93B0FF", new HEXColorValidator()),
+
             layout: {
-                outer_gap: option(8, validators.number),
-                gap: option(6, validators.number),
+                outer_gap: option(8, new NumberValidator()),
+                gap: option(6, new NumberValidator()),
                 left: option(
                     [
-                        { name: "AppLauncherButton", props: { test: "" } },
-                        { name: "WorkspaceSelector", props: {} }
+                        { name: "WorkspaceSelector", props: { scroll_direction: "normal" } }
                     ] as TBarLayout,
-                    validators.barWidgets
+                    new BarLayoutValidator()
                 ),
                 center: option(
                     [
-                        { name: "TimeAndNotificationsDisplay", props: {} }
+                        
                     ] as TBarLayout,
-                    validators.barWidgets
+                    new BarLayoutValidator()
                 ),
                 right: option(
                     [
-                        { name: "ColorPickerButton", props: getBarWidgets().ColorPickerButton.props },
-                        { name: "ScreenshotButton", props: getBarWidgets().ScreenshotButton.props },
-                        { name: "SystemTray", props: {} },
-                        { name: "QuickMenuButton", props: {} }
+                        { name: "SystemTray", props: {} }
                     ] as TBarLayout,
-                    validators.barWidgets
+                    new BarLayoutValidator()
                 )
             },
-            system_tray: {
-                background: option("#BDA4A419", validators.color),
-                side_padding: option(6, validators.number),
-                border_radius: option(4, validators.number),
-                spacing: option(8, validators.number)
-            },
-            quick_menu: {
-                background: option("#BDA4A419", validators.color),
-                side_padding: option(6, validators.number),
-                border_radius: option(4, validators.number),
-                spacing: option(8, validators.number)
-            }
         },
         system_tray: {
-            animation: {
-                enabled: option(true, validators.boolean),
+            background: option("#000000BF", new HEXColorValidator()),
+            favorites: option([] as string[], new StringArrayValidator()),
 
-                duration: option(0.2, validators.number),
-                reverse_duration: option(0.2, validators.number),
+            icon_size: option(12, new NumberValidator({ min: 1, max: 30 })),
 
-                update_rate: option(100, validators.number)
-            },
-
-            background: option('#000000BF', validators.color),
-            border_radius: option(8, validators.number),
-            padding: option(8, validators.number),
-            spacing: option(8, validators.number),
-            
-            favorites: option([], validators.stringArray),
-            favorites_enabled: option(true, validators.boolean)
+            padding: option(8, new NumberValidator({ min: 0, max: 30 })),
+            border_radius: option(12, new NumberValidator({ min: 0, max: 50 }))
         },
         app_launcher: {
-            animation: {
-                enabled: option(true, validators.boolean),
+            background: option("#000000BF", new HEXColorValidator()),
+            padding: option(12, new NumberValidator({ min: 0, max: 32 })),
+            border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
 
-                duration: option(0.2, validators.number),
-                reverse_duration: option(0.2, validators.number),
-                
-                update_rate: option(100, validators.number)
+            search: {
+                background: option("#000000BF", new HEXColorValidator()),
+                border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
             },
 
-            background: option('#000000BF', validators.color),
-            seperator_background: option('#FFFFFFBF', validators.color),
-            border_radius: option(8, validators.number),
-            padding: option(16, validators.number),
-            spacing: option(12, validators.number),
+            spacing: option(8, new NumberValidator({ min: 0, max: 50 })),
+            icon_size: option(32, new NumberValidator({ min: 1, max: 80 })),
 
-            icon_spacing: option(6, validators.number),
-            icon_size: option(58, validators.number),
-            show_frequents: option(true, validators.boolean),
-
-            rows: option(5, validators.number),
-            columns: option(3, validators.number)
+            rows: option(3, new NumberValidator({ min: 1, max: 15 })),
+            columns: option(5, new NumberValidator({ min: 1, max: 15 }))
         }
     };
 }; 

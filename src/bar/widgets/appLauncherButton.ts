@@ -1,54 +1,63 @@
-import { AppLauncherWindow } from "src/appLauncher/appLauncher";
 import { globals } from "src/globals";
-import { PopupAnimationFunctions } from "src/utils/PopupWindow";
+import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
+import { DerivedVariable } from "src/utils/utils";
 
-const hyprland = await Service.import("hyprland");
+import Gtk from "gi://Gtk?version=3.0";
+import { StringValidator } from "src/options";
+import { toggleAppLauncher } from "src/popupWindows/appLauncher";
 
-export function getAppLauncherButton() {
-    const defaultProps = {};
+//#region PROPS
 
-    return {
-        name: "AppLauncherButton",
-        props: defaultProps,
-        create(monitorName: string, props: typeof defaultProps) {
-            return Widget.Button({
-                class_name: "bar-app-launcher-button",
-                label: "",
-                // label: "󰣛"
-                onClicked: () => {
-                    const monitor = hyprland.monitors.find(x => x.name == monitorName);
-                    const { app_launcher } = globals.optionsHandler.options;
+const defaultProps = {
+    icon: "󰣇 "
+};
 
-                    if(monitor) {
-                        const position = {
-                            x: monitor.width / 2,
-                            y: (app_launcher.rows.value * app_launcher.icon_size.value) + ((app_launcher.rows.value - 1) * app_launcher.icon_spacing.value) + 180
-                        };
+type PropsType = typeof defaultProps;
 
-                        if(!AppLauncherWindow.window.is_visible()) {
-                            const animation = globals.optionsHandler.options.app_launcher.animation;
-                            if(animation.enabled.value) {
-                                AppLauncherWindow.animation = {
-                                    start: {
-                                        x: position.x,
-                                        y: 0
-                                    },
-                                    duration: animation.duration.value,
-                                    reverseDuration: animation.reverse_duration.value,
-                                    updateRate: animation.update_rate.value,
-                                    function: PopupAnimationFunctions.linear
-                                }
-                            }
-                            
-                            AppLauncherWindow.show(monitor.id ?? -1, position, true);
-                        }
-                        else {
-                            AppLauncherWindow.hide();
-                        }
-                        
-                    }
-                }
-            }); 
+function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProps): TProps | undefined {
+    if(props == undefined || typeof props != "object") {
+        return fallback;
+    }
+
+    const newProps = Object.assign({}, props) as TProps;
+    for(const key in props) {
+        if(fallback[key] == undefined) {
+            delete newProps[key];
         }
-    };
+    }
+
+    for(const key in defaultProps) {
+        if(newProps[key] == undefined) {
+            newProps[key] = fallback[key];
+        }
+    }
+
+    props.icon = new StringValidator().validate(props.icon, fallback.icon) ?? fallback.icon;
+
+    return newProps;
 }
+
+function propsValidator(props: PropsType, previousProps?: PropsType) {
+    const fallback = _validateProps(previousProps ?? defaultProps, defaultProps) ?? defaultProps;
+    return _validateProps(props, fallback);
+}
+
+//#endregion
+
+export class AppLauncherButton implements IBarWidget<PropsType, Gtk.Button> {
+    name = "AppLauncherButton";
+    defaultProps = defaultProps;
+
+    propsValidator = propsValidator;
+    create(monitor: TBarWidgetMonitor, props: PropsType) {
+        return Widget.Button({
+            class_name: "bar-app-launcher-button",
+            label: props.icon,
+            onClicked: (self) => {
+                if(!globals.popupWindows?.AppLauncher) return;
+
+                toggleAppLauncher(globals.popupWindows.AppLauncher, monitor.id);
+            }
+        });
+    }
+};

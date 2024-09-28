@@ -1,5 +1,5 @@
 import { IReloadable } from "src/interfaces/reloadable";
-import { MonitorTypeFlags, PathMonitor } from "../pathMonitor";
+import { MonitorTypeFlags, PathMonitor } from "../classes/pathMonitor";
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { paths } from "src/paths";
 import { Variable} from "resource:///com/github/Aylur/ags/variable.js";
@@ -8,7 +8,7 @@ import { Options } from "types/variable";
 
 export interface OptionValidator<T> {
     // validator can override if its not a bad issue like missing option
-    validate(value: T): T | undefined;
+    validate(value: T, previousValue?: T): T | undefined;
 };
 
 export class Option<T> extends Variable<T> {
@@ -31,6 +31,17 @@ export class Option<T> extends Variable<T> {
         this._default = value;
         this._validator = validator;
         this._options = options;
+
+        this.value = value;
+    }
+
+
+    setValue = (value: T) => {
+        this.value = value;
+    }
+
+    getValue = (): T => {
+        return super.getValue();
     }
 
     set id(id: string) { this._id = id; }
@@ -44,22 +55,31 @@ export class Option<T> extends Variable<T> {
     get value() { return this._value; }
     set value(value: T) {
         if(this._validator) {
-            const validation = this._validator.validate(value);
+            const validation = this._validator.validate(value, this._value);
             if(validation == undefined) {
                 // check if current/fallback is invalid too
                 if(this._validator.validate(this._value) == undefined) {
+                    // super.value = this._default;
                     this._value = this._default;
+
+                    this.notify('value');
+                    this.emit('changed');
                 }
 
                 return;
             }
             
+            // super.value = validation;
             this._value = validation;
-        }
-        else {
-            this._value = value;
+
+            this.notify('value');
+            this.emit('changed');
+            return;
         }
 
+        // super.value = value;
+        this._value = value;
+        
         this.notify('value');
         this.emit('changed');
     }
@@ -96,10 +116,12 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private _default: OptionsType;
     private _options: OptionsType;
+    private _prevOptions: string;
 
     private _ignoreChange: boolean;
 
 
+    get loaded() { return this._loaded; }
     get options() { return this._options; }
 
 
@@ -119,6 +141,8 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
         this._default = options;
         this._options = options;
+
+        this._prevOptions = "";
         
         this._ignoreChange = false;
     }
@@ -164,6 +188,13 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
         this._pathMonitor.load();
         this.loadOptionsListeners(false);
 
+        var firstLoaded = true;
+        this.connect("options_reloaded", () => {
+            console.log(`options ${!firstLoaded ? "re" : ""}loaded`);
+
+            firstLoaded = false;
+        });
+
         this.loadOptions();
         this.saveOptions();
     }
@@ -201,7 +232,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private loadOptions() {
         const text = Utils.readFile(paths.OPTIONS_PATH);
-        let json;
+        let json: {};
 
         this._options = this._default;
         try {
@@ -216,6 +247,11 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
             this.setOption(key, json[key]);
         }
 
+        if(this._prevOptions == JSON.stringify(this._options)) {
+            return;
+        }
+
+        this._prevOptions = JSON.stringify(this._options);
         this.emit("options_reloaded", this.options);
 
         this._ignoreChange = true;

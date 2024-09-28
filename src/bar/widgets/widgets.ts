@@ -1,19 +1,15 @@
-import { getWorkspaceSelector } from "./workspaceSelector"
-import { getTimeAndNotificationsDisplay } from "./timeAndNotificationsDisplay";
-import { getAppLauncherButton } from "./appLauncherButton";
-import { getQuickMenuButton } from "./quickMenuButton";
-import { getScreenshotButton } from "./screenshotButton";
-import { getColorPickerButton } from "./colorPickerButton";
-import { getSystemTray } from "./systemTray";
+import { AppLauncherButton } from "./appLauncherButton";
+import { Clock } from "./clock";
+import { ColorPickerButton } from "./colorPickerButton";
+import { ScreenshotButton } from "./screenshotButton";
+import { SystemTray } from "./systemTray";
+import { WorkspaceSelector } from "./workspaceSelector";
 
-export function getBarWidgets() {
-    return {
-        AppLauncherButton: getAppLauncherButton(),
-        WorkspaceSelector: getWorkspaceSelector(),
-        TimeAndNotificationsDisplay: getTimeAndNotificationsDisplay(),
-        SystemTray: getSystemTray(),
-        ScreenshotButton: getScreenshotButton(),
-        ColorPickerButton: getColorPickerButton(),
-        QuickMenuButton: getQuickMenuButton()
-    };
-}
+export const BarWidgets = {
+    AppLauncherButton: new AppLauncherButton(),
+    WorkspaceSelector: new WorkspaceSelector(),
+    Clock: new Clock(),
+    SystemTray: new SystemTray(),
+    ScreenshotButton: new ScreenshotButton(),
+    ColorPickerButton: new ColorPickerButton()
+};

@@ -26,7 +26,7 @@ export function HEXtoRGBA(hex: string): RGBA {
     };
 }
 
-export function HEXtoCSSRGBA(hex: string): string {
+export function HEXtoSCSSRGBA(hex: string): string {
     if(/^#[A-Fa-f0-9]{8}$/.test(hex)) {
         var hexStr = hex.substring(1);
         const num = Number.parseInt(`0x${hexStr}`);
@@ -35,4 +35,10 @@ export function HEXtoCSSRGBA(hex: string): string {
     }
 
     return `rgba($color: #000000, $alpha: 0.0)`;
+}
+
+export function HEXtoCSSRGBA(hex: string): string {
+    const rgba = HEXtoRGBA(hex);
+    
+    return `rgba(${rgba.red}, ${rgba.green}, ${rgba.blue}, ${rgba.alpha / 255})`;
 }

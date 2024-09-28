@@ -1,6 +1,6 @@
-@import "./bar/bar.scss";
-@import "./systemTray/systemTray.scss";
-@import "./appLauncher/appLauncher.scss";
+@import "./bar";
+@import "./systemTray";
+@import "./appLauncher";
 
 .background {
     background-color: rgba($color: #000000, $alpha: 0.0);

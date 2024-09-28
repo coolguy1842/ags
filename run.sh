@@ -6,11 +6,11 @@ start_normal_bar() {
     echo ""
     
     $ags_command &
+    echo "\n\n"
     exit
 }
 
 killall ags
 trap 'start_normal_bar' INT
 
-# $ags_command -c ~/.config/ags-new-new/config.js $1
 $ags_command $1

@@ -1,129 +1,250 @@
-import { Box } from "resource:///com/github/Aylur/ags/widgets/box.js";
 import { globals } from "src/globals";
-import { SystemTrayWindow } from "src/systemTray/systemTray";
-import { PopupAnimationFunctions } from "src/utils/PopupWindow";
-import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
+import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
+import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
+import { DerivedVariable, getActiveFavorites, getTrayItemID } from "src/utils/utils";
+import { TPosition } from "src/utils/classes/PopupAnimation";
+import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 
-const hyprland = await Service.import("hyprland");
-const systemTray = await Service.import("systemtray");
+import Gtk from "gi://Gtk?version=3.0";
+import Gdk from "gi://Gdk";
+import { BarPosition, BooleanValidator, HEXColorValidator, NumberValidator } from "src/options";
+import Box from "types/widgets/box";
+import { HEXtoCSSRGBA } from "src/utils/colorUtils";
+import { updateTray } from "src/components/trayComponents";
+import { TrayType } from "../enums/trayType";
 
+const tray = await Service.import("systemtray");
 
-export function getSystemTray() {
-    const defaultProps = {
-        favourites_enabled: true
-    };
+//#region PROPS
 
-    return {
-        name: "SystemTray",
-        props: defaultProps,
-        create(monitorName: string, props: typeof defaultProps) {
-            const updateTray = (trayBox: Box<never, unknown>) => {
-                const favorites = globals.optionsHandler.options.system_tray.favorites;
-                const favorites_enabled = globals.optionsHandler.options.system_tray.favorites_enabled;
-        
-                if(favorites_enabled.value) {
-                    const favoriteItems = systemTray.items
-                        .filter(x => favorites.value.includes(getTrayItemID(x)))
-                        .map(item => {
-                            const id = getTrayItemID(item);
-            
-                            return Widget.Button({
-                                class_name: `bar-system-tray-icon system-tray-icon-id-${id}`,
-                                child: Widget.Icon({
-                                    icon: item.bind("icon")
-                                }),
-                                onPrimaryClick: (_, event) => {
-                                    item.activate(event);
-                                },
-                                onSecondaryClick: (_, event) => {
-                                    item.openMenu(event);
-                                },
-                                onMiddleClick: (_, _event) => {
-                                    favorites.value = favorites.value.filter(x => x != id);
-                                }
-                            });
-                        });
-            
-                    if(getActiveFavorites(favorites.value).length != systemTray.items.length) {
-                        favoriteItems.push(
-                            Widget.Button({
-                                className: "bar-system-tray-button",
-                                label: "󰄝 ",
-                                setup: (btn) => {
-                                    btn.connect("button-press-event", () => {
-                                        const allocation = btn.get_allocation();
-                                        const monitor = hyprland.monitors.find(x => x.name == monitorName)!;
+const defaultProps = {
+    background: "#BDA4A419",
+    enable_favorites: true,
+    
+    spacing: 3,
+    border_radius: 8,
 
-                                        const position = {
-                                            x: allocation.x,
-                                            y: monitor.height - ((allocation.height + allocation.y) + 10),
-                                        };
-                
-                                        if(SystemTrayWindow.window.is_visible()) {
-                                            SystemTrayWindow.hide();
-                                        }
-                                        else {
-                                            const animationOptions = globals.optionsHandler.options.system_tray.animation;
+    icon_size: 50,
+    
+    horizontal_padding: 4,
+    vertical_padding: 2,
+};
 
-                                            if(animationOptions.enabled.value) {
-                                                SystemTrayWindow.animation = {
-                                                    start: {
-                                                        x: position.x,
-                                                        y: monitor.height + (allocation.height + allocation.y)
-                                                    },
-                                                    function: PopupAnimationFunctions.linear,
-                                                    duration: animationOptions.duration.value,
-                                                    reverseDuration: animationOptions.reverse_duration.value,
-                                                    updateRate: animationOptions.update_rate.value
-                                                }
-                                            }
-                                            else {
-                                                SystemTrayWindow.animation = undefined;
-                                            }
+type PropsType = typeof defaultProps;
 
-                                            SystemTrayWindow.show(monitor.id, position);
-                                        }
-                                    });
-                                }
-                            })
-                        );
-                    }
+function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProps): TProps | undefined {
+    if(props == undefined || typeof props != "object") {
+        return fallback;
+    }
 
-                    trayBox.children = favoriteItems as never[];
-                }
-                else {
-                    trayBox.children = systemTray.items
-                        .map(item => {
-                            const id = getTrayItemID(item);
-            
-                            return Widget.Button({
-                                class_name: `bar-system-tray-icon bar-system-tray-item-${id} ${item.title.includes("spotify") ? "tray-icon-spotify" : ""}`,
-                                child: Widget.Icon({
-                                    icon: item.bind("icon")
-                                }),
-                                onPrimaryClick: (_, event) => {
-                                    item.activate(event);
-                                },
-                                onSecondaryClick: (_, event) => {
-                                    item.openMenu(event);
-                                }
-                            });
-                        }) as never[];
-                }
+    const newProps = Object.assign({}, props) as TProps;
+    for(const key in props) {
+        if(fallback[key] == undefined) {
+            delete newProps[key];
+        }
+    }
+
+    for(const key in defaultProps) {
+        if(newProps[key] == undefined) {
+            newProps[key] = fallback[key];
+        }
+    }
+
+    newProps.background = new HEXColorValidator().validate(newProps.background) ?? fallback.background;
+    newProps.enable_favorites = new BooleanValidator().validate(newProps.enable_favorites) ?? fallback.enable_favorites;
+
+    newProps.spacing = new NumberValidator({ min: 1, max: 20 }).validate(newProps.spacing) ?? fallback.spacing;
+    newProps.border_radius = new NumberValidator({ min: 0, max: 24 }).validate(newProps.border_radius) ?? fallback.border_radius;
+
+    newProps.horizontal_padding = new NumberValidator({ min: 0, max: 32 }).validate(newProps.horizontal_padding) ?? fallback.horizontal_padding;
+    newProps.vertical_padding = new NumberValidator({ min: 0, max: 12 }).validate(newProps.vertical_padding) ?? fallback.vertical_padding;
+
+    newProps.icon_size = new NumberValidator({ min: 0, max: 60 }).validate(newProps.icon_size) ?? fallback.icon_size;
+
+    return newProps;
+}
+
+function propsValidator(props: PropsType, previousProps?: PropsType) {
+    const fallback = _validateProps(previousProps ?? defaultProps, defaultProps) ?? defaultProps;
+    return _validateProps(props, fallback);
+}
+
+//#endregion
+
+export class SystemTray implements IBarWidget<PropsType, Gtk.Box> {
+    name = "SystemTray";
+    defaultProps = defaultProps;
+
+    propsValidator = propsValidator;
+    create(monitor: TBarWidgetMonitor, props: PropsType) {
+        const { system_tray } = globals.optionsHandler!.options;
+        const trayType = props.enable_favorites ? TrayType.FAVORITES : TrayType.ALL;
+
+        const onMiddleClick = (item: TrayItem) => {
+            system_tray.favorites.value = system_tray.favorites.value.filter(x => x != getTrayItemID(item));
+        }
+
+        const updateTrayFn = (self: Box<Gtk.Widget, unknown>) => {
+            updateTray(self, trayType, system_tray.favorites.value, props.icon_size, onMiddleClick);
+        }
+
+        const popupButton = this.trayPopupFavoritesButton(monitor.id, props);
+        const updatePopupFn = (self: Box<Gtk.Widget, unknown>) => {
+            if(!props.enable_favorites) {
+                popupButton.set_visible(false);
+                return;
             }
 
-            return Widget.Box({
-                class_name: "bar-system-tray",
-                spacing: globals.optionsHandler.options.bar.system_tray.spacing.bind(),
-                children: [],
-                setup: (box) => updateTray(box)
-            }).hook(globals.optionsHandler.options.system_tray.favorites, (box) => {
-                updateTray(box);
-            }).hook(globals.optionsHandler.options.system_tray.favorites_enabled, (box) => {
-                updateTray(box);
-            }).hook(systemTray, (box) => {
-                updateTray(box);
-            })
+            if(getActiveFavorites(system_tray.favorites.value).length == tray.items.length) {
+                popupButton.set_visible(false);
+                return;
+            }
+
+            popupButton.set_visible(true);
         }
-    };
-}
+
+        return Widget.Box({
+            class_name: "bar-system-tray",
+            css: `
+                background-color: ${HEXtoCSSRGBA(props.background)};
+                padding: ${props.vertical_padding}px ${props.horizontal_padding}px;
+                border-radius: ${props.border_radius}px;
+            `,
+            spacing: props.spacing,
+            hpack: "center",
+            children: [
+                Widget.Box({
+                    spacing: props.spacing,
+                    setup: updateTrayFn
+                })
+                    .hook(tray, updateTrayFn)
+                    .hook(system_tray.favorites, updateTrayFn),
+                popupButton
+            ],
+            setup: updatePopupFn
+        }).hook(tray, updatePopupFn).hook(system_tray.favorites, updatePopupFn);
+    }
+
+    private trayPopupFavoritesButton(monitorID: number, props: PropsType) {
+        const button = Widget.Button({
+            className: "bar-system-tray-popup-favorites-button",
+            label: "󰄝 "
+        });
+
+        button.on_clicked = () => {
+            const TrayFavoritesPopupWindow = globals.popupWindows?.SystemTray;
+            if(!TrayFavoritesPopupWindow) return;
+
+            if(TrayFavoritesPopupWindow.window.is_visible()) {
+                TrayFavoritesPopupWindow.hide();
+
+                return;
+            }
+
+            const barPosition = globals.optionsHandler!.options.bar.position;
+            const barHeight = globals.optionsHandler!.options.bar.height;
+
+            const getPosition = () => {
+                if(button.is_destroyed || !button.get_accessible()) {
+                    return {
+                        x: 0, y: 0
+                    }
+                };
+    
+                const allocation = button.get_allocation();
+                const position = {
+                    x: allocation.x + (allocation.width / 2),
+                    y: allocation.y + allocation.height
+                };
+
+                return position;
+            }
+    
+            const position = new Variable(getPosition(), {
+                poll: [
+                    250,
+                    (variable) => {
+                        if(button.is_destroyed || !button.get_accessible()) {
+                            variable.stopPoll();
+                        }
+    
+                        return getPosition();
+                    }
+                ]
+            });
+    
+            const endDerived = new DerivedVariable(
+                [
+                    barPosition,
+                    barHeight,
+                    position,
+                    TrayFavoritesPopupWindow.childAllocation,
+                    TrayFavoritesPopupWindow.screenBounds
+                ],
+                (barPos, barHeight, position, childAllocation, screenBounds) => {
+                    const screenPadding = 10;
+                    var out = {
+                        x: screenPadding,
+                        y: screenPadding
+                    };
+    
+                    switch(barPos) {
+                    case BarPosition.TOP: {
+                        out = {
+                            x: position.x - (childAllocation.width / 2),
+                            y: screenBounds.height - (barHeight + screenPadding)
+                        };
+        
+                        break;
+                    }
+                    // case isnt needed here, just have it to specify what its for
+                    case BarPosition.BOTTOM: default: {
+                        out = {
+                            x: position.x - (childAllocation.width / 2),
+                            y: position.y + childAllocation.height + screenPadding
+                        };
+    
+                        break;
+                    }
+                    }
+                    
+                    out.x = Math.min(out.x, (screenBounds.width - childAllocation.width) - screenPadding);
+                    out.x = Math.max(out.x, screenPadding);
+    
+                    out.y = Math.min(out.y, screenBounds.height - screenPadding);
+                    out.y = Math.max(out.y, screenPadding);
+    
+                    return out;
+                }    
+            );
+
+            const startDerived = new DerivedVariable(
+                [
+                    endDerived,
+                    barPosition,
+                    barHeight,
+                    TrayFavoritesPopupWindow.childAllocation,
+                    TrayFavoritesPopupWindow.screenBounds,
+                ],
+                (derived, barPos, barHeight, childAllocation, screenBounds) => {
+                    return {
+                        x: derived.x,
+                        y: barPos == BarPosition.TOP ? screenBounds.height + childAllocation.height : barHeight
+                    };
+                }
+            );
+    
+            TrayFavoritesPopupWindow.onHide = () => {
+                position.stopPoll();
+
+                startDerived.stop();
+                endDerived.stop();
+            };
+
+            TrayFavoritesPopupWindow.child.spacing = props.spacing;
+            TrayFavoritesPopupWindow.show(monitorID, startDerived, endDerived);
+        }
+
+        return button;
+    }
+};
