@@ -160,9 +160,12 @@ function createAppLauncherPopupWidget(width: Variable<number>) {
 export function createAppLauncherPopupWindow() {
     const { app_launcher } = globals.optionsHandler!.options;
 
-    const itemsWidth = new DerivedVariable([app_launcher.icon_size, app_launcher.spacing, app_launcher.columns], (icon_size, spacing, cols) => {
-        return (cols * icon_size) + (cols * (spacing));
-    });
+    const itemsWidth = new DerivedVariable(
+        [app_launcher.icon_size, app_launcher.spacing, app_launcher.columns, app_launcher.application.padding],
+        (icon_size, spacing, cols, padding) => {
+            return (cols * (icon_size + (padding * 2))) + (cols * (spacing));
+        }
+    );
 
     const popupWindow = new PopupWindow(
         {
