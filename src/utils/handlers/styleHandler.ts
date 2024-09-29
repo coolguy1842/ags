@@ -67,7 +67,12 @@ export class StyleHandler implements IReloadable {
             app_launcher.padding,
 
             app_launcher.search.background,
-            app_launcher.search.border_radius
+            app_launcher.search.border_radius,
+
+            app_launcher.application.background,
+            app_launcher.application.background_selected,
+            app_launcher.application.padding,
+            app_launcher.application.border_radius
         ];
     }
 
@@ -89,6 +94,11 @@ export class StyleHandler implements IReloadable {
 
             $("app-launcher-search-background-color", HEXtoSCSSRGBA(app_launcher.search.background.value)),
             $("app-launcher-search-border-radius", `${app_launcher.search.border_radius.value}px`),
+
+            $("app-launcher-item-background-color", HEXtoSCSSRGBA(app_launcher.application.background.value)),
+            $("app-launcher-item-background-color-selected", HEXtoSCSSRGBA(app_launcher.application.background_selected.value)),
+            $("app-launcher-item-padding", `${app_launcher.application.padding.value}px`),
+            $("app-launcher-item-border-radius", `${app_launcher.application.border_radius.value}px`),
         ].join("\n");
     }
 

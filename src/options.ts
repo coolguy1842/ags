@@ -173,6 +173,14 @@ export interface IOptions extends TOptions {
             border_radius: Option<number>;
         }
 
+        application: {
+            background: Option<string>;
+            background_selected: Option<string>;
+
+            padding: Option<number>;
+            border_radius: Option<number>;
+        }
+
         spacing: Option<number>;
         icon_size: Option<number>;
 
@@ -238,7 +246,15 @@ export function getOptions(): IOptions {
                 border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
             },
 
-            spacing: option(8, new NumberValidator({ min: 0, max: 50 })),
+            application: {
+                background: option("#00000000", new HEXColorValidator()),
+                background_selected: option("#000000BF", new HEXColorValidator()),
+
+                padding: option(4, new NumberValidator({ min: 0, max: 64 })),
+                border_radius: option(8, new NumberValidator({ min: 0, max: 50 }))
+            },
+
+            spacing: option(4, new NumberValidator({ min: 0, max: 50 })),
             icon_size: option(32, new NumberValidator({ min: 1, max: 80 })),
 
             rows: option(3, new NumberValidator({ min: 1, max: 15 })),
