@@ -209,19 +209,22 @@ export function getOptions(): IOptions {
                 gap: option(6, new NumberValidator()),
                 left: option(
                     [
-                        { name: "WorkspaceSelector", props: { scroll_direction: "normal" } }
+                        { name: "AppLauncherButton" },
+                        { name: "WorkspaceSelector" }
                     ] as TBarLayout,
                     new BarLayoutValidator()
                 ),
                 center: option(
                     [
-                        
+                        { name: "Clock" }
                     ] as TBarLayout,
                     new BarLayoutValidator()
                 ),
                 right: option(
                     [
-                        { name: "SystemTray", props: {} }
+                        { name: "ColorPickerButton" },
+                        { name: "ScreenshotButton" },
+                        { name: "SystemTray" }
                     ] as TBarLayout,
                     new BarLayoutValidator()
                 )
@@ -231,7 +234,7 @@ export function getOptions(): IOptions {
             background: option("#000000BF", new HEXColorValidator()),
             favorites: option([] as string[], new StringArrayValidator()),
 
-            icon_size: option(12, new NumberValidator({ min: 1, max: 30 })),
+            icon_size: option(14, new NumberValidator({ min: 1, max: 30 })),
 
             padding: option(8, new NumberValidator({ min: 0, max: 30 })),
             border_radius: option(12, new NumberValidator({ min: 0, max: 50 }))
@@ -242,13 +245,13 @@ export function getOptions(): IOptions {
             border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
 
             search: {
-                background: option("#000000BF", new HEXColorValidator()),
+                background: option("#141414FF", new HEXColorValidator()),
                 border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
             },
 
             application: {
                 background: option("#00000000", new HEXColorValidator()),
-                background_selected: option("#000000BF", new HEXColorValidator()),
+                background_selected: option("#484848FF", new HEXColorValidator()),
 
                 padding: option(4, new NumberValidator({ min: 0, max: 64 })),
                 border_radius: option(8, new NumberValidator({ min: 0, max: 50 }))

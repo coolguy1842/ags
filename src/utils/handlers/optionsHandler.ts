@@ -232,6 +232,8 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private loadOptions() {
         const text = Utils.readFile(paths.OPTIONS_PATH);
+        if(text == "") return;
+        
         let json: {};
 
         this._options = this._default;

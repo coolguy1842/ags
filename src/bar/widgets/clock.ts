@@ -47,33 +47,6 @@ function propsValidator(props: PropsType, previousProps?: PropsType) {
 
 //#endregion
 
-const TestPopupWidget = Widget.Box({
-    css: "background-color: black;",
-    widthRequest: 150,
-    height_request: 100,
-    children: [
-        Widget.Label({        
-            widthRequest: 150,
-            height_request: 100,
-            label: "test"
-        })
-    ]
-});
-
-export const TestPopupWindow = new PopupWindow(
-    {
-        name: "test-popup",
-        keymode: "on-demand"
-    },
-    TestPopupWidget,
-    {
-        animation: PopupAnimations.Ease,
-        duration: 0.4,
-        refreshRate: 165
-    }
-);
-
-
 export class Clock implements IBarWidget<PropsType, Gtk.Button> {
     name = "Clock";
     defaultProps = defaultProps;
@@ -82,67 +55,7 @@ export class Clock implements IBarWidget<PropsType, Gtk.Button> {
     create(monitor: TBarWidgetMonitor, props: PropsType) {
         return Widget.Button({
             className: "bar-clock",
-            label: globals.clock!.bind().transform(clock => clock.format(props.clock_format) ?? ""),
-            onClicked: (self) => {
-                const getAllocation = () => {
-                    if(self.is_destroyed || !self.get_accessible()) {
-                        return {
-                            x: 0, y: 0
-                        }
-                    };
-    
-                    const allocation = self.get_allocation();
-                    return {
-                        x: allocation.x + (allocation.width / 2),
-                        y: allocation.y + allocation.height
-                    }
-                }
-    
-                const variable = new Variable(getAllocation(), {
-                    poll: [
-                        250, 
-                        (variable) => {
-                            if(self.is_destroyed || !self.get_accessible()) {
-                                variable.stopPoll();
-                            }
-    
-                            return getAllocation();
-                        }
-                    ]
-                });
-    
-                const derived = new DerivedVariable(
-                    [
-                        variable,
-                        TestPopupWindow.childAllocation
-                    ],
-                    (allocation, childAllocation) => {
-                        const out = {
-                            x: allocation.x - (childAllocation.width / 2),
-                            y: allocation.y + childAllocation.height + 10
-                        };
-    
-                        return out;
-                    }
-                );
-    
-                const startPosition = new DerivedVariable([derived], (variable) => {
-                    return {
-                        x: variable.x,
-                        y: 0
-                    };
-                });
-                
-
-                TestPopupWindow.onHide = () => {
-                    variable.stopPoll();
-
-                    startPosition.stop();
-                    derived.stop();
-                };
-    
-                TestPopupWindow.show(monitor.id, startPosition, derived);
-            }
+            label: globals.clock!.bind().transform(clock => clock.format(props.clock_format) ?? "")
         });
     }
 };

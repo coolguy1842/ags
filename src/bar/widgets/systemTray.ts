@@ -24,9 +24,9 @@ const defaultProps = {
     spacing: 3,
     border_radius: 8,
 
-    icon_size: 50,
+    icon_size: 14,
     
-    horizontal_padding: 4,
+    horizontal_padding: 6,
     vertical_padding: 2,
 };
 
