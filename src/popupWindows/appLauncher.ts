@@ -9,12 +9,20 @@ import Box from "types/widgets/box";
 
 const applications = await Service.import("applications");
 
-function AppLauncherItem(child: Gtk.Widget | Binding<any, any, Gtk.Widget>, onClicked: () => void) {
+var items: Gtk.Widget[];
+var itemCursor: Variable<number> = new Variable(0);
+
+function AppLauncherItem(index: number, child: Gtk.Widget | Binding<any, any, Gtk.Widget>, onClicked: () => void) {
     return Widget.Button({
         className: "app-launcher-item",
         halign: Gtk.Align.CENTER,
         child: child,
-        onClicked
+        onClicked,
+        setup: (self) => {
+            self.hook(itemCursor, () => {
+                self.toggleClassName("app-launcher-item-selected", itemCursor.value == index);
+            });
+        }
     });
 }
 
@@ -25,9 +33,10 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
     const input = globals.searchInput?.value ?? "";
     var children: Gtk.Widget[] = [];
 
+    itemCursor.value = 0;
     if(/^\s*-?(\d+|(\d?\.\d+))( ?([-\+\/\*]|(\*\*)){1} ?-?(\d+|(\d?\.\d+))){1,}$/.test(input)) {
         children.push(
-            AppLauncherItem(
+            AppLauncherItem(0,
                 Widget.Label({
                     hpack: "center",
                     label: `${eval(input)}`,
@@ -38,11 +47,11 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
                     globals.popupWindows?.AppLauncher?.hide();
                 }
             )
-        )
+        );
     }
     else if(/^[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/.test(input)) {
         children.push(
-            AppLauncherItem(
+            AppLauncherItem(0,
                 Widget.Label({
                     hpack: "center",
                     label: `${input}`,
@@ -60,7 +69,7 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
         .filter(app => app.match(input))
         .sort((a, b) => b.frequency - a.frequency)
         .slice(0, app_launcher.rows.value * app_launcher.columns.value)
-        .map(application => AppLauncherItem(
+        .map((application, index) => AppLauncherItem(index,
             Widget.Icon({
                 size: app_launcher.icon_size.value,
                 icon: Utils.lookUpIcon(application.icon_name ?? undefined, 32)?.load_icon()
@@ -73,6 +82,7 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
         ));
     }
 
+    items = children;
     widget.children = splitToNChunks(
         children.slice(0, app_launcher.rows.value * app_launcher.columns.value),
         app_launcher.columns.value
@@ -93,7 +103,41 @@ function createAppLauncherPopupWidget(width: Variable<number>) {
             Widget.Entry({
                 className: "app-launcher-search-input",
                 onChange: (self) => globals.searchInput!.value = self.text ?? ""
-            }).hook(globals.searchInput!, (self) => self.text = globals.searchInput!.value as string),
+            })
+                .keybind("Return", (self) => {
+                    const item = items[itemCursor.value] as Gtk.Button;
+                    item.clicked();
+                })
+                .keybind("Left", (self) => {
+                    if(self.cursor_position != 0) {
+                        return;
+                    }
+
+                    itemCursor.value = Math.min(itemCursor.value, items.length - 1);
+                    itemCursor.value = Math.max(itemCursor.value - 1, 0);
+                })
+                .keybind("Right", (self) => {
+                    if(self.cursor_position != self.text_length) {
+                        return;
+                    }
+
+                    itemCursor.value = Math.max(itemCursor.value, 0);
+                    itemCursor.value = Math.min(itemCursor.value + 1, items.length - 1);
+                })
+                .keybind("Up", (self) => {
+                    itemCursor.value = Math.min(itemCursor.value, items.length - 1);
+                    itemCursor.value = Math.max(itemCursor.value - app_launcher.columns.value, 0);
+                })
+                .keybind("Down", (self) => {
+                    itemCursor.value = Math.max(itemCursor.value, 0);
+                    itemCursor.value = Math.min(itemCursor.value + app_launcher.columns.value, items.length - 1);
+
+                    // bit of a hack, if this isnt here then down arrow removes focus from the input
+                    setTimeout(() => {
+                        self.grab_focus();
+                    }, 1);
+                })
+                .hook(globals.searchInput!, (self) => self.text = globals.searchInput!.value as string),
             Widget.Box({
                 className: "app-launcher-app-container",
                 vertical: true,
@@ -180,6 +224,8 @@ export function toggleAppLauncher(appLauncher: PopupWindow<any, any>, monitor: n
         if(globals.searchInput) {
             globals.searchInput.value = "";
         }
+
+        itemCursor.value = 0;
         
         startDerived.stop();
         endDerived.stop();

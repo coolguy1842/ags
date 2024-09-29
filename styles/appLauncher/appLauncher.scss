@@ -7,6 +7,15 @@
 
 .app-launcher-item {
     @include app-launcher-widget;
+
+    background-color: $app-launcher-item-background-color;
+    
+    padding: $app-launcher-item-padding;
+    border-radius: $app-launcher-item-border-radius;
+
+    &.app-launcher-item-selected {
+        background-color: $app-launcher-item-background-color-selected;
+    }
 }
 
 
