@@ -260,7 +260,7 @@ export function getOptions(): IOptions {
             spacing: option(4, new NumberValidator({ min: 0, max: 50 })),
             icon_size: option(32, new NumberValidator({ min: 1, max: 80 })),
 
-            rows: option(3, new NumberValidator({ min: 1, max: 15 })),
+            rows: option(4, new NumberValidator({ min: 1, max: 15 })),
             columns: option(5, new NumberValidator({ min: 1, max: 15 }))
         }
     };
