@@ -173,6 +173,8 @@ export interface IOptions extends TOptions {
             border_radius: Option<number>;
         }
 
+        title_color: Option<string>;
+
         application: {
             background: Option<string>;
             background_selected: Option<string>;
@@ -248,6 +250,8 @@ export function getOptions(): IOptions {
                 background: option("#141414FF", new HEXColorValidator()),
                 border_radius: option(12, new NumberValidator({ min: 0, max: 50 })),
             },
+
+            title_color: option("#FFFFFFFF", new HEXColorValidator()),
 
             application: {
                 background: option("#00000000", new HEXColorValidator()),

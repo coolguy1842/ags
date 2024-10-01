@@ -5,6 +5,13 @@
     border-radius: $app-launcher-border-radius;
 }
 
+.app-launcher-title {
+    @include app-launcher-widget;
+
+    color: $app-launcher-title-text-color;
+}
+
+
 .app-launcher-item {
     @include app-launcher-widget;
 

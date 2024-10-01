@@ -14,7 +14,7 @@ var items: Gtk.Button[];
 
 var itemDisplayText: Variable<string> = new Variable("");
 var itemCursor: Variable<number> = new Variable(0);
-var itemScroll = 0;
+var itemScroll: Variable<number> = new Variable(0);
 
 function AppLauncherItem(index: number, displayText: string, child: Gtk.Widget | Binding<any, any, Gtk.Widget>, onClicked: () => void) {
     return Widget.Button({
@@ -24,6 +24,8 @@ function AppLauncherItem(index: number, displayText: string, child: Gtk.Widget |
         child: child,
         onClicked,
         setup: (self) => {
+            self.toggleClassName("app-launcher-item-selected", itemCursor.value == index);
+            
             self.hook(itemCursor, () => {
                 self.toggleClassName("app-launcher-item-selected", itemCursor.value == index);
             });
@@ -41,11 +43,22 @@ function getCurrentItem(): Gtk.Button | undefined {
     return items[itemCursor.value];
 }
 
-function updateCursor(columns: number, newValue: number) {
+function updateCursor(newValue: number, rows: number, columns: number) {
     itemCursor.value = Math.min(Math.max(newValue, 0), items.length - 1);
 
     const item = getCurrentItem();
     itemDisplayText.value = item?.name ?? "";
+
+    const scrollAmount = itemScroll.value * columns;
+    const visibleItems = (columns * rows) + scrollAmount;
+
+    if(itemCursor.value >= visibleItems) {
+        itemScroll.value++;
+    }
+
+    if(itemCursor.value < scrollAmount) {
+        itemScroll.value--;
+    }
 }
 
 
@@ -55,7 +68,6 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
     const input = globals.searchInput?.value ?? "";
     var children: Gtk.Button[] = [];
 
-    itemCursor.value = 0;
     if(/^\s*-?(\d+|(\d?\.\d+))( ?([-\+\/\*]|(\*\*)){1} ?-?(\d+|(\d?\.\d+))){1,}$/.test(input)) {
         children.push(
             AppLauncherItem(0,
@@ -90,25 +102,25 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
     }
     else {
         children = applications.list
-        .filter(app => app.match(input))
-        .sort((a, b) => b.frequency - a.frequency)
-        .map((application, index) => AppLauncherItem(index,
-            `Launch ${application.app.get_name()}`,
-            Widget.Icon({
-                size: app_launcher.icon_size.value,
-                icon: Utils.lookUpIcon(application.icon_name ?? undefined, 32)?.load_icon()
-            }),
-            async () => {
-                application.launch();
-                globals.popupWindows?.AppLauncher?.hide();
-            }
-        ));
+            .filter(app => app.match(input))
+            .sort((a, b) => b.frequency - a.frequency)
+            .map((application, index) => AppLauncherItem(index,
+                `Launch ${application.app.get_name()}`,
+                Widget.Icon({
+                    size: app_launcher.icon_size.value,
+                    icon: Utils.lookUpIcon(application.icon_name ?? undefined, 32)?.load_icon()
+                }),
+                async () => {
+                    application.launch();
+                    globals.popupWindows?.AppLauncher?.hide();
+                }
+            ));
     }
 
     items = children;
-    updateCursor(app_launcher.columns.value, itemCursor.value);
+    updateCursor(itemCursor.value, app_launcher.rows.value, app_launcher.columns.value);
 
-    const scrollAmount = itemScroll * app_launcher.columns.value;
+    const scrollAmount = itemScroll.value * app_launcher.columns.value;
     widget.children = splitToNChunks(
         children.slice(scrollAmount, (app_launcher.rows.value * app_launcher.columns.value) + scrollAmount),
         app_launcher.columns.value
@@ -139,20 +151,20 @@ function createAppLauncherPopupWidget(width: Variable<number>) {
                         return;
                     }
 
-                    updateCursor(app_launcher.columns.value, itemCursor.value - 1);
+                    updateCursor(itemCursor.value - 1, app_launcher.rows.value, app_launcher.columns.value);
                 })
                 .keybind("Right", (self) => {
                     if(self.cursor_position != self.text_length) {
                         return;
                     }
 
-                    updateCursor(app_launcher.columns.value, itemCursor.value + 1);
+                    updateCursor(itemCursor.value + 1, app_launcher.rows.value, app_launcher.columns.value);
                 })
                 .keybind("Up", (self) => {
-                    updateCursor(app_launcher.columns.value, itemCursor.value - app_launcher.columns.value);
+                    updateCursor(itemCursor.value - app_launcher.columns.value, app_launcher.rows.value, app_launcher.columns.value);
                 })
                 .keybind("Down", async (self) => {
-                    updateCursor(app_launcher.columns.value, itemCursor.value + app_launcher.columns.value);
+                    updateCursor(itemCursor.value + app_launcher.columns.value, app_launcher.rows.value, app_launcher.columns.value);
 
                     // have to have this, if not then down arrow removes focus from the input
                     await sleep(1);
@@ -160,6 +172,7 @@ function createAppLauncherPopupWidget(width: Variable<number>) {
                 })
                 .hook(globals.searchInput!, (self) => self.text = globals.searchInput!.value as string),
             Widget.Label({
+                className: "app-launcher-title",
                 label: itemDisplayText.bind(),
                 ellipsize: Pango10.EllipsizeMode.END
             }),
@@ -173,6 +186,7 @@ function createAppLauncherPopupWidget(width: Variable<number>) {
             })
                 .hook(globals.searchInput!, updateApplications)
                 .hook(app_launcher.icon_size, updateApplications)
+                .hook(itemScroll, updateApplications)
                 .hook(app_launcher.spacing, updateApplications)
                 .hook(app_launcher.columns, updateApplications)
                 .hook(app_launcher.rows, updateApplications)
@@ -255,8 +269,8 @@ export function toggleAppLauncher(appLauncher: PopupWindow<any, any>, monitor: n
             globals.searchInput.value = "";
         }
 
-        itemScroll = 0;
-        updateCursor(app_launcher.columns.value, 0);
+        itemScroll.value = 0;
+        updateCursor(0, app_launcher.rows.value, app_launcher.columns.value);
 
         startDerived.stop();
         endDerived.stop();
