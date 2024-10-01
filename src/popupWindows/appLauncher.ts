@@ -51,8 +51,8 @@ function updateCursor(newValue: number, rows: number, columns: number) {
     const item = getCurrentItem();
     itemDisplayText.value = item?.name ?? "";
 
-    const scrollAmount = itemScroll.value * columns;
-    const visibleItems = (columns * rows) + scrollAmount;
+    var scrollAmount = itemScroll.value * columns;
+    var visibleItems = (columns * rows) + scrollAmount;
 
     while(itemCursor.value < scrollAmount || itemCursor.value >= visibleItems) {
         if(itemCursor.value >= visibleItems) {
@@ -62,6 +62,9 @@ function updateCursor(newValue: number, rows: number, columns: number) {
         if(itemCursor.value < scrollAmount) {
             itemScroll.value--;
         }
+
+        scrollAmount = itemScroll.value * columns;
+        visibleItems = (columns * rows) + scrollAmount;
     }
 }
 
