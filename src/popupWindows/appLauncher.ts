@@ -5,12 +5,14 @@ import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { globals } from "src/globals";
 import { PopupAnimations } from "src/utils/classes/PopupAnimation";
 import { PopupWindow } from "src/utils/classes/PopupWindow";
+import Mexp from "src/utils/math-expression-evaluator/index";
 import { DerivedVariable, sleep, splitToNChunks } from "src/utils/utils";
 import Box from "types/widgets/box";
 
 const applications = await Service.import("applications");
 
 var items: Gtk.Button[];
+var appLauncherChildren: Variable<Gtk.Box[]> = new Variable([] as Gtk.Box[]);
 
 var itemDisplayText: Variable<string> = new Variable("");
 var itemCursor: Variable<number> = new Variable(0);
@@ -44,7 +46,7 @@ function getCurrentItem(): Gtk.Button | undefined {
 }
 
 function updateCursor(newValue: number, rows: number, columns: number) {
-    itemCursor.value = Math.min(Math.max(newValue, 0), items.length - 1);
+    itemCursor.value = Math.max(0, Math.min(newValue, items.length - 1));
 
     const item = getCurrentItem();
     itemDisplayText.value = item?.name ?? "";
@@ -52,33 +54,43 @@ function updateCursor(newValue: number, rows: number, columns: number) {
     const scrollAmount = itemScroll.value * columns;
     const visibleItems = (columns * rows) + scrollAmount;
 
-    if(itemCursor.value >= visibleItems) {
-        itemScroll.value++;
-    }
-
-    if(itemCursor.value < scrollAmount) {
-        itemScroll.value--;
+    while(itemCursor.value < scrollAmount || itemCursor.value >= visibleItems) {
+        if(itemCursor.value >= visibleItems) {
+            itemScroll.value++;
+        }
+    
+        if(itemCursor.value < scrollAmount) {
+            itemScroll.value--;
+        }
     }
 }
 
-
+const MathExpression = new Mexp();
 function updateApplications(widget: Box<Gtk.Widget, unknown>) {
     const { app_launcher } = globals.optionsHandler!.options;
 
     const input = globals.searchInput?.value ?? "";
     var children: Gtk.Button[] = [];
 
-    if(/^\s*-?(\d+|(\d?\.\d+))( ?([-\+\/\*]|(\*\*)){1} ?-?(\d+|(\d?\.\d+))){1,}$/.test(input)) {
+    var mathOutput: number | undefined;
+    try {
+        mathOutput = MathExpression.eval(input);
+    }
+    catch(err) {
+        mathOutput = undefined;
+    }
+
+    if(mathOutput) {
         children.push(
             AppLauncherItem(0,
                 "Copy to clipboard",
                 Widget.Label({
                     hpack: "center",
-                    label: `${eval(input)}`,
+                    label: `${mathOutput}`,
                     width_request: widget.width_request
                 }),
                 async () => {
-                    console.log(Utils.execAsync(`wl-copy ${eval(input)}`));
+                    console.log(Utils.execAsync(`wl-copy ${mathOutput}`));
                     globals.popupWindows?.AppLauncher?.hide();
                 }
             )
@@ -100,7 +112,8 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
             )
         )
     }
-    else {
+    
+    if(children.length <= 0) {
         children = applications.list
             .filter(app => app.match(input))
             .sort((a, b) => b.frequency - a.frequency)
@@ -121,7 +134,7 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
     updateCursor(itemCursor.value, app_launcher.rows.value, app_launcher.columns.value);
 
     const scrollAmount = itemScroll.value * app_launcher.columns.value;
-    widget.children = splitToNChunks(
+    appLauncherChildren.value = splitToNChunks(
         children.slice(scrollAmount, (app_launcher.rows.value * app_launcher.columns.value) + scrollAmount),
         app_launcher.columns.value
     ).map(x => Widget.Box({
@@ -182,6 +195,7 @@ function createAppLauncherPopupWidget(width: Variable<number>) {
                 hpack: "center",
                 widthRequest: width.bind(),
                 spacing: app_launcher.spacing.bind(),
+                children: appLauncherChildren.bind(),
                 setup: updateApplications
             })
                 .hook(globals.searchInput!, updateApplications)
