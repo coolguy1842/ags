@@ -1,10 +1,9 @@
-import { getOptions } from "src/options";
 import { OptionsHandler } from "./utils/handlers/optionsHandler";
 import { StyleHandler } from "./utils/handlers/styleHandler";
 import { getCurrentMonitor } from "./utils/utils";
 import { IReloadable } from "./interfaces/reloadable";
-import { createAppLauncherPopupWindow, toggleAppLauncher } from "./popupWindows/appLauncher";
-import { createTrayFavoritesPopupWindow } from "./popupWindows/systemTray";
+
+import { options } from "./options/options";
 
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 
@@ -12,6 +11,7 @@ import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "types/@girs/gobject-2.0/gobject-2.0";
 import Gdk from "gi://Gdk";
+import { PopupWindow } from "./utils/classes/PopupWindow";
 
 
 const TEMP_DIR_S = `/tmp/coolguy/ags`;
@@ -48,15 +48,14 @@ export class Globals implements IReloadable {
     private _clock?: Variable<GLib.DateTime>;
     private _searchInput?: Variable<string>;
 
-    private _optionsHandler?: OptionsHandler<ReturnType<typeof getOptions>>;
+    private _optionsHandler?: OptionsHandler<typeof options>;
     private _styleHandler?: StyleHandler;
 
     private _communicationSocketService?: Gio.SocketService;
     private _communicationSocket?: Gio.Socket;
 
     private _popupWindows?: {
-        AppLauncher: ReturnType<typeof createAppLauncherPopupWindow>,
-        SystemTray: ReturnType<typeof createTrayFavoritesPopupWindow>
+
     };
 
     private _close_socket(path: string) {
@@ -65,6 +64,19 @@ export class Globals implements IReloadable {
         if(file.query_exists(null)) {
             file.delete(null);
         }
+    }
+
+    private _on_socket_message(socket: Gio.SocketService, connection: Gio.SocketConnection, channel: GObject.Object | null) {
+        const inStream = connection.get_input_stream();
+        const message = inStream.read_bytes(128, null);
+
+        const command = new TextDecoder().decode(message.toArray());
+
+        switch(command) {
+        default: break;
+        }
+        
+        connection.close(null);
     }
 
     
@@ -101,18 +113,17 @@ export class Globals implements IReloadable {
             poll: [1000, () => GLib.DateTime.new_now_local()],
         });
 
-        this._optionsHandler = new OptionsHandler(getOptions());
+        this._optionsHandler = new OptionsHandler(options);
         this._optionsHandler.load();
 
         this._styleHandler = new StyleHandler();
         this._styleHandler.load();
 
         this._popupWindows = {
-            AppLauncher: createAppLauncherPopupWindow(),
-            SystemTray: createTrayFavoritesPopupWindow()
+
         };
 
-        for(const window of Object.values(this._popupWindows)) {
+        for(const window of Object.values(this._popupWindows) as PopupWindow<any, unknown>[]) {
             window.load();
         }
 
@@ -125,22 +136,7 @@ export class Globals implements IReloadable {
         this._communicationSocketService = Gio.SocketService.new();
         this._communicationSocketService.add_address(address, Gio.SocketType.STREAM, Gio.SocketProtocol.DEFAULT, null);
 
-        this._communicationSocketService.connect("incoming", (socket_service: Gio.SocketService, connection: Gio.SocketConnection, channel: GObject.Object | null) => {
-            const inStream = connection.get_input_stream();
-            const message = inStream.read_bytes(128, null);
-
-            const command = new TextDecoder().decode(message.toArray());
-
-            switch(command) {
-            case "app_launcher":
-                if(!this.popupWindows?.AppLauncher) break;
-
-                toggleAppLauncher(this.popupWindows.AppLauncher, getCurrentMonitor());
-                break;
-            }
-            
-            connection.close(null);
-        })
+        this._communicationSocketService.connect("incoming", this._on_socket_message);
 
         this._communicationSocketService.start();
         this._loaded = true;
@@ -149,7 +145,7 @@ export class Globals implements IReloadable {
     cleanup(): void {
         if(!this._loaded) return;
         
-        for(const window of Object.values(this._popupWindows ?? {})) {
+        for(const window of Object.values(this._popupWindows ?? {}) as PopupWindow<any, unknown>[]) {
             window.cleanup();
         }
 

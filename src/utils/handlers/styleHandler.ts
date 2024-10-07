@@ -53,57 +53,21 @@ export class StyleHandler implements IReloadable {
 
 
     getBindings() {
-        const { bar, system_tray, app_launcher } = globals.optionsHandler!.options;
+        const { bar } = globals.optionsHandler!.options;
         
         return [
             bar.background,
             bar.icon_color,
-
-            system_tray.background,
-            system_tray.border_radius,
-            system_tray.padding,
-
-            app_launcher.background,
-            app_launcher.border_radius,
-            app_launcher.padding,
-
-            app_launcher.search.background,
-            app_launcher.search.border_radius,
-
-            app_launcher.application.background,
-            app_launcher.application.background_selected,
-            app_launcher.application.padding,
-            app_launcher.application.border_radius,
-
-            app_launcher.title_color
         ];
     }
 
     // TODO: make bindings able to be used here that way we dont need the getBindings hack
     getDynamicSCSS() {
-        const { bar, system_tray, app_launcher } = globals.optionsHandler!.options;
+        const { bar } = globals.optionsHandler!.options;
 
         return [
             $("bar-background-color", HEXtoSCSSRGBA(bar.background.value)),
             $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value)),
-
-            $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value)),
-            $("system-tray-border-radius", `${system_tray.border_radius.value}px`),
-            $("system-tray-padding", `${system_tray.padding.value}px`),
-
-            $("app-launcher-background-color", HEXtoSCSSRGBA(app_launcher.background.value)),
-            $("app-launcher-border-radius", `${app_launcher.border_radius.value}px`),
-            $("app-launcher-padding", `${app_launcher.padding.value}px`),
-
-            $("app-launcher-search-background-color", HEXtoSCSSRGBA(app_launcher.search.background.value)),
-            $("app-launcher-search-border-radius", `${app_launcher.search.border_radius.value}px`),
-
-            $("app-launcher-item-background-color", HEXtoSCSSRGBA(app_launcher.application.background.value)),
-            $("app-launcher-item-background-color-selected", HEXtoSCSSRGBA(app_launcher.application.background_selected.value)),
-            $("app-launcher-item-padding", `${app_launcher.application.padding.value}px`),
-            $("app-launcher-item-border-radius", `${app_launcher.application.border_radius.value}px`),
-
-            $("app-launcher-title-text-color", HEXtoSCSSRGBA(app_launcher.title_color.value))
         ].join("\n");
     }
 
