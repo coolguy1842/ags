@@ -4,16 +4,55 @@ import { MonitorTypeFlags, PathMonitor } from "../classes/PathMonitor";
 import { HEXtoSCSSRGBA } from "../colorUtils";
 
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
+import { Variable } from "types/variable";
 
 const $ = (key: string, value: string) => `$${key}: ${value};`;
+
+
+class DynamicSCSSVariable<TVariables extends Variable<any>[]> implements IReloadable {
+    private _variables: TVariables;
+    private _transformFunc: () => string;
+    private _updateFunc: (transformed: string) => void;
+
+    private _loaded: boolean;
+    get loaded() { return this._loaded; }
+    
+    constructor(variables: TVariables, transformFunc: () => string, updateFunc: (transformed: string) => void) {
+        this._variables = variables;
+        this._transformFunc = transformFunc;
+        this._updateFunc = updateFunc;
+
+        this._loaded = false;
+    }
+
+    load(): void {
+        if(this._loaded) return;
+
+        for(const variable of this._variables) {
+            variable.connect("changed", () => this._updateFunc(this._transformFunc()));
+        }
+
+        this._loaded = true;
+    }
+
+    cleanup(): void {
+        if(!this._loaded) return;
+
+        this._loaded = false;
+    }
+
+    getTransformed() { return this._transformFunc(); }
+};
+
 
 export class StyleHandler implements IReloadable {
     private _loaded: boolean = false;
     get loaded() { return this._loaded; }
 
     private _monitor: PathMonitor;
-
     private _optionsListenerID?: number;
+
+    private _dynamicSCSSVariables?: DynamicSCSSVariable<any>[];
 
     constructor() {
         this._monitor = new PathMonitor(`${App.configDir}/styles`, MonitorTypeFlags.FILE | MonitorTypeFlags.RECURSIVE, (file, fileType, event) => {
@@ -26,22 +65,21 @@ export class StyleHandler implements IReloadable {
     load(): void {
         if(this._loaded) return;
         
-        this._loaded = true;
         this._monitor.load();
 
-        for(const binding of this.getBindings()) {
-            binding.connect("changed", () => {
-                this.reloadStyles();
-            });
+        this._dynamicSCSSVariables = this.getDynamicSCSSVariables();
+        for(const variable of this._dynamicSCSSVariables) {
+            variable.load();
         }
 
         this.reloadStyles();
+
+        this._loaded = true;
     }
 
     cleanup() {
         if(!this._loaded) return;
 
-        this._loaded = false;
         this._monitor.cleanup();
 
         if(this._optionsListenerID) {
@@ -49,26 +87,25 @@ export class StyleHandler implements IReloadable {
 
             this._optionsListenerID = undefined;
         }
-    }
-
-
-    getBindings() {
-        const { bar } = globals.optionsHandler!.options;
         
-        return [
-            bar.background,
-            bar.icon_color,
-        ];
+        for(const variable of this._dynamicSCSSVariables ?? []) {
+            variable.cleanup();
+        }
+
+        this._dynamicSCSSVariables = undefined;
+
+        this._loaded = false;
     }
 
-    // TODO: make bindings able to be used here that way we dont need the getBindings hack
-    getDynamicSCSS() {
+
+    getDynamicSCSSVariables(): DynamicSCSSVariable<any>[] {
         const { bar } = globals.optionsHandler!.options;
 
+        const updateFunc = () => this.reloadStyles();
         return [
-            $("bar-background-color", HEXtoSCSSRGBA(bar.background.value)),
-            $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value)),
-        ].join("\n");
+            new DynamicSCSSVariable([ bar.background ], () => $("bar-background-color", HEXtoSCSSRGBA(bar.background.value)), updateFunc),
+            new DynamicSCSSVariable([ bar.icon_color ], () => $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value)), updateFunc)
+        ];
     }
 
     async reloadStyles() {
@@ -81,7 +118,7 @@ export class StyleHandler implements IReloadable {
         try {
             Utils.exec(`mkdir -p ${paths!.OUT_CSS_DIR}`);
 
-            Utils.writeFileSync(this.getDynamicSCSS(), paths!.OUT_SCSS_DYNAMIC);
+            Utils.writeFileSync((this._dynamicSCSSVariables ?? []).map(x => x.getTransformed()).join("\n"), paths!.OUT_SCSS_DYNAMIC);
             Utils.writeFileSync(
                 [ paths!.OUT_SCSS_DYNAMIC, paths!.STYLES_MAIN ]
                     .map(file => `@import '${file}';`)

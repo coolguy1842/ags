@@ -1,5 +1,7 @@
 import { globals } from "src/globals";
 import { TBarWidgetMonitor } from "src/interfaces/barWidget";
+import { BarWidgets } from "./widgets/widgets";
+import { ScrollDirection } from "./widgets/WorkspaceSelector";
 
 export function Bar(monitor: TBarWidgetMonitor) {
     const { bar } = globals.optionsHandler!.options;
@@ -16,6 +18,9 @@ export function Bar(monitor: TBarWidgetMonitor) {
                 hpack: "start",
                 vpack: "center",
                 hexpand: true,
+                children: [
+                    BarWidgets.WorkspaceSelector.create(monitor, { scroll_direction: ScrollDirection.NORMAL })
+                ]
             }),
             centerWidget: Widget.Box({
                 hpack: "center",

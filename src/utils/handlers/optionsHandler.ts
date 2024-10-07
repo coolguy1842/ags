@@ -61,7 +61,6 @@ export class Option<T> extends Variable<T> {
             if(validation == undefined) {
                 // check if current/fallback is invalid too
                 if(this._validator.validate(this._value) == undefined) {
-                    // super.value = this._default;
                     this._value = this._default;
 
                     this.notify('value');
@@ -71,7 +70,6 @@ export class Option<T> extends Variable<T> {
                 return;
             }
             
-            // super.value = validation;
             this._value = validation;
 
             this.notify('value');
@@ -79,7 +77,6 @@ export class Option<T> extends Variable<T> {
             return;
         }
 
-        // super.value = value;
         this._value = value;
         
         this.notify('value');
@@ -100,6 +97,7 @@ export type TOptions = {
 export type OptionsHandlerCallback = (...args: any) => void;
 export class OptionsHandler<OptionsType extends TOptions> extends Service implements IReloadable {
     static {
+        // register gobject like this to enable hotreloading of this class
         registerGObject(this, {
             typename: `Ags_OptionsHandler_${Date.now()}`,
             signals: {
@@ -116,7 +114,6 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private _pathMonitor: PathMonitor;
 
-    private _default: OptionsType;
     private _options: OptionsType;
     private _prevOptions: string;
 
@@ -125,7 +122,6 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     get loaded() { return this._loaded; }
     get options() { return this._options; }
-
 
     constructor(options: OptionsType) {
         super();
@@ -141,9 +137,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
             this.loadOptions();
         });
 
-        this._default = options;
         this._options = options;
-
         this._prevOptions = "";
         
         this._ignoreChange = false;
@@ -238,7 +232,6 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
         
         let json: {};
 
-        this._options = this._default;
         try {
             json = JSON.parse(text);
         }
