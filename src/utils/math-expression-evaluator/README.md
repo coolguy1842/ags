@@ -99,8 +99,8 @@ var value = mexp.eval(exp);  // 2 + 2
 |**Sigma**| Summation eg. Sigma(1,100,n) results 5050 |
 |**Pi**| Product eg. Pi(1,10,n) results 3628800 |
 |**n**| Variable for Summation or Product |
-|**pi**| Math constant pi returns 3.14 |
-|**e**| Math constant e returns 2.71 |
+|**PI**| Math constant pi returns 3.14 |
+|**E**| Math constant e returns 2.71 |
 |**C**| Combination operator eg. 4C2 returns 6 |
 |**P**| Permutation operator eg. 4P2 returns 12 |
 |**!**| factorial operator eg. 4! returns 24 |

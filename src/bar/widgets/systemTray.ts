@@ -1,17 +1,17 @@
 import { globals } from "src/globals";
-import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
-import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
-import { DerivedVariable, getActiveFavorites, getTrayItemID } from "src/utils/utils";
-import { TPosition } from "src/utils/classes/PopupAnimation";
-import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
-
-import Gtk from "gi://Gtk?version=3.0";
-import Gdk from "gi://Gdk";
 import { BarPosition, BooleanValidator, HEXColorValidator, NumberValidator } from "src/options";
-import Box from "types/widgets/box";
+import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
 import { HEXtoCSSRGBA } from "src/utils/colorUtils";
+import { DerivedVariable } from "src/utils/classes/DerivedVariable";
+import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { updateTray } from "src/components/trayComponents";
 import { TrayType } from "../enums/trayType";
+
+import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
+import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
+
+import Box from "types/widgets/box";
+import Gtk from "gi://Gtk?version=3.0";
 
 const tray = await Service.import("systemtray");
 

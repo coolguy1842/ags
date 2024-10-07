@@ -1,7 +1,7 @@
-import { globals } from "src/globals";
-import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
 import { TrayType } from "src/bar/enums/trayType";
 import { getTrayItemID } from "src/utils/utils";
+
+import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
 import { Binding } from "types/service";
 import Box from "types/widgets/box";
 

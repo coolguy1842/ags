@@ -1,10 +1,12 @@
 import { IReloadable } from "src/interfaces/reloadable";
-import { MonitorTypeFlags, PathMonitor } from "../classes/pathMonitor";
-import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
-import { paths } from "src/paths";
+import { MonitorTypeFlags, PathMonitor } from "../classes/PathMonitor";
+import { Options } from "types/variable";
+
 import { Variable} from "resource:///com/github/Aylur/ags/variable.js";
 import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
-import { Options } from "types/variable";
+
+import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
+import { globals } from "src/globals";
 
 export interface OptionValidator<T> {
     // validator can override if its not a bad issue like missing option
@@ -128,7 +130,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
     constructor(options: OptionsType) {
         super();
 
-        this._pathMonitor = new PathMonitor(paths.OPTIONS_PATH, MonitorTypeFlags.FILE, (file, fileType, event) => {
+        this._pathMonitor = new PathMonitor(globals.paths.OPTIONS_PATH, MonitorTypeFlags.FILE, (file, fileType, event) => {
             if(event == FileMonitorEvent.CHANGED) return;
             
             if(this._ignoreChange) {
@@ -227,11 +229,11 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
     }
 
     private saveOptions() {
-        Utils.writeFileSync(JSON.stringify(this.simplifyOptions(), undefined, 4), paths.OPTIONS_PATH);
+        Utils.writeFileSync(JSON.stringify(this.simplifyOptions(), undefined, 4), globals.paths.OPTIONS_PATH);
     }
 
     private loadOptions() {
-        const text = Utils.readFile(paths.OPTIONS_PATH);
+        const text = Utils.readFile(globals.paths.OPTIONS_PATH);
         if(text == "") return;
         
         let json: {};

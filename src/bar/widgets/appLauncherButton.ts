@@ -1,10 +1,10 @@
 import { globals } from "src/globals";
 import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
-import { DerivedVariable } from "src/utils/utils";
 
-import Gtk from "gi://Gtk?version=3.0";
 import { StringValidator } from "src/options";
 import { toggleAppLauncher } from "src/popupWindows/appLauncher";
+
+import Gtk from "gi://Gtk?version=3.0";
 
 //#region PROPS
 

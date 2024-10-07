@@ -1,7 +1,9 @@
-import Gtk from "gi://Gtk?version=3.0";
-import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
 import { BaseProps, Widget as TWidget } from "types/widgets/widget";
 import { newLayout as Layout } from './layout';
+
+import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
+
+import Gtk from "gi://Gtk?version=3.0";
 
 export default function W<
     T extends { new(...args: any[]): Gtk.Widget },

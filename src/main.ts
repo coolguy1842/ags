@@ -1,7 +1,6 @@
 import { globals } from "./globals";
 import { Bar } from "./bar/bar";
 import { IReloadable } from "./interfaces/reloadable";
-import Gdk from "gi://Gdk";
 
 const hyprland = await Service.import("hyprland");
 

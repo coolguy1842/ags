@@ -1,10 +1,6 @@
 import { globals } from "src/globals";
 import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
-import { PopupWindow } from "src/utils/classes/PopupWindow";
-import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
-import { DerivedVariable } from "src/utils/utils";
 import Gtk from "gi://Gtk?version=3.0";
-import { PopupAnimations } from "src/utils/classes/PopupAnimation";
 
 //#region PROPS
 

@@ -1,6 +1,7 @@
 import { IBarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
-import Gtk from "gi://Gtk?version=3.0";
 import { ValueInEnumValidator } from "src/options";
+
+import Gtk from "gi://Gtk?version=3.0";
 
 const hyprland = await Service.import("hyprland");
 

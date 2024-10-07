@@ -34,8 +34,8 @@ let PathMonitorImport = null;
 let pathMonitor = null;
 async function initHotReloader() {
     try {
-        const pathMonitorPath = `${App.configDir}/src/utils/classes/pathMonitor.ts`;
-        const pathMonitorCompiledPath = `${outDir}/pathMonitor.js`;
+        const pathMonitorPath = `${App.configDir}/src/utils/classes/PathMonitor.ts`;
+        const pathMonitorCompiledPath = `${outDir}/PathMonitor.js`;
 
         Utils.exec([
             'bun', 'build', pathMonitorPath,

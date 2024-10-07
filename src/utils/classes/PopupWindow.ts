@@ -1,15 +1,15 @@
-import Gtk from "gi://Gtk?version=3.0";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { EventBox } from "resource:///com/github/Aylur/ags/widgets/eventbox.js";
 import { Window } from "resource:///com/github/Aylur/ags/widgets/window.js";
 import { Rectangle } from "types/@girs/gdk-3.0/gdk-3.0.cjs";
-import { Allocation } from "types/@girs/gtk-3.0/gtk-3.0.cjs";
 import { WindowProps } from "types/widgets/window";
 import { PopupAnimation, TPosition } from "./PopupAnimation";
 import { sleep } from "../utils";
-import Widgets from "../widgets/widgets";
 import { IReloadable } from "src/interfaces/reloadable";
-import Gdk30 from "gi://Gdk";
+
+import Gtk from "gi://Gtk?version=3.0";
+import Widgets from "../widgets/widgets";
+
 
 export type PopupPosition = TPosition | Variable<TPosition>;
 export type AnimationOptions = {

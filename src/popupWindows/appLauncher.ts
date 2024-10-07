@@ -1,13 +1,16 @@
-import Gtk from "gi://Gtk?version=3.0";
-import Pango10 from "gi://Pango";
 import { Binding } from "resource:///com/github/Aylur/ags/service.js";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { globals } from "src/globals";
+import { DerivedVariable } from "src/utils/classes/DerivedVariable";
 import { PopupAnimations } from "src/utils/classes/PopupAnimation";
 import { PopupWindow } from "src/utils/classes/PopupWindow";
+import { sleep, splitToNChunks } from "src/utils/utils";
+
 import Mexp from "src/utils/math-expression-evaluator/index";
-import { DerivedVariable, sleep, splitToNChunks } from "src/utils/utils";
 import Box from "types/widgets/box";
+
+import Gtk from "gi://Gtk?version=3.0";
+import Pango from "gi://Pango";
 
 const applications = await Service.import("applications");
 
@@ -128,6 +131,7 @@ function updateApplications(widget: Box<Gtk.Widget, unknown>) {
                 }),
                 async () => {
                     application.launch();
+
                     globals.popupWindows?.AppLauncher?.hide();
                 }
             ));
@@ -190,7 +194,7 @@ function createAppLauncherPopupWidget(width: Variable<number>) {
             Widget.Label({
                 className: "app-launcher-title",
                 label: itemDisplayText.bind(),
-                ellipsize: Pango10.EllipsizeMode.END
+                ellipsize: Pango.EllipsizeMode.END
             }),
             Widget.Box({
                 className: "app-launcher-app-container",
@@ -207,6 +211,7 @@ function createAppLauncherPopupWidget(width: Variable<number>) {
                 .hook(app_launcher.spacing, updateApplications)
                 .hook(app_launcher.columns, updateApplications)
                 .hook(app_launcher.rows, updateApplications)
+                .hook(applications, updateApplications)
         ]
     });
 

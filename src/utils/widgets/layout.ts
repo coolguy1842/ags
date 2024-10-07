@@ -1,6 +1,7 @@
-import Gtk from 'gi://Gtk?version=3.0';
 import { registerGObject } from 'resource:///com/github/Aylur/ags/utils/gobject.js';
 import { BaseProps, Widget } from 'types/widgets/widget';
+
+import Gtk from 'gi://Gtk?version=3.0';
 
 export type LayoutProps<
     Attr = unknown,

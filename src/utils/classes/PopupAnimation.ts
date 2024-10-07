@@ -1,5 +1,3 @@
-import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
-
 export type TPosition = {
     x: number,
     y: number

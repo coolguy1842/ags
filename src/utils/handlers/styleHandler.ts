@@ -1,8 +1,9 @@
 import { globals } from "../../globals";
 import { IReloadable } from "src/interfaces/reloadable";
-import { MonitorTypeFlags, PathMonitor } from "../classes/pathMonitor";
-import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
+import { MonitorTypeFlags, PathMonitor } from "../classes/PathMonitor";
 import { HEXtoSCSSRGBA } from "../colorUtils";
+
+import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 
 const $ = (key: string, value: string) => `$${key}: ${value};`;
 

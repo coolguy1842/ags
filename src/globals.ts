@@ -1,17 +1,23 @@
 import { getOptions } from "src/options";
-import { paths as pathsList } from "./paths";
 import { OptionsHandler } from "./utils/handlers/optionsHandler";
 import { StyleHandler } from "./utils/handlers/styleHandler";
-import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
+import { getCurrentMonitor } from "./utils/utils";
 import { IReloadable } from "./interfaces/reloadable";
 import { createAppLauncherPopupWindow, toggleAppLauncher } from "./popupWindows/appLauncher";
 import { createTrayFavoritesPopupWindow } from "./popupWindows/systemTray";
 
+import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
+
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import GObject from "types/@girs/gobject-2.0/gobject-2.0";
-import { getCurrentMonitor } from "./utils/utils";
 import Gdk from "gi://Gdk";
+
+
+const TEMP_DIR_S = `/tmp/coolguy/ags`;
+
+const STYLES_DIR_S = `${App.configDir}/styles`;
+const OUT_CSS_DIR_S = `${TEMP_DIR_S}/css`;
 
 export class Globals implements IReloadable {
     private _loaded: boolean = false;
@@ -25,7 +31,19 @@ export class Globals implements IReloadable {
     } 
 
     private _monitorLookups?: { [name: string]: number };
-    private _paths?: typeof pathsList;
+    private _paths = {
+        TEMP_DIR: TEMP_DIR_S,
+        OPTIONS_PATH: `${App.configDir}/options.json`,
+        SOCKET_PATH: `${TEMP_DIR_S}/socket`,
+        
+        STYLES_DIR: STYLES_DIR_S,
+        STYLES_MAIN: `${STYLES_DIR_S}/main.scss`,
+    
+        OUT_CSS_DIR: `${TEMP_DIR_S}/css`,
+        OUT_SCSS_DYNAMIC: `${OUT_CSS_DIR_S}/dynamic.scss`,
+        OUT_SCSS_IMPORTS: `${OUT_CSS_DIR_S}/imports.scss`,
+        OUT_CSS_IMPORTS: `${OUT_CSS_DIR_S}/imports.css`
+    };
 
     private _clock?: Variable<GLib.DateTime>;
     private _searchInput?: Variable<string>;
@@ -35,7 +53,6 @@ export class Globals implements IReloadable {
 
     private _communicationSocketService?: Gio.SocketService;
     private _communicationSocket?: Gio.Socket;
-    private _communicationSocketCancellable?: Gio.Cancellable;
 
     private _popupWindows?: {
         AppLauncher: ReturnType<typeof createAppLauncherPopupWindow>,
@@ -78,7 +95,6 @@ export class Globals implements IReloadable {
         if(this._loaded) return;
 
         this.loadMonitorLookups();
-        this._paths = pathsList;
         
         this._searchInput = new Variable("");
         this._clock = new Variable(GLib.DateTime.new_now_local(), {
@@ -150,7 +166,6 @@ export class Globals implements IReloadable {
             this._close_socket(this._paths.SOCKET_PATH);
         }
 
-        this._paths = undefined;
         this._monitorLookups = undefined;
 
         this._loaded = false;
