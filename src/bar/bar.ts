@@ -20,9 +20,7 @@ export function Bar(monitor: TBarWidgetMonitor) {
                 vpack: "center",
                 hexpand: true,
                 spacing: bar.widget_spacing.bind(),
-                children: [
-                    BarWidgets.WorkspaceSelector.create(monitor, { scroll_direction: ScrollDirection.NORMAL })
-                ]
+                children: bar.layout.left.bind().as(c => c.map(x => BarWidgets[x.name].create(monitor, x.props as any)))
             }),
             centerWidget: Widget.Box({
                 className: "bar-center-box",
@@ -30,6 +28,7 @@ export function Bar(monitor: TBarWidgetMonitor) {
                 vpack: "center",
                 hexpand: true,
                 spacing: bar.widget_spacing.bind(),
+                children: bar.layout.center.bind().as(c => c.map(x => BarWidgets[x.name].create(monitor, x.props as any)))
             }),
             endWidget: Widget.Box({
                 className: "bar-right-box",
@@ -37,6 +36,7 @@ export function Bar(monitor: TBarWidgetMonitor) {
                 vpack: "center",
                 hexpand: true,
                 spacing: bar.widget_spacing.bind(),
+                children: bar.layout.right.bind().as(c => c.map(x => BarWidgets[x.name].create(monitor, x.props as any)))
             })
         })
     }).hook(bar.position, (self) => {

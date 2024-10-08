@@ -34,12 +34,8 @@ export function generateOptions() {
                 left: option([
                     { name: "WorkspaceSelector" }
                 ] as TBarLayout, BarLayoutValidator.create()),
-                center: option([
-                    { name: "WorkspaceSelector" }
-                ] as TBarLayout, BarLayoutValidator.create()),
-                right: option([
-                    { name: "WorkspaceSelector" }
-                ] as TBarLayout, BarLayoutValidator.create())
+                center: option([] as TBarLayout, BarLayoutValidator.create()),
+                right: option([] as TBarLayout, BarLayoutValidator.create())
             }
         }
     };
