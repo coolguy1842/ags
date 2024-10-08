@@ -24,11 +24,14 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
     "load": { self: PopupWindow<Child, Attr> },
     "cleanup": { self: PopupWindow<Child, Attr> },
 
-    "show": {},
-    "hide": {},
+    "showComplete": { self: PopupWindow<Child, Attr> },
+    "showCancel": { self: PopupWindow<Child, Attr> },
 
-    "animationComplete": { animationName: string }
-    "animationCancel": { animationName: string }
+    "hideComplete": { self: PopupWindow<Child, Attr> },
+    "hideCancel": { self: PopupWindow<Child, Attr> },
+
+    "animationComplete": { self: PopupWindow<Child, Attr>, animationName: string }
+    "animationCancel": { self: PopupWindow<Child, Attr>, animationName: string }
 }> implements IReloadable {
     private _loaded: boolean;
 
@@ -231,9 +234,11 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
                 this._hiding = false;
                 this._window.set_visible(false);
                 
-                this.emit("hide", { self: this });
+                this.emit("hideComplete", { self: this });
                 break;
-            case "show": this.emit("show", { self: this }); break;
+            case "show":
+                this.emit("showComplete", { self: this });
+                break;
             }
         });
 
@@ -244,7 +249,9 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
                 this._hiding = false;
                 
                 break;
-            case "show": this.emit("show", { self: this }); break;
+            case "show":
+                this.emit("showCancel", { self: this });
+                break;
             }
         });
 
@@ -255,10 +262,10 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
         if(!this._loaded) return;
 
         this.cancelAnimation();
-
-        this.emit("hide", { self: this });
         this.emit("cleanup", { self: this });
 
+        this.window.visible = false;
+        
         for(const listener of this._activeListeners) {
             listener.variable.disconnect(listener.listener);
         }
@@ -293,7 +300,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
         }
 
         this.updateChild();
-        this.emit("show", { self: this });
+        this.emit("showComplete", { self: this });
     }
 
     hide(endPosition: PopupPosition = this._lastShowStartPosition) {
@@ -319,7 +326,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
             return;
         }
         
-        this.emit("hide", { self: this });
+        this.emit("hideComplete", { self: this });
     }
 
     private _currentAnimationInfo?: {
@@ -350,7 +357,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
 
                 let { name, duration, updateFrequency, start, end, alpha, addAlpha } = this._currentAnimationInfo;
                 if(alpha > 1.0) {
-                    this.emit("animationComplete", { animationName: this._currentAnimationInfo.name });
+                    this.emit("animationComplete", { self: this, animationName: this._currentAnimationInfo.name });
 
                     this.cancelAnimation(false);
                     break;
@@ -414,7 +421,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
         if(!this._loaded) return;
 
         if(this._currentAnimationInfo != undefined && sendCancelEvent) {
-            this.emit("animationCancel", { animationName: this._currentAnimationInfo.name });
+            this.emit("animationCancel", { self: this, animationName: this._currentAnimationInfo.name });
         }
 
         this._animationLooping = false;

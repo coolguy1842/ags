@@ -66,9 +66,14 @@ export class TestPopupButton implements IBarWidget<PropsType> {
                     }
                 );
             
-                testPopup.once("hide", () => {
+                const onStop = () => {
                     startDerived.stop();
                     endDerived.stop();
+                };
+
+                testPopup.onceMulti({
+                    "hideComplete": onStop,
+                    "cleanup": onStop
                 });
 
                 globals.popupWindows?.TestPopupWindow.show(monitor.id, startDerived, endDerived);

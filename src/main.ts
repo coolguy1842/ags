@@ -73,5 +73,9 @@ export class Main implements IReloadable {
 
     cleanup(): void {
         globals.cleanup();
+
+        for(const window of App.windows) {
+            App.removeWindow(window);
+        }
     }
 };
