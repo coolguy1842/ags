@@ -5,6 +5,7 @@ import { HEXtoSCSSRGBA } from "../colorUtils";
 
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { Variable } from "types/variable";
+import { Option } from "./optionsHandler";
 
 const $ = (key: string, value: string) => `$${key}: ${value};`;
 
@@ -101,10 +102,14 @@ export class StyleHandler implements IReloadable {
     getDynamicSCSSVariables(): DynamicSCSSVariable<any>[] {
         const { bar } = globals.optionsHandler!.options;
 
-        const updateFunc = () => this.reloadStyles();
+        const genVariable = (vars: Option<any>[], transformFunc: () => string) => {
+            return new DynamicSCSSVariable(vars, transformFunc, () => this.reloadStyles());
+        };
+
         return [
-            new DynamicSCSSVariable([ bar.background ], () => $("bar-background-color", HEXtoSCSSRGBA(bar.background.value)), updateFunc),
-            new DynamicSCSSVariable([ bar.icon_color ], () => $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value)), updateFunc)
+            genVariable([ bar.background ], () => $("bar-background-color", HEXtoSCSSRGBA(bar.background.value))),
+            genVariable([ bar.icon_color ], () => $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value))),
+            genVariable([ bar.outer_padding ], () => $("bar-outer-padding", `${bar.outer_padding.value}px`))
         ];
     }
 

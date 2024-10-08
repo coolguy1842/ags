@@ -13,7 +13,7 @@ type PropsType = typeof defaultProps;
 
 function _validateProps<TProps extends PropsType>(props: TProps, fallback: TProps): TProps {
     const newProps = Object.assign({}, props) as TProps;
-    newProps.scroll_direction = new ValueInEnumValidator(ScrollDirection).validate(newProps.scroll_direction) ?? fallback.scroll_direction;
+    newProps.scroll_direction = ValueInEnumValidator.create(ScrollDirection).validate(newProps.scroll_direction) ?? fallback.scroll_direction;
 
     return newProps;
 }

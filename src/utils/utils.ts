@@ -1,6 +1,10 @@
-import GLib from "gi://GLib?version=2.0";
 import { TrayItem } from "resource:///com/github/Aylur/ags/service/systemtray.js";
+import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
 import { globals } from "src/globals";
+import { PspecFlag, PspecType } from "types/utils/gobject";
+
+import GLib from "gi://GLib";
+import GObject from "gi://GObject";
 
 export function arraysEqual<T>(a: T[], b: T[]) {
     if(a === b) return true;
@@ -63,4 +67,25 @@ export function getCurrentMonitor() {
 
     if(!globals.monitorLookups) return 0;
     return globals.monitorLookups[monitor.name] ?? monitor.id;
+}
+
+export function registerObject<
+    Obj extends { new(...args: any[]): GObject.Object },
+    Config extends {
+        typename?: string,
+        signals?: { [signal: string]: PspecType[] },
+        properties?: { [prop: string]: [type?: PspecType, handle?: PspecFlag] },
+        cssName?: string,
+    },
+>(object: Obj, config?: Config) {
+    // include date to allow for hotreloading with custom gobjects
+    const typeName = config?.typename ?? `Coolguy_Ags_${object.name}_${Date.now()}`;
+    if(!config) {
+        config = { typename: typeName } as Config;
+    }
+    else {
+        config.typename = typeName;
+    }
+
+    registerGObject(object, config);
 }

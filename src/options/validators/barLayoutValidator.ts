@@ -8,7 +8,18 @@ export type TBarLayoutItem<T extends keyof (typeof BarWidgets)> = {
 
 export type TBarLayout = TBarLayoutItem<keyof (typeof BarWidgets)>[];
 
+type TOptions = {};
 export class BarLayoutValidator<T extends TBarLayout> implements OptionValidator<T> {
+    private _options?: TOptions;
+    private constructor(options?: TOptions) {
+        this._options = options;
+    }
+
+    static create() {
+        return new BarLayoutValidator({});
+    }
+
+
     validate(value: T, previousValue?: T) {
         if(value == undefined || !Array.isArray(value)) {
             return undefined;
@@ -23,7 +34,7 @@ export class BarLayoutValidator<T extends TBarLayout> implements OptionValidator
             }
 
             const component = BarWidgets[val.name];
-            const props = component.propsValidator(val.props as any, previousVal?.props as any);
+            const props = component.propsValidator(val.props, previousVal?.props);
             val.props = props ?? component.defaultProps;
         }
 

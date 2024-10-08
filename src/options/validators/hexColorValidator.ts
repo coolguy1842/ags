@@ -5,15 +5,22 @@ export enum HEXColorType {
     RGBA
 };
 
+type TOptions = {
+    colorType: HEXColorType
+};
+
 export class HEXColorValidator<T extends string> implements OptionValidator<T> {
-    private _colorType: HEXColorType;
-    
-    constructor(colorType: HEXColorType = HEXColorType.RGBA) {
-        this._colorType = colorType;
+    private _options: TOptions;
+    private constructor(options: TOptions) {
+        this._options = options;
+    }
+
+    static create(colorType: HEXColorType = HEXColorType.RGBA) {
+        return new HEXColorValidator({ colorType });
     }
 
     validate(value: T, _previousValue?: T) {
-        switch(this._colorType) {
+        switch(this._options.colorType) {
         case HEXColorType.RGB:
             return /^#[0-9A-F]{6}$/.test(value) ? value : undefined;
         case HEXColorType.RGBA:

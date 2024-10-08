@@ -1,9 +1,7 @@
 import { OptionsHandler } from "./utils/handlers/optionsHandler";
 import { StyleHandler } from "./utils/handlers/styleHandler";
-import { getCurrentMonitor } from "./utils/utils";
 import { IReloadable } from "./interfaces/reloadable";
-
-import { options } from "./options/options";
+import { generateOptions } from "./options/options";
 
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 
@@ -48,7 +46,7 @@ export class Globals implements IReloadable {
     private _clock?: Variable<GLib.DateTime>;
     private _searchInput?: Variable<string>;
 
-    private _optionsHandler?: OptionsHandler<typeof options>;
+    private _optionsHandler?: OptionsHandler<ReturnType<typeof generateOptions>>;
     private _styleHandler?: StyleHandler;
 
     private _communicationSocketService?: Gio.SocketService;
@@ -113,7 +111,7 @@ export class Globals implements IReloadable {
             poll: [1000, () => GLib.DateTime.new_now_local()],
         });
 
-        this._optionsHandler = new OptionsHandler(options);
+        this._optionsHandler = new OptionsHandler(generateOptions);
         this._optionsHandler.load();
 
         this._styleHandler = new StyleHandler();

@@ -15,22 +15,28 @@ export function Bar(monitor: TBarWidgetMonitor) {
         height_request: bar.height.value,
         child: Widget.CenterBox({
             startWidget: Widget.Box({
+                className: "bar-left-box",
                 hpack: "start",
                 vpack: "center",
                 hexpand: true,
+                spacing: bar.widget_spacing.bind(),
                 children: [
                     BarWidgets.WorkspaceSelector.create(monitor, { scroll_direction: ScrollDirection.NORMAL })
                 ]
             }),
             centerWidget: Widget.Box({
+                className: "bar-center-box",
                 hpack: "center",
                 vpack: "center",
                 hexpand: true,
+                spacing: bar.widget_spacing.bind(),
             }),
             endWidget: Widget.Box({
+                className: "bar-right-box",
                 hpack: "end",
                 vpack: "center",
                 hexpand: true,
+                spacing: bar.widget_spacing.bind(),
             })
         })
     }).hook(bar.position, (self) => {
