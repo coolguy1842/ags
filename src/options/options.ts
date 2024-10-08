@@ -34,7 +34,9 @@ export function generateOptions() {
                 left: option([
                     { name: "WorkspaceSelector" }
                 ] as TBarLayout, BarLayoutValidator.create()),
-                center: option([] as TBarLayout, BarLayoutValidator.create()),
+                center: option([
+                    { name: "Clock" }
+                ] as TBarLayout, BarLayoutValidator.create()),
                 right: option([] as TBarLayout, BarLayoutValidator.create())
             }
         }

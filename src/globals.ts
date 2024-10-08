@@ -10,6 +10,7 @@ import Gio from "gi://Gio";
 import GObject from "types/@girs/gobject-2.0/gobject-2.0";
 import Gdk from "gi://Gdk";
 import { PopupWindow } from "./utils/classes/PopupWindow";
+import { createTestPopupWindow } from "./popups/TestPopupWindow";
 
 
 const TEMP_DIR_S = `/tmp/coolguy/ags`;
@@ -53,7 +54,7 @@ export class Globals implements IReloadable {
     private _communicationSocket?: Gio.Socket;
 
     private _popupWindows?: {
-
+        TestPopupWindow: ReturnType<typeof createTestPopupWindow>
     };
 
     private _close_socket(path: string) {
@@ -118,7 +119,7 @@ export class Globals implements IReloadable {
         this._styleHandler.load();
 
         this._popupWindows = {
-
+            TestPopupWindow: createTestPopupWindow()
         };
 
         for(const window of Object.values(this._popupWindows) as PopupWindow<any, unknown>[]) {

@@ -73,9 +73,8 @@ export class StyleHandler implements IReloadable {
             variable.load();
         }
 
-        this.reloadStyles();
-
         this._loaded = true;
+        this.reloadStyles();
     }
 
     cleanup() {
