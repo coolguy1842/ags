@@ -41,7 +41,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
     private _lastShowStartPosition: PopupPosition;
 
 
-    private _activeListeners: { variable: any, listener: number }[];
+    private _activeListeners: { variable: any, listener: number, polling: boolean }[];
 
     
     private _positionListener?: number;
@@ -204,19 +204,22 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
         if(this._loaded) return;
 
         this._wrapperAllocation.startPoll();
+        this._screenBounds.startPoll();
+
         this._activeListeners.push({
             variable: this._childWrapper,
             listener: this._childWrapper.connect("draw", () => {
                 this._wrapperAllocation.value = this._getWrapperAllocation();
-            })
+            }),
+            polling: false
         })
 
         this._position = new Variable({ x: 0, y: 0 });
         this._lastPosition = this._position.value;
 
-        this._activeListeners.push({ variable: this._position,          listener: this._position         .connect("changed", () => this.updateChild()) });
-        this._activeListeners.push({ variable: this._wrapperAllocation, listener: this._wrapperAllocation.connect("changed", () => this.updateChild()) });
-        this._activeListeners.push({ variable: this._screenBounds,      listener: this._screenBounds     .connect("changed", () => this.updateChild()) });
+        this._activeListeners.push({ variable: this._position,          listener: this._position         .connect("changed", () => this.updateChild()), polling: false });
+        this._activeListeners.push({ variable: this._wrapperAllocation, listener: this._wrapperAllocation.connect("changed", () => this.updateChild()), polling: true });
+        this._activeListeners.push({ variable: this._screenBounds,      listener: this._screenBounds     .connect("changed", () => this.updateChild()), polling: true });
 
         this.child = this._child;
 
@@ -264,10 +267,14 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
         this.cancelAnimation();
         this.emit("cleanup", { self: this });
 
-        this.window.visible = false;
-        
         for(const listener of this._activeListeners) {
             listener.variable.disconnect(listener.listener);
+
+            if(listener.variable instanceof Variable) {
+                if(listener.polling) {
+                    listener.variable.stopPoll();
+                }
+            }
         }
 
         this.unregisterAll();

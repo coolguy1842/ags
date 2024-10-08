@@ -146,6 +146,7 @@ export class Globals implements IReloadable {
         
         for(const window of Object.values(this._popupWindows ?? {}) as PopupWindow<any, unknown>[]) {
             window.cleanup();
+            window.window.destroy();
         }
 
         this._popupWindows = undefined;
