@@ -12,6 +12,8 @@ import Gdk from "gi://Gdk";
 import { PopupWindow } from "./utils/classes/PopupWindow";
 import { createTestPopupWindow } from "./popups/TestPopupWindow";
 import { createSystemTrayPopupWindow } from "./popups/SystemTrayPopupWindow";
+import { createAppLauncherPopupWindow, toggleAppLauncherPopupWindow } from "./popups/AppLauncherPopupWindow";
+import { getCurrentMonitor } from "./utils/utils";
 
 
 const TEMP_DIR_S = `/tmp/coolguy/ags`;
@@ -56,7 +58,8 @@ export class Globals implements IReloadable {
 
     private _popupWindows?: {
         TestPopupWindow: ReturnType<typeof createTestPopupWindow>
-        SystemTrayPopupWindow: ReturnType<typeof createSystemTrayPopupWindow>
+        SystemTrayPopupWindow: ReturnType<typeof createSystemTrayPopupWindow>,
+        AppLauncherPopupWindow: ReturnType<typeof createAppLauncherPopupWindow>
     };
 
     private _close_socket(path: string) {
@@ -74,6 +77,9 @@ export class Globals implements IReloadable {
         const command = new TextDecoder().decode(message.toArray());
 
         switch(command) {
+        case "app_launcher":
+            toggleAppLauncherPopupWindow(getCurrentMonitor());
+            break;
         default: break;
         }
         
@@ -122,7 +128,8 @@ export class Globals implements IReloadable {
 
         this._popupWindows = {
             TestPopupWindow: createTestPopupWindow(),
-            SystemTrayPopupWindow: createSystemTrayPopupWindow()
+            SystemTrayPopupWindow: createSystemTrayPopupWindow(),
+            AppLauncherPopupWindow: createAppLauncherPopupWindow()
         };
 
         for(const window of Object.values(this._popupWindows) as PopupWindow<any, unknown>[]) {

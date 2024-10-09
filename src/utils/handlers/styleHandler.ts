@@ -98,7 +98,7 @@ export class StyleHandler implements IReloadable {
 
 
     getDynamicSCSSVariables(): DynamicSCSSVariable<any>[] {
-        const { bar, system_tray } = globals.optionsHandler!.options;
+        const { bar, system_tray, app_launcher } = globals.optionsHandler!.options;
 
         const genVariable = (vars: Option<any>[], transformFunc: () => string) => {
             return new DynamicSCSSVariable(vars, transformFunc, () => this.reloadStyles());
@@ -109,9 +109,23 @@ export class StyleHandler implements IReloadable {
             genVariable([ bar.icon_color ], () => $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value))),
             genVariable([ bar.outer_padding ], () => $("bar-outer-padding", `${bar.outer_padding.value}px`)),
 
+            
             genVariable([ system_tray.background ], () => $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value))),
             genVariable([ system_tray.border_radius ], () => $("system-tray-border-radius", `${system_tray.border_radius.value}px`)),
-            genVariable([ system_tray.padding ], () => $("system-tray-padding", `${system_tray.padding.value}px`))
+            genVariable([ system_tray.padding ], () => $("system-tray-padding", `${system_tray.padding.value}px`)),
+
+            
+            genVariable([ app_launcher.background ], () => $("app-launcher-background-color", HEXtoSCSSRGBA(app_launcher.background.value))),
+            genVariable([ app_launcher.padding ], () => $("app-launcher-padding", `${app_launcher.padding.value}px`)),
+            genVariable([ app_launcher.border_radius ], () => $("app-launcher-border-radius", `${app_launcher.border_radius.value}px`)),
+
+            genVariable([ app_launcher.input.background ], () => $("app-launcher-input-background-color", HEXtoSCSSRGBA(app_launcher.input.background.value))),
+            genVariable([ app_launcher.input.border_radius ], () => $("app-launcher-input-border-radius", `${app_launcher.input.border_radius.value}px`)),
+
+            genVariable([ app_launcher.app_item.background ], () => $("app-launcher-app-item-background-color", HEXtoSCSSRGBA(app_launcher.app_item.background.value))),
+            genVariable([ app_launcher.app_item.background_selected ], () => $("app-launcher-app-item-selected-background-color", HEXtoSCSSRGBA(app_launcher.app_item.background_selected.value))),
+            genVariable([ app_launcher.app_item.border_radius ], () => $("app-launcher-app-item-border-radius", `${app_launcher.app_item.border_radius.value}px`)),
+            genVariable([ app_launcher.app_item.padding ], () => $("app-launcher-app-item-padding", `${app_launcher.app_item.padding.value}px`))
         ];
     }
 

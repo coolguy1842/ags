@@ -197,6 +197,9 @@ export class SystemTray extends BarWidget<PropsType> {
 
                         startDerived.stop();
                         endDerived.stop();
+
+                        position.dispose();
+                        barHeight.dispose();
                     };
     
                     trayPopup.onceMulti({

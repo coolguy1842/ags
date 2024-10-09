@@ -54,6 +54,30 @@ export function generateOptions() {
 
             padding: option(8, NumberValidator.create({ min: 0 })),
             border_radius: option(12, NumberValidator.create({ min: 0, max: 50 }))
+        },
+
+        app_launcher: {
+            background: option("#000000BF", HEXColorValidator.create()),
+
+            padding: option(8, NumberValidator.create({ min: 0 })),
+            border_radius: option(12, NumberValidator.create({ min: 0, max: 50 })),
+
+            input: {
+                background: option("#202020FF", HEXColorValidator.create()),
+
+                border_radius: option(12, NumberValidator.create({ min: 0, max: 50 }))
+            },
+
+            app_item: {
+                background: option("#00000000", HEXColorValidator.create()),
+                background_selected: option("#484848FF", HEXColorValidator.create()),
+
+                padding: option(4, NumberValidator.create({ min: 0 })),
+                border_radius: option(8, NumberValidator.create({ min: 0, max: 50 }))
+            },
+
+            rows: option(4, NumberValidator.create({ min: 1 })),
+            columns: option(5, NumberValidator.create({ min: 1 }))
         }
     };
 }

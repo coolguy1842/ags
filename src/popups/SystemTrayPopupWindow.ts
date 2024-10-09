@@ -13,7 +13,7 @@ export function createSystemTrayPopupWindow() {
             exclusivity: "exclusive"
         },
         Widget.Box({
-            className: "system-tray-popup-window",
+            className: "system-tray",
             spacing: globals.optionsHandler?.options.system_tray.spacing.bind(),
             setup: (self) => {
                 const system_tray = globals.optionsHandler?.options.system_tray;
