@@ -10,10 +10,9 @@ type PropsType = typeof defaultProps;
 export class Clock extends BarWidget<PropsType> {
     constructor() { super("Clock", defaultProps); }
     protected _validateProps(props: PropsType, fallback: PropsType): PropsType | undefined {
-        const newProps = Object.assign({}, props) as PropsType;
-        newProps.format = ClockFormatValidator.create().validate(newProps.format, fallback.format) ?? fallback.format;
+        props.format = ClockFormatValidator.create().validate(props.format, fallback.format) ?? fallback.format;
     
-        return newProps;
+        return props;
     }
 
     create(_monitor: TBarWidgetMonitor, props: PropsType) {

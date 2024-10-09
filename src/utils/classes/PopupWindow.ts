@@ -15,6 +15,7 @@ import { EventHandler } from "../handlers/eventHandler";
 export type PopupPosition = TPosition | Variable<TPosition>;
 export type AnimationOptions = {
     animation: PopupAnimation;
+    animateTransition: boolean;
     
     duration: number;
     refreshRate: number;
@@ -451,7 +452,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
             return;
         }
 
-        if(this._animationOptions) {
+        if(this._animationOptions && this._animationOptions.animateTransition) {
             const { animation, duration, refreshRate } = this._animationOptions;
             this.animate("moving", { x: this._lastPosition.x, y: this._lastPosition.y }, this._position, duration / 2, refreshRate, animation.func);
 

@@ -14,6 +14,6 @@ export function createTestPopupWindow() {
                 Widget.Label("test")
             ]
         }),
-        { animation: PopupAnimations.Ease, duration: 0.4, refreshRate: 165 }
+        { animation: PopupAnimations.Ease, animateTransition: true, duration: 0.4, refreshRate: 165 }
     );
 }

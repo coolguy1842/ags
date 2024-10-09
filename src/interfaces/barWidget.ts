@@ -9,7 +9,7 @@ export type TBarWidgetMonitor = {
 
 export abstract class BarWidget<TProps extends object> {
     protected _validateProps(props: TProps, fallback: TProps): TProps | undefined {
-        return Object.assign({}, props) as TProps;
+        return props;
     }
     
     protected _basicPropsValidator(props: TProps, fallback: TProps): TProps {

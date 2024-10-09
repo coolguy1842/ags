@@ -93,13 +93,12 @@ export class StyleHandler implements IReloadable {
         }
 
         this._dynamicSCSSVariables = undefined;
-
         this._loaded = false;
     }
 
 
     getDynamicSCSSVariables(): DynamicSCSSVariable<any>[] {
-        const { bar } = globals.optionsHandler!.options;
+        const { bar, system_tray } = globals.optionsHandler!.options;
 
         const genVariable = (vars: Option<any>[], transformFunc: () => string) => {
             return new DynamicSCSSVariable(vars, transformFunc, () => this.reloadStyles());
@@ -108,7 +107,11 @@ export class StyleHandler implements IReloadable {
         return [
             genVariable([ bar.background ], () => $("bar-background-color", HEXtoSCSSRGBA(bar.background.value))),
             genVariable([ bar.icon_color ], () => $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value))),
-            genVariable([ bar.outer_padding ], () => $("bar-outer-padding", `${bar.outer_padding.value}px`))
+            genVariable([ bar.outer_padding ], () => $("bar-outer-padding", `${bar.outer_padding.value}px`)),
+
+            genVariable([ system_tray.background ], () => $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value))),
+            genVariable([ system_tray.border_radius ], () => $("system-tray-border-radius", `${system_tray.border_radius.value}px`)),
+            genVariable([ system_tray.padding ], () => $("system-tray-padding", `${system_tray.padding.value}px`))
         ];
     }
 

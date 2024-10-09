@@ -49,6 +49,7 @@ export function generateOptions() {
             favorites: option([] as string[], StringArrayValidator.create()),
 
             icon_size: option(14, NumberValidator.create({ min: 4 })),
+            spacing: option(3, NumberValidator.create({ min: 0 })),
 
             padding: option(8, NumberValidator.create({ min: 0 })),
             border_radius: option(12, NumberValidator.create({ min: 0, max: 50 }))

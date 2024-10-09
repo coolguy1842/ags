@@ -5,3 +5,7 @@
 .bar-widget-system-tray-item {
     @include bar-widget;
 }
+
+.bar-widget-system-tray-popup-button {
+    @include bar-widget;
+}

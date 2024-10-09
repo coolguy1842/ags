@@ -11,6 +11,7 @@ import GObject from "types/@girs/gobject-2.0/gobject-2.0";
 import Gdk from "gi://Gdk";
 import { PopupWindow } from "./utils/classes/PopupWindow";
 import { createTestPopupWindow } from "./popups/TestPopupWindow";
+import { createSystemTrayPopupWindow } from "./popups/SystemTrayPopupWindow";
 
 
 const TEMP_DIR_S = `/tmp/coolguy/ags`;
@@ -55,6 +56,7 @@ export class Globals implements IReloadable {
 
     private _popupWindows?: {
         TestPopupWindow: ReturnType<typeof createTestPopupWindow>
+        SystemTrayPopupWindow: ReturnType<typeof createSystemTrayPopupWindow>
     };
 
     private _close_socket(path: string) {
@@ -119,7 +121,8 @@ export class Globals implements IReloadable {
         this._styleHandler.load();
 
         this._popupWindows = {
-            TestPopupWindow: createTestPopupWindow()
+            TestPopupWindow: createTestPopupWindow(),
+            SystemTrayPopupWindow: createSystemTrayPopupWindow()
         };
 
         for(const window of Object.values(this._popupWindows) as PopupWindow<any, unknown>[]) {
