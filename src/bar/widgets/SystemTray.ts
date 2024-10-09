@@ -6,10 +6,6 @@ import { Binding } from "types/service";
 import { globals } from "src/globals";
 import { getTrayItemID } from "src/utils/utils";
 
-import Box from "types/widgets/box";
-
-import Gtk from "gi://Gtk?version=3.0";
-import Gdk from "gi://Gdk";
 import { HEXColorValidator } from "src/options/validators/hexColorValidator";
 import { BooleanValidator } from "src/options/validators/booleanValidator";
 import { NumberValidator } from "src/options/validators/numberValidator";
@@ -19,10 +15,16 @@ import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { BarPosition } from "src/options/options";
 import { TrayType } from "../enums/trayType";
 
+import Box from "types/widgets/box";
+
+import Gtk from "gi://Gtk?version=3.0";
+import Gdk from "gi://Gdk";
+
+
 const systemTray = await Service.import("systemtray");
 const defaultProps = {
     background: "#242424A0",
-    popup_icon: "󰄝 ",
+    popup_icon: "󰄝  ",
     enable_favorites: true,
     
     spacing: 3,
@@ -43,13 +45,13 @@ export class SystemTray extends BarWidget<PropsType> {
         props.background = HEXColorValidator.create().validate(props.background) ?? fallback.background;
         props.enable_favorites = BooleanValidator.create().validate(props.enable_favorites) ?? fallback.enable_favorites;
 
-        props.spacing = NumberValidator.create({ min: 1, max: 20 }).validate(props.spacing) ?? fallback.spacing;
+        props.spacing = NumberValidator.create({ min: 0, max: 20 }).validate(props.spacing) ?? fallback.spacing;
         props.border_radius = NumberValidator.create({ min: 0, max: 24 }).validate(props.border_radius) ?? fallback.border_radius;
 
         props.horizontal_padding = NumberValidator.create({ min: 0, max: 32 }).validate(props.horizontal_padding) ?? fallback.horizontal_padding;
         props.vertical_padding = NumberValidator.create({ min: 0, max: 12 }).validate(props.vertical_padding) ?? fallback.vertical_padding;
 
-        props.icon_size = NumberValidator.create({ min: 0, max: 60 }).validate(props.icon_size) ?? fallback.icon_size;
+        props.icon_size = NumberValidator.create({ min: 4, max: 60 }).validate(props.icon_size) ?? fallback.icon_size;
 
         return props;
     }
@@ -77,7 +79,7 @@ export class SystemTray extends BarWidget<PropsType> {
 
         if(props.enable_favorites) {
             children.push(Widget.Button({
-                className: "bar-widget-system-tray-popup-button",
+                classNames: [ "bar-widget-system-tray-popup-button", "bar-button" ],
                 label: props.popup_icon,
                 onClicked: (self) => {
                     const trayPopup = globals.popupWindows?.SystemTrayPopupWindow;
@@ -156,7 +158,7 @@ export class SystemTray extends BarWidget<PropsType> {
                             }
 
                             return {
-                                x: Math.max(Math.min(position.x - (childAllocation.width / 2), (screenBounds.width - childAllocation.width) - offset), 0),
+                                x: Math.max(Math.min(position.x - (childAllocation.width / 2), (screenBounds.width - childAllocation.width) - offset), offset),
                                 y: yPosition
                             }
                         }

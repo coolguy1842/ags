@@ -33,6 +33,7 @@ export function generateOptions() {
 
             layout: {
                 left: option([
+                    { name: "AppLauncherButton" },
                     { name: "WorkspaceSelector" }
                 ] as TBarLayout, BarLayoutValidator.create()),
                 center: option([

@@ -14,7 +14,7 @@ export class ClockFormatValidator<T extends string> implements OptionValidator<T
 
 
     validate(value: T, previousValue?: T) {
-        const formatted = GLib.DateTime.new_now_local().format(value);
+        const formatted = GLib.DateTime.new_now_local().format(value ?? "");
         if(formatted == null) {
             return previousValue;
         }

@@ -89,3 +89,7 @@ export function registerObject<
 
     registerGObject(object, config);
 }
+
+export function copyObject<T extends {}>(obj: T): T {
+    return Object.assign({}, obj);
+}

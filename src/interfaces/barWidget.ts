@@ -1,4 +1,5 @@
 import Gtk from "gi://Gtk?version=3.0";
+import { copyObject } from "src/utils/utils";
 
 export type TBarWidgetMonitor = {
     // plugname e.g DP-1
@@ -46,8 +47,17 @@ export abstract class BarWidget<TProps extends object> {
 
     
     propsValidator(props: TProps, previousProps?: TProps): TProps | undefined {
-        const fallback = this._validateProps(previousProps ?? this._defaultProps, this._defaultProps) ?? this.defaultProps;
-        return this._validateProps(this._basicPropsValidator(props, fallback), fallback);
+        const defaultProps = copyObject(this._defaultProps);
+
+        var previous: TProps | undefined;
+        var fallback = defaultProps;
+        if(previousProps) {
+            previous = copyObject(previousProps);
+            fallback = this._validateProps(previous, defaultProps) ?? defaultProps;
+        }
+        
+        const current = copyObject(props);
+        return this._validateProps(this._basicPropsValidator(current, fallback), fallback);
     }
 
     create(monitor: TBarWidgetMonitor, props: TProps): Gtk.Widget {
