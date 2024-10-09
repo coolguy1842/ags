@@ -48,7 +48,11 @@ export class EventHandler<Events extends { [name: string]: TEventData<any> }> {
                 continue;
             }
 
-            eventInfo.callbacks[event](data);
+            const callback = eventInfo.callbacks[event];
+            if(callback != undefined) {
+                callback(data);
+            }
+            
             if(eventInfo.singleUse) {
                 delete this._registeredMultiEvents[id];
             }
@@ -58,7 +62,9 @@ export class EventHandler<Events extends { [name: string]: TEventData<any> }> {
     on<K extends (string & keyof Events)>(event: K, callback: (data: Events[K]) => void) { return this.registerEvent(event, callback); }
     once<K extends (string & keyof Events)>(event: K, callback: (data: Events[K]) => void) { return this.registerEvent(event, callback, true); }
 
+    // register multiple events in one call
     onMulti<K extends keyof Events, E extends { [key in K]?: (data: Events[K]) => void }>(events: E) { return this.registerMultiEvent(events as any); }
+    // will unregister all events after one fires
     onceMulti<K extends keyof Events, E extends { [key in K]?: (data: Events[K]) => void }>(events: E) { return this.registerMultiEvent(events as any, true); }
 
 

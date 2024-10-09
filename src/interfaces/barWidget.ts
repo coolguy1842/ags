@@ -7,32 +7,50 @@ export type TBarWidgetMonitor = {
     id: number
 };
 
-export interface IBarWidget<TProps extends object> {
-    name: string,
-    defaultProps: TProps,
+export abstract class BarWidget<TProps extends object> {
+    protected _validateProps(props: TProps, fallback: TProps): TProps | undefined {
+        return Object.assign({}, props) as TProps;
+    }
     
-    propsValidator(props: TProps): TProps | undefined;
-    create(monitor: TBarWidgetMonitor, props: TProps): Gtk.Widget;
+    protected _basicPropsValidator(props: TProps, fallback: TProps): TProps {
+        if(props == undefined || typeof props != "object") {
+            return fallback;
+        }
+    
+        const newProps = Object.assign({}, props) as TProps;
+        for(const key in props) {
+            if(fallback[key] == undefined) {
+                delete newProps[key];
+            }
+        }
+    
+        for(const key in fallback) {
+            if(newProps[key] == undefined) {
+                newProps[key] = fallback[key];
+            }
+        }
+    
+        return newProps;
+    }
+
+    protected _name: string;
+    protected _defaultProps: TProps;
+
+    get name() { return this._name; }
+    get defaultProps() { return this._defaultProps; }
+
+    constructor(name: string, defaultProps: TProps) {
+        this._name = name;
+        this._defaultProps = defaultProps;
+    }
+
+    
+    propsValidator(props: TProps, previousProps?: TProps): TProps | undefined {
+        const fallback = this._validateProps(previousProps ?? this._defaultProps, this._defaultProps) ?? this.defaultProps;
+        return this._validateProps(this._basicPropsValidator(props, fallback), fallback);
+    }
+
+    create(monitor: TBarWidgetMonitor, props: TProps): Gtk.Widget {
+        return Widget.Box();
+    }
 };
-
-
-export function basicBarWidgetPropsValidator<TProps extends object>(props: TProps, fallback: TProps): TProps {
-    if(props == undefined || typeof props != "object") {
-        return fallback;
-    }
-
-    const newProps = Object.assign({}, props) as TProps;
-    for(const key in props) {
-        if(fallback[key] == undefined) {
-            delete newProps[key];
-        }
-    }
-
-    for(const key in fallback) {
-        if(newProps[key] == undefined) {
-            newProps[key] = fallback[key];
-        }
-    }
-
-    return newProps;
-}

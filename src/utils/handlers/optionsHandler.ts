@@ -228,6 +228,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private saveOptions() {
         Utils.writeFileSync(JSON.stringify(this.simplifyOptions(), undefined, 4), globals.paths.OPTIONS_PATH);
+        this._prevOptions = JSON.stringify(this._options);
     }
 
     private loadOptions() {
@@ -244,16 +245,18 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
             return;
         }
 
+        const prevText = this._prevOptions;
         for(const key in json) {
             this.setOption(key, json[key]);
         }
 
         const newText = JSON.stringify(this._options);
+
         if(newText != text) {
             this.saveOptions();
         }
 
-        if(this._prevOptions == newText) {
+        if(prevText == newText) {
             return;
         }
 

@@ -34,7 +34,7 @@ export class BarLayoutValidator<T extends TBarLayout> implements OptionValidator
             }
 
             const component = BarWidgets[val.name];
-            const props = component.propsValidator(val.props, previousVal?.props);
+            const props = component.propsValidator(val.props as any, previousVal?.props as any);
             val.props = props ?? component.defaultProps;
         }
 
