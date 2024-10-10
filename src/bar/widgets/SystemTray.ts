@@ -95,7 +95,7 @@ export class SystemTray extends BarWidget<PropsType> {
 
         return Widget.Box({
             className: "bar-widget-system-tray",
-            spacing: props.spacing,
+            spacing: props.spacing + 2,
             css: `
                 background-color: ${HEXtoCSSRGBA(props.background)};
 

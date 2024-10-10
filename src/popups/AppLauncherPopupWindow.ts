@@ -104,6 +104,8 @@ function createAppLauncherItemWidget(index: number, appLauncherItem: AppLauncher
 const applications = await Service.import("applications");
 const MathExpression = new Mexp();
 
+var prevSearch: string | undefined = undefined;
+
 function updateItemContainer(
     container: Box<Gtk.Widget, unknown>, containerWidth: Variable<number>,
     searchInput: Variable<string>, launcherItems: Variable<AppLauncherItem[]>, itemCursor: Variable<number>, itemScroll: Variable<number>
@@ -119,8 +121,12 @@ function updateItemContainer(
         mathOutput = undefined;
     }
 
-    itemCursor.value = 0;
-    itemScroll.value = 0;
+    if(prevSearch != searchInput.value) {
+        itemCursor.value = 0;
+        itemScroll.value = 0;
+
+        prevSearch = searchInput.value;
+    }
 
     if(mathOutput != undefined) {
         launcherItems.value = [
@@ -191,6 +197,8 @@ export function createAppLauncherPopupWindow() {
         }
     );
 
+    prevSearch = undefined;
+    
     const searchInput = new Variable("");
     const launcherItems = new Variable([] as AppLauncherItem[]);
 
@@ -319,6 +327,8 @@ export function createAppLauncherPopupWindow() {
         searchInput.value = "";
         itemCursor.value = 0;
         itemScroll.value = 0;
+
+        prevSearch = undefined;
     });
 
     return popupWindow;
