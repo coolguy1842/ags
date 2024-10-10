@@ -3,19 +3,18 @@ import { MonitorTypeFlags, PathMonitor } from "../classes/PathMonitor";
 import { Options } from "types/variable";
 
 import { Variable} from "resource:///com/github/Aylur/ags/variable.js";
-import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
 
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
 import { globals } from "src/globals";
+import { registerObject } from "../utils";
 
 export interface OptionValidator<T> {
-    // validator can override if its not a bad issue like missing option
-    validate(value: T, previousValue?: T): T | undefined;
+    validate(value: T, fallback?: T): T | undefined;
 };
 
 export class Option<T> extends Variable<T> {
     static {
-        registerGObject(this, { typename: `Ags_Option_${Date.now()}` });
+        registerObject(this);
     }
 
     private _id: string;
@@ -60,8 +59,7 @@ export class Option<T> extends Variable<T> {
             const validation = this._validator.validate(value, this._value);
             if(validation == undefined) {
                 // check if current/fallback is invalid too
-                if(this._validator.validate(this._value) == undefined) {
-                    // super.value = this._default;
+                if(this._validator.validate(this._value, this._default) == undefined) {
                     this._value = this._default;
 
                     this.notify('value');
@@ -71,7 +69,6 @@ export class Option<T> extends Variable<T> {
                 return;
             }
             
-            // super.value = validation;
             this._value = validation;
 
             this.notify('value');
@@ -79,7 +76,6 @@ export class Option<T> extends Variable<T> {
             return;
         }
 
-        // super.value = value;
         this._value = value;
         
         this.notify('value');
@@ -100,8 +96,8 @@ export type TOptions = {
 export type OptionsHandlerCallback = (...args: any) => void;
 export class OptionsHandler<OptionsType extends TOptions> extends Service implements IReloadable {
     static {
-        registerGObject(this, {
-            typename: `Ags_OptionsHandler_${Date.now()}`,
+        // register gobject like this to enable hotreloading of this class
+        registerObject(this, {
             signals: {
                 "options_reloaded": ["jsobject"],
                 "option_changed": ["jsobject"]
@@ -116,7 +112,9 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private _pathMonitor: PathMonitor;
 
-    private _default: OptionsType;
+    private _defaultOptionsGenerator: () => OptionsType;
+
+    private _defaultOptions: OptionsType;
     private _options: OptionsType;
     private _prevOptions: string;
 
@@ -126,10 +124,10 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
     get loaded() { return this._loaded; }
     get options() { return this._options; }
 
-
-    constructor(options: OptionsType) {
+    constructor(defaultOptionsGenerator: () => OptionsType) {
         super();
 
+        this._defaultOptionsGenerator = defaultOptionsGenerator;
         this._pathMonitor = new PathMonitor(globals.paths.OPTIONS_PATH, MonitorTypeFlags.FILE, (file, fileType, event) => {
             if(event == FileMonitorEvent.CHANGED) return;
             
@@ -141,8 +139,8 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
             this.loadOptions();
         });
 
-        this._default = options;
-        this._options = options;
+        this._options = this._defaultOptionsGenerator();
+        this._defaultOptions = this._defaultOptionsGenerator();
 
         this._prevOptions = "";
         
@@ -230,6 +228,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
     private saveOptions() {
         Utils.writeFileSync(JSON.stringify(this.simplifyOptions(), undefined, 4), globals.paths.OPTIONS_PATH);
+        this._prevOptions = JSON.stringify(this._options);
     }
 
     private loadOptions() {
@@ -238,7 +237,6 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
         
         let json: {};
 
-        this._options = this._default;
         try {
             json = JSON.parse(text);
         }
@@ -247,19 +245,25 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
             return;
         }
 
+        const prevText = this._prevOptions;
         for(const key in json) {
             this.setOption(key, json[key]);
         }
 
-        if(this._prevOptions == JSON.stringify(this._options)) {
+        const newText = JSON.stringify(this._options);
+
+        if(newText != text) {
+            this.saveOptions();
+        }
+
+        if(prevText == newText) {
             return;
         }
 
-        this._prevOptions = JSON.stringify(this._options);
+        this._prevOptions = newText;
         this.emit("options_reloaded", this.options);
 
         this._ignoreChange = true;
-        this.saveOptions();
     }
 
 

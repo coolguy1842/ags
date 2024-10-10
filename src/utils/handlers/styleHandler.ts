@@ -4,16 +4,56 @@ import { MonitorTypeFlags, PathMonitor } from "../classes/PathMonitor";
 import { HEXtoSCSSRGBA } from "../colorUtils";
 
 import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
+import { Variable } from "types/variable";
+import { Option } from "./optionsHandler";
 
 const $ = (key: string, value: string) => `$${key}: ${value};`;
+
+
+class DynamicSCSSVariable<TVariables extends Variable<any>[]> implements IReloadable {
+    private _variables: TVariables;
+    private _transformFunc: () => string;
+    private _updateFunc: (transformed: string) => void;
+
+    private _loaded: boolean;
+    get loaded() { return this._loaded; }
+    
+    constructor(variables: TVariables, transformFunc: () => string, updateFunc: (transformed: string) => void) {
+        this._variables = variables;
+        this._transformFunc = transformFunc;
+        this._updateFunc = updateFunc;
+
+        this._loaded = false;
+    }
+
+    load(): void {
+        if(this._loaded) return;
+
+        for(const variable of this._variables) {
+            variable.connect("changed", () => this._updateFunc(this._transformFunc()));
+        }
+
+        this._loaded = true;
+    }
+
+    cleanup(): void {
+        if(!this._loaded) return;
+
+        this._loaded = false;
+    }
+
+    getTransformed() { return this._transformFunc(); }
+};
+
 
 export class StyleHandler implements IReloadable {
     private _loaded: boolean = false;
     get loaded() { return this._loaded; }
 
     private _monitor: PathMonitor;
-
     private _optionsListenerID?: number;
+
+    private _dynamicSCSSVariables?: DynamicSCSSVariable<any>[];
 
     constructor() {
         this._monitor = new PathMonitor(`${App.configDir}/styles`, MonitorTypeFlags.FILE | MonitorTypeFlags.RECURSIVE, (file, fileType, event) => {
@@ -26,22 +66,20 @@ export class StyleHandler implements IReloadable {
     load(): void {
         if(this._loaded) return;
         
-        this._loaded = true;
         this._monitor.load();
 
-        for(const binding of this.getBindings()) {
-            binding.connect("changed", () => {
-                this.reloadStyles();
-            });
+        this._dynamicSCSSVariables = this.getDynamicSCSSVariables();
+        for(const variable of this._dynamicSCSSVariables) {
+            variable.load();
         }
 
+        this._loaded = true;
         this.reloadStyles();
     }
 
     cleanup() {
         if(!this._loaded) return;
 
-        this._loaded = false;
         this._monitor.cleanup();
 
         if(this._optionsListenerID) {
@@ -49,62 +87,46 @@ export class StyleHandler implements IReloadable {
 
             this._optionsListenerID = undefined;
         }
-    }
-
-
-    getBindings() {
-        const { bar, system_tray, app_launcher } = globals.optionsHandler!.options;
         
-        return [
-            bar.background,
-            bar.icon_color,
+        for(const variable of this._dynamicSCSSVariables ?? []) {
+            variable.cleanup();
+        }
 
-            system_tray.background,
-            system_tray.border_radius,
-            system_tray.padding,
-
-            app_launcher.background,
-            app_launcher.border_radius,
-            app_launcher.padding,
-
-            app_launcher.search.background,
-            app_launcher.search.border_radius,
-
-            app_launcher.application.background,
-            app_launcher.application.background_selected,
-            app_launcher.application.padding,
-            app_launcher.application.border_radius,
-
-            app_launcher.title_color
-        ];
+        this._dynamicSCSSVariables = undefined;
+        this._loaded = false;
     }
 
-    // TODO: make bindings able to be used here that way we dont need the getBindings hack
-    getDynamicSCSS() {
+
+    getDynamicSCSSVariables(): DynamicSCSSVariable<any>[] {
         const { bar, system_tray, app_launcher } = globals.optionsHandler!.options;
 
+        const genVariable = (vars: Option<any>[], transformFunc: () => string) => {
+            return new DynamicSCSSVariable(vars, transformFunc, () => this.reloadStyles());
+        };
+
         return [
-            $("bar-background-color", HEXtoSCSSRGBA(bar.background.value)),
-            $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value)),
+            genVariable([ bar.background ], () => $("bar-background-color", HEXtoSCSSRGBA(bar.background.value))),
+            genVariable([ bar.icon_color ], () => $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value))),
+            genVariable([ bar.outer_padding ], () => $("bar-outer-padding", `${bar.outer_padding.value}px`)),
 
-            $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value)),
-            $("system-tray-border-radius", `${system_tray.border_radius.value}px`),
-            $("system-tray-padding", `${system_tray.padding.value}px`),
+            
+            genVariable([ system_tray.background ], () => $("system-tray-background-color", HEXtoSCSSRGBA(system_tray.background.value))),
+            genVariable([ system_tray.border_radius ], () => $("system-tray-border-radius", `${system_tray.border_radius.value}px`)),
+            genVariable([ system_tray.padding ], () => $("system-tray-padding", `${system_tray.padding.value}px`)),
 
-            $("app-launcher-background-color", HEXtoSCSSRGBA(app_launcher.background.value)),
-            $("app-launcher-border-radius", `${app_launcher.border_radius.value}px`),
-            $("app-launcher-padding", `${app_launcher.padding.value}px`),
+            
+            genVariable([ app_launcher.background ], () => $("app-launcher-background-color", HEXtoSCSSRGBA(app_launcher.background.value))),
+            genVariable([ app_launcher.padding ], () => $("app-launcher-padding", `${app_launcher.padding.value}px`)),
+            genVariable([ app_launcher.border_radius ], () => $("app-launcher-border-radius", `${app_launcher.border_radius.value}px`)),
 
-            $("app-launcher-search-background-color", HEXtoSCSSRGBA(app_launcher.search.background.value)),
-            $("app-launcher-search-border-radius", `${app_launcher.search.border_radius.value}px`),
+            genVariable([ app_launcher.input.background ], () => $("app-launcher-input-background-color", HEXtoSCSSRGBA(app_launcher.input.background.value))),
+            genVariable([ app_launcher.input.border_radius ], () => $("app-launcher-input-border-radius", `${app_launcher.input.border_radius.value}px`)),
 
-            $("app-launcher-item-background-color", HEXtoSCSSRGBA(app_launcher.application.background.value)),
-            $("app-launcher-item-background-color-selected", HEXtoSCSSRGBA(app_launcher.application.background_selected.value)),
-            $("app-launcher-item-padding", `${app_launcher.application.padding.value}px`),
-            $("app-launcher-item-border-radius", `${app_launcher.application.border_radius.value}px`),
-
-            $("app-launcher-title-text-color", HEXtoSCSSRGBA(app_launcher.title_color.value))
-        ].join("\n");
+            genVariable([ app_launcher.item.background ], () => $("app-launcher-item-background-color", HEXtoSCSSRGBA(app_launcher.item.background.value))),
+            genVariable([ app_launcher.item.background_selected ], () => $("app-launcher-item-selected-background-color", HEXtoSCSSRGBA(app_launcher.item.background_selected.value))),
+            genVariable([ app_launcher.item.border_radius ], () => $("app-launcher-item-border-radius", `${app_launcher.item.border_radius.value}px`)),
+            genVariable([ app_launcher.item.padding ], () => $("app-launcher-item-padding", `${app_launcher.item.padding.value}px`))
+        ];
     }
 
     async reloadStyles() {
@@ -117,7 +139,7 @@ export class StyleHandler implements IReloadable {
         try {
             Utils.exec(`mkdir -p ${paths!.OUT_CSS_DIR}`);
 
-            Utils.writeFileSync(this.getDynamicSCSS(), paths!.OUT_SCSS_DYNAMIC);
+            Utils.writeFileSync((this._dynamicSCSSVariables ?? []).map(x => x.getTransformed()).join("\n"), paths!.OUT_SCSS_DYNAMIC);
             Utils.writeFileSync(
                 [ paths!.OUT_SCSS_DYNAMIC, paths!.STYLES_MAIN ]
                     .map(file => `@import '${file}';`)

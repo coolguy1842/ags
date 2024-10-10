@@ -6,7 +6,7 @@ start_normal_bar() {
     echo ""
     
     $ags_command &
-    echo "\n\n"
+    echo -e "\n"
     exit
 }
 

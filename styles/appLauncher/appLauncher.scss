@@ -1,16 +1,27 @@
 .app-launcher {
     background-color: $app-launcher-background-color;
-    
+
     padding: $app-launcher-padding;
     border-radius: $app-launcher-border-radius;
 }
 
-.app-launcher-title {
-    @include app-launcher-widget;
+$app-launcher-search-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0) inset;
 
-    color: $app-launcher-title-text-color;
+.app-launcher-input {
+    all: unset;
+
+    padding-left: 8px;
+    padding-right: 8px;
+
+    background-color: $app-launcher-input-background-color;
+
+    border-radius: $app-launcher-input-border-radius;
+    box-shadow: $app-launcher-search-box-shadow;
+
+    &:focus {
+        box-shadow: $app-launcher-search-box-shadow;
+    }
 }
-
 
 .app-launcher-item {
     @include app-launcher-widget;
@@ -21,25 +32,6 @@
     border-radius: $app-launcher-item-border-radius;
 
     &.app-launcher-item-selected {
-        background-color: $app-launcher-item-background-color-selected;
+        background-color: $app-launcher-item-selected-background-color;
     }
-}
-
-
-$app-launcher-search-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0) inset;
-.app-launcher-search-input {
-    all: unset;
-
-    min-height: 28px;
-    padding-left: 8px;
-    padding-right: 8px;
-
-    background-color: $app-launcher-search-background-color;
-
-    border-radius: $app-launcher-search-border-radius;
-    box-shadow: $app-launcher-search-box-shadow;
-}
-
-.app-launcher-search-input:focus {
-    box-shadow: $app-launcher-search-box-shadow;
 }

@@ -1,5 +1,6 @@
 import Gio from "gi://Gio?version=2.0";
 import GLib from "gi://GLib?version=2.0";
+import System from "system";
 
 const entry = `${App.configDir}/src/main.ts`;
 const outDir = `/tmp/coolguy/ags/js`;
@@ -84,6 +85,9 @@ async function reloadAGS() {
             
             importedMain = null;
             imported = null;
+
+            // call garbage collector just incase
+            System.gc();
         }
     
         imported = await import(`file://${outDir}/${outFile}`);

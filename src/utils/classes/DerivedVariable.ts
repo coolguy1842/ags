@@ -1,5 +1,5 @@
-import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.js";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
+import { registerObject } from "../utils";
 
 export class DerivedVariable<
     V,
@@ -7,9 +7,7 @@ export class DerivedVariable<
     Args extends { [K in keyof Deps]: Deps[K] extends Variable<infer T> ? T : never }
 > extends Variable<V> {
     static {
-        registerGObject(this, {
-            typename: `Ags_OptionsHandler_${Date.now()}`,
-            signals: {},
+        registerObject(this, {
             properties: {
                 'value': ['jsobject', 'rw'],
                 'is-listening': ['boolean', 'r'],

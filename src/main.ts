@@ -19,6 +19,7 @@ export class Main implements IReloadable {
     reloadWindows() {
         for(const window of App.windows) {
             App.removeWindow(window);
+            window.destroy();
         }
 
         globals.loadMonitorLookups();
@@ -59,6 +60,7 @@ export class Main implements IReloadable {
                 console.log(`${monitorName} removed`);
     
                 App.removeWindow(window);
+                window.destroy();
             }
         });
 
@@ -73,5 +75,9 @@ export class Main implements IReloadable {
 
     cleanup(): void {
         globals.cleanup();
+
+        for(const window of App.windows) {
+            App.removeWindow(window);
+        }
     }
 };

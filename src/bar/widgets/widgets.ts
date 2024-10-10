@@ -1,15 +1,15 @@
-import { AppLauncherButton } from "./appLauncherButton";
-import { Clock } from "./clock";
-import { ColorPickerButton } from "./colorPickerButton";
-import { ScreenshotButton } from "./screenshotButton";
-import { SystemTray } from "./systemTray";
-import { WorkspaceSelector } from "./workspaceSelector";
+import { AppLauncherButton } from "./AppLauncherButton";
+import { Clock } from "./Clock";
+import { ColorPickerButton } from "./ColorPickerButton";
+import { ScreenshotButton } from "./ScreenshotButton";
+import { SystemTray } from "./SystemTray";
+import { WorkspaceSelector } from "./WorkspaceSelector";
 
 export const BarWidgets = {
-    AppLauncherButton: new AppLauncherButton(),
     WorkspaceSelector: new WorkspaceSelector(),
     Clock: new Clock(),
     SystemTray: new SystemTray(),
-    ScreenshotButton: new ScreenshotButton(),
-    ColorPickerButton: new ColorPickerButton()
+    AppLauncherButton: new AppLauncherButton(),
+    ColorPickerButton: new ColorPickerButton(),
+    ScreenshotButton: new ScreenshotButton()
 };

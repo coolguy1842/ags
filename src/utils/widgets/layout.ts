@@ -1,7 +1,7 @@
-import { registerGObject } from 'resource:///com/github/Aylur/ags/utils/gobject.js';
 import { BaseProps, Widget } from 'types/widgets/widget';
 
 import Gtk from 'gi://Gtk?version=3.0';
+import { registerObject } from '../utils';
 
 export type LayoutProps<
     Attr = unknown,
@@ -17,11 +17,7 @@ export function newLayout<
 export interface Layout<Attr> extends Widget<Attr> { }
 export class Layout<Attr> extends Gtk.Layout {
     static {
-        registerGObject(this, {
-            typename: `Ags_LayoutWidget_${Date.now()}`,
-            signals: {},
-            properties: {}
-        });
+        registerObject(this);
     }
 
     constructor(props: LayoutProps<Attr> = {}) {
