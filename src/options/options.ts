@@ -70,7 +70,7 @@ export function generateOptions() {
 
             item: {
                 background: option("#00000000", HEXColorValidator.create()),
-                background_selected: option("#282828FF", HEXColorValidator.create()),
+                background_selected: option("#383838FF", HEXColorValidator.create()),
 
                 padding: option(4, NumberValidator.create({ min: 0 })),
                 border_radius: option(8, NumberValidator.create({ min: 0, max: 50 })),

@@ -119,6 +119,9 @@ function updateItemContainer(
         mathOutput = undefined;
     }
 
+    itemCursor.value = 0;
+    itemScroll.value = 0;
+
     if(mathOutput != undefined) {
         launcherItems.value = [
             {
