@@ -122,10 +122,10 @@ export class StyleHandler implements IReloadable {
             genVariable([ app_launcher.input.background ], () => $("app-launcher-input-background-color", HEXtoSCSSRGBA(app_launcher.input.background.value))),
             genVariable([ app_launcher.input.border_radius ], () => $("app-launcher-input-border-radius", `${app_launcher.input.border_radius.value}px`)),
 
-            genVariable([ app_launcher.app_item.background ], () => $("app-launcher-app-item-background-color", HEXtoSCSSRGBA(app_launcher.app_item.background.value))),
-            genVariable([ app_launcher.app_item.background_selected ], () => $("app-launcher-app-item-selected-background-color", HEXtoSCSSRGBA(app_launcher.app_item.background_selected.value))),
-            genVariable([ app_launcher.app_item.border_radius ], () => $("app-launcher-app-item-border-radius", `${app_launcher.app_item.border_radius.value}px`)),
-            genVariable([ app_launcher.app_item.padding ], () => $("app-launcher-app-item-padding", `${app_launcher.app_item.padding.value}px`))
+            genVariable([ app_launcher.item.background ], () => $("app-launcher-item-background-color", HEXtoSCSSRGBA(app_launcher.item.background.value))),
+            genVariable([ app_launcher.item.background_selected ], () => $("app-launcher-item-selected-background-color", HEXtoSCSSRGBA(app_launcher.item.background_selected.value))),
+            genVariable([ app_launcher.item.border_radius ], () => $("app-launcher-item-border-radius", `${app_launcher.item.border_radius.value}px`)),
+            genVariable([ app_launcher.item.padding ], () => $("app-launcher-item-padding", `${app_launcher.item.padding.value}px`))
         ];
     }
 

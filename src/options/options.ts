@@ -68,13 +68,18 @@ export function generateOptions() {
                 border_radius: option(12, NumberValidator.create({ min: 0, max: 50 }))
             },
 
-            app_item: {
+            item: {
                 background: option("#00000000", HEXColorValidator.create()),
                 background_selected: option("#484848FF", HEXColorValidator.create()),
 
                 padding: option(4, NumberValidator.create({ min: 0 })),
-                border_radius: option(8, NumberValidator.create({ min: 0, max: 50 }))
+                border_radius: option(8, NumberValidator.create({ min: 0, max: 50 })),
+
+                icon_size: option(32, NumberValidator.create({ min: 1 })),
+                spacing: option(4, NumberValidator.create({ min: 0 })),
             },
+
+            spacing: option(4, NumberValidator.create({ min: 0 })),
 
             rows: option(4, NumberValidator.create({ min: 1 })),
             columns: option(5, NumberValidator.create({ min: 1 }))

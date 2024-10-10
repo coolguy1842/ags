@@ -22,3 +22,16 @@ $app-launcher-search-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0) inset;
         box-shadow: $app-launcher-search-box-shadow;
     }
 }
+
+.app-launcher-item {
+    @include app-launcher-widget;
+
+    background-color: $app-launcher-item-background-color;
+    
+    padding: $app-launcher-item-padding;
+    border-radius: $app-launcher-item-border-radius;
+
+    &.app-launcher-item-selected {
+        background-color: $app-launcher-item-selected-background-color;
+    }
+}
