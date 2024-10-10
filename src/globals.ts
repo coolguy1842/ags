@@ -5,16 +5,16 @@ import { generateOptions } from "./options/options";
 
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 
-import GLib from "gi://GLib";
-import Gio from "gi://Gio";
-import GObject from "types/@girs/gobject-2.0/gobject-2.0";
-import Gdk from "gi://Gdk";
 import { PopupWindow } from "./utils/classes/PopupWindow";
-import { createTestPopupWindow } from "./popups/TestPopupWindow";
 import { createSystemTrayPopupWindow } from "./popups/SystemTrayPopupWindow";
 import { createAppLauncherPopupWindow, toggleAppLauncherPopupWindow } from "./popups/AppLauncherPopupWindow";
 import { getCurrentMonitor } from "./utils/utils";
 
+import GObject from "types/@girs/gobject-2.0/gobject-2.0";
+
+import GLib from "gi://GLib";
+import Gio from "gi://Gio";
+import Gdk from "gi://Gdk";
 
 const TEMP_DIR_S = `/tmp/coolguy/ags`;
 
@@ -57,7 +57,6 @@ export class Globals implements IReloadable {
     private _communicationSocket?: Gio.Socket;
 
     private _popupWindows?: {
-        TestPopupWindow: ReturnType<typeof createTestPopupWindow>
         SystemTrayPopupWindow: ReturnType<typeof createSystemTrayPopupWindow>,
         AppLauncherPopupWindow: ReturnType<typeof createAppLauncherPopupWindow>
     };
@@ -127,7 +126,6 @@ export class Globals implements IReloadable {
         this._styleHandler.load();
 
         this._popupWindows = {
-            TestPopupWindow: createTestPopupWindow(),
             SystemTrayPopupWindow: createSystemTrayPopupWindow(),
             AppLauncherPopupWindow: createAppLauncherPopupWindow()
         };

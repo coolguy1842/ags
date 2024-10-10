@@ -18,12 +18,12 @@ type PropsType = typeof defaultProps;
 export class WorkspaceSelector extends BarWidget<PropsType> {
     constructor() { super("WorkspaceSelector", defaultProps); }
     protected _validateProps(props: PropsType, fallback: PropsType): PropsType | undefined {
-        props.scroll_direction = ValueInEnumValidator.create(ScrollDirection).validate(props.scroll_direction) ?? fallback.scroll_direction;
-
-        props.activeSymbol = StringValidator.create().validate(props.activeSymbol, fallback.activeSymbol) ?? fallback.activeSymbol;
-        props.inActiveSymbol = StringValidator.create().validate(props.inActiveSymbol, fallback.inActiveSymbol) ?? fallback.inActiveSymbol;
-
-        return props;
+        return {
+            scroll_direction: ValueInEnumValidator.create(ScrollDirection).validate(props.scroll_direction) ?? fallback.scroll_direction,
+            
+            activeSymbol: StringValidator.create().validate(props.activeSymbol, fallback.activeSymbol) ?? fallback.activeSymbol,
+            inActiveSymbol: StringValidator.create().validate(props.inActiveSymbol, fallback.inActiveSymbol) ?? fallback.inActiveSymbol
+        };
     }
 
     create(monitor: TBarWidgetMonitor, props: PropsType) {

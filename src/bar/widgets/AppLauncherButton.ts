@@ -12,9 +12,9 @@ type PropsType = typeof defaultProps;
 export class AppLauncherButton extends BarWidget<PropsType> {
     constructor() { super("AppLauncherButton", defaultProps); }
     protected _validateProps(props: PropsType, fallback: PropsType): PropsType | undefined {
-        props.launcher_icon = StringValidator.create().validate(props.launcher_icon, fallback.launcher_icon) ?? fallback.launcher_icon;
-
-        return props;
+        return {
+            launcher_icon: StringValidator.create().validate(props.launcher_icon, fallback.launcher_icon) ?? fallback.launcher_icon
+        };
     }
 
     create(monitor: TBarWidgetMonitor, props: PropsType) {

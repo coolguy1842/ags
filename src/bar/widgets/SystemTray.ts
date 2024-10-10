@@ -40,20 +40,19 @@ type PropsType = typeof defaultProps;
 export class SystemTray extends BarWidget<PropsType> {
     constructor() { super("SystemTray", defaultProps); }
     protected _validateProps(props: PropsType, fallback: PropsType): PropsType | undefined {
-        props.popup_icon = StringValidator.create().validate(props.popup_icon) ?? fallback.popup_icon;
+        return {
+            popup_icon: StringValidator.create().validate(props.popup_icon) ?? fallback.popup_icon,
+            background: HEXColorValidator.create().validate(props.background) ?? fallback.background,
+            
+            enable_favorites: BooleanValidator.create().validate(props.enable_favorites) ?? fallback.enable_favorites,
 
-        props.background = HEXColorValidator.create().validate(props.background) ?? fallback.background;
-        props.enable_favorites = BooleanValidator.create().validate(props.enable_favorites) ?? fallback.enable_favorites;
-
-        props.spacing = NumberValidator.create({ min: 0, max: 20 }).validate(props.spacing) ?? fallback.spacing;
-        props.border_radius = NumberValidator.create({ min: 0, max: 24 }).validate(props.border_radius) ?? fallback.border_radius;
-
-        props.horizontal_padding = NumberValidator.create({ min: 0, max: 32 }).validate(props.horizontal_padding) ?? fallback.horizontal_padding;
-        props.vertical_padding = NumberValidator.create({ min: 0, max: 12 }).validate(props.vertical_padding) ?? fallback.vertical_padding;
-
-        props.icon_size = NumberValidator.create({ min: 4, max: 60 }).validate(props.icon_size) ?? fallback.icon_size;
-
-        return props;
+            icon_size: NumberValidator.create({ min: 4, max: 60 }).validate(props.icon_size) ?? fallback.icon_size,
+            border_radius: NumberValidator.create({ min: 0, max: 24 }).validate(props.border_radius) ?? fallback.border_radius,
+            spacing: NumberValidator.create({ min: 0, max: 20 }).validate(props.spacing) ?? fallback.spacing,
+            
+            horizontal_padding: NumberValidator.create({ min: 0, max: 32 }).validate(props.horizontal_padding) ?? fallback.horizontal_padding,
+            vertical_padding: NumberValidator.create({ min: 0, max: 12 }).validate(props.vertical_padding) ?? fallback.vertical_padding
+        };
     }
 
     create(monitor: TBarWidgetMonitor, props: PropsType) {
