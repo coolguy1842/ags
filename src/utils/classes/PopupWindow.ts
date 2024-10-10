@@ -69,6 +69,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
     get screenBounds() { return this._screenBounds; }
     get animationOptions() { return this._animationOptions; }
 
+    set animationOptions(animationOptions: AnimationOptions | undefined) { this._animationOptions = animationOptions; }
+
     get child() { return this._child; }
     set child(child: Child) {
         this._child = child;
@@ -230,32 +232,30 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
         this._animationLooping = false;
         this._currentAnimationInfo = undefined;
 
-        this.on("animationComplete", (data) => {
-            switch(data.animationName) {
-            case "hide":
+        this.onMulti({
+            hideComplete: () => {
                 this.window.click_through = false;
 
                 this._hiding = false;
                 this._window.set_visible(false);
-                
-                this.emit("hideComplete", { self: this });
-                break;
-            case "show":
-                this.emit("showComplete", { self: this });
-                break;
+            },
+            hideCancel: () => {
+                this.window.click_through = false;
+                this._hiding = false;
+            }
+        })
+
+        this.on("animationComplete", (data) => {
+            switch(data.animationName) {
+            case "hide": this.emit("hideComplete", { self: this }); break;
+            case "show": this.emit("showComplete", { self: this }); break;
             }
         });
 
         this.on("animationCancel", (data) => {
             switch(data.animationName) {
-            case "hide":
-                this.window.click_through = false;
-                this._hiding = false;
-                
-                break;
-            case "show":
-                this.emit("showCancel", { self: this });
-                break;
+            case "hide":this.emit("hideCancel", { self: this }); break;
+            case "show": this.emit("showCancel", { self: this }); break;
             }
         });
 

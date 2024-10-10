@@ -4,7 +4,7 @@ import { TrayItem } from "types/service/systemtray";
 import { HEXtoCSSRGBA } from "src/utils/colorUtils";
 import { Binding } from "types/service";
 import { globals } from "src/globals";
-import { getTrayItemID } from "src/utils/utils";
+import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
 
 import { HEXColorValidator } from "src/options/validators/hexColorValidator";
 import { BooleanValidator } from "src/options/validators/booleanValidator";
@@ -19,6 +19,7 @@ import Box from "types/widgets/box";
 
 import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk";
+import { toggleSystemTrayPopup } from "src/popups/SystemTrayPopupWindow";
 
 
 const systemTray = await Service.import("systemtray");
@@ -56,159 +57,40 @@ export class SystemTray extends BarWidget<PropsType> {
     }
 
     create(monitor: TBarWidgetMonitor, props: PropsType) {
-        const children: Gtk.Widget[] = [
-            Widget.Box({
-                spacing: props.spacing,
-                setup: (self) => {
-                    var type = TrayType.ALL;
-                    if(props.enable_favorites) {
-                        type = TrayType.FAVORITES;
-                    }
+        const system_tray = globals.optionsHandler?.options.system_tray;
 
-                    updateTrayItems(self, props.icon_size, type);
-                    self.hook(systemTray, () => updateTrayItems(self, props.icon_size, type));
+        const toggleButton = Widget.Button({
+            classNames: [ "bar-widget-system-tray-popup-button", "bar-button" ],
+            label: props.popup_icon,
+            onClicked: (self) => {
+                toggleSystemTrayPopup(monitor.id, self);
+            }
+        });
 
-                    const system_tray = globals.optionsHandler?.options.system_tray;
-                    if(system_tray != undefined) {
-                        self.hook(system_tray.favorites, () => updateTrayItems(self, props.icon_size, type));
-                    }
-                }
-            })
-        ];
+        const updateChildren = (self: Box<Gtk.Widget, unknown>) => {
+            var shouldHaveToggle = props.enable_favorites && getActiveFavorites(system_tray?.favorites.value ?? []).length != systemTray.items.length;
+            // hack to hide it
+            toggleButton.label = shouldHaveToggle ? props.popup_icon : "";
 
-        if(props.enable_favorites) {
-            children.push(Widget.Button({
-                classNames: [ "bar-widget-system-tray-popup-button", "bar-button" ],
-                label: props.popup_icon,
-                onClicked: (self) => {
-                    const trayPopup = globals.popupWindows?.SystemTrayPopupWindow;
-                    const barPosition = globals.optionsHandler?.options.bar.position;
-                    if(!trayPopup || !barPosition) return;
-                    if(trayPopup.window.is_visible() && trayPopup.window.monitor == monitor.id) {
-                        trayPopup.hide();
-                
-                        return;
-                    }
-
-                    const getPosition = () => {
-                        if(self.is_destroyed || !self.get_accessible()) {
-                            return { x: 0, y: 0 }
+            self.children = [
+                Widget.Box({
+                    spacing: props.spacing,
+                    setup: (self) => {
+                        var type = TrayType.ALL;
+                        if(props.enable_favorites) {
+                            type = TrayType.FAVORITES;
                         }
-            
-                        const allocation = self.get_allocation();
-                        const position = {
-                            x: allocation.x + (allocation.width / 2),
-                            y: allocation.y + allocation.height
-                        };
-
-                        return position;
-                    }
-            
-                    const position = new Variable(getPosition(), {
-                        poll: [
-                            100,
-                            (variable) => {
-                                if(self.is_destroyed || !self.get_accessible()) {
-                                    variable.stopPoll();
-                                }
-            
-                                return getPosition();
-                            }
-                        ]
-                    });
-
-                    const getBarHeight = () => {
-                        return self.get_window()?.get_height() ?? (globals.optionsHandler?.options.bar.height.value ?? 0);
-                    }
-            
-                    const barHeight = new Variable(getBarHeight(), {
-                        poll: [
-                            250,
-                            (variable) => {
-                                if(self.is_destroyed || !self.get_accessible()) {
-                                    variable.stopPoll();
-                                }
-            
-                                return getBarHeight();
-                            }
-                        ]
-                    });
-
-                    const endDerived = new DerivedVariable(
-                        [
-                            position,
-                            barHeight,
-                            barPosition,
-                            trayPopup.screenBounds,
-                            trayPopup.childAllocation
-                        ],
-                        (position, barHeight, barPosition, screenBounds, childAllocation) => {
-                            const offset = 10;
-
-                            var yPosition = 0;
-                            switch(barPosition) {
-                            case BarPosition.TOP:
-                                yPosition = screenBounds.height - (offset - 1);
-                                break;
-                            case BarPosition.BOTTOM:
-                                yPosition = childAllocation.height + barHeight + offset;
-                                break;
-                            default: break;
-                            }
-
-                            return {
-                                x: Math.max(Math.min(position.x - (childAllocation.width / 2), (screenBounds.width - childAllocation.width) - offset), offset),
-                                y: yPosition
-                            }
-                        }
-                    );
-                
-                    const startDerived = new DerivedVariable(
-                        [
-                            endDerived,
-                            barHeight,
-                            barPosition,
-                            trayPopup.screenBounds,
-                            trayPopup.childAllocation
-                        ],
-                        (end, barHeight, barPosition, screenBounds, childAllocation) => {
-                            var yPosition = 0;
-                            switch(barPosition) {
-                            case BarPosition.TOP:
-                                yPosition = screenBounds.height + barHeight;
-                                break;
-                            case BarPosition.BOTTOM:
-                                yPosition = barHeight;
-                                break;
-                            default: break;
-                            }
-
-                            return {
-                                x: end.x,
-                                y: yPosition
-                            }
-                        }
-                    );
-                
-                    const onStop = () => {
-                        position.stopPoll();
-                        barHeight.stopPoll();
-
-                        startDerived.stop();
-                        endDerived.stop();
-
-                        position.dispose();
-                        barHeight.dispose();
-                    };
     
-                    trayPopup.onceMulti({
-                        "hideComplete": onStop,
-                        "cleanup": onStop
-                    });
+                        updateTrayItems(self, props.icon_size, type);
+                        self.hook(systemTray, () => updateTrayItems(self, props.icon_size, type));
     
-                    trayPopup.show(monitor.id, startDerived, endDerived);
-                }
-            }));
+                        if(system_tray != undefined) {
+                            self.hook(system_tray.favorites, () => updateTrayItems(self, props.icon_size, type));
+                        }
+                    }
+                }),
+                toggleButton
+            ];    
         }
 
         return Widget.Box({
@@ -220,8 +102,9 @@ export class SystemTray extends BarWidget<PropsType> {
                 padding: ${props.vertical_padding}px ${props.horizontal_padding}px;
                 border-radius: ${props.border_radius}px;
             `,
-            children
-        });
+            setup: (self) => updateChildren(self)
+        }).hook(systemTray, (self) => updateChildren(self))
+            .hook(system_tray!.favorites, (self) => updateChildren(self));
     }
 };
 
