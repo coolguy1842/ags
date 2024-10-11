@@ -6,20 +6,18 @@ import { Binding } from "types/service";
 import { globals } from "src/globals";
 import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
 
+import { toggleSystemTrayPopup } from "src/popups/SystemTrayPopupWindow";
+
 import { HEXColorValidator } from "src/options/validators/hexColorValidator";
 import { BooleanValidator } from "src/options/validators/booleanValidator";
 import { NumberValidator } from "src/options/validators/numberValidator";
 import { StringValidator } from "src/options/validators/stringValidator";
-import { DerivedVariable } from "src/utils/classes/DerivedVariable";
-import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
-import { BarPosition } from "src/options/options";
 import { TrayType } from "../enums/trayType";
 
 import Box from "types/widgets/box";
 
 import Gtk from "gi://Gtk?version=3.0";
 import Gdk from "gi://Gdk";
-import { toggleSystemTrayPopup } from "src/popups/SystemTrayPopupWindow";
 
 
 const systemTray = await Service.import("systemtray");
@@ -118,7 +116,8 @@ export function createTrayItem(item: TrayItem, iconSize: number | Binding<any, a
                 self.hook(item, () => {
                     self.icon = item.icon;
                 })
-            }
+            },
+            tooltipText: item.title
         }),
         onPrimaryClick: (_self, event) => {
             item.activate(event);

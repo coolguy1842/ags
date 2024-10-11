@@ -1,18 +1,21 @@
-import Gdk from "gi://Gdk";
-import GdkPixbuf from "gi://GdkPixbuf";
-import Pango from "gi://Pango";
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { globals } from "src/globals";
 import { DerivedVariable } from "src/utils/classes/DerivedVariable";
 import { PopupAnimations } from "src/utils/classes/PopupAnimation";
 import { PopupWindow } from "src/utils/classes/PopupWindow";
-import Mexp from "src/utils/math-expression-evaluator/index";
-import { sleep, splitToNChunks } from "src/utils/utils";
-import Gtk from "types/@girs/gtk-3.0/gtk-3.0";
+import { splitToNChunks } from "src/utils/utils";
 import { Binding } from "types/service";
+
+import Mexp from "src/utils/math-expression-evaluator/index";
+
 import Box from "types/widgets/box";
-import Button from "types/widgets/button";
 import Label from "types/widgets/label";
+
+import Gtk from "types/@girs/gtk-3.0/gtk-3.0";
+import Gdk from "gi://Gdk";
+import GdkPixbuf from "gi://GdkPixbuf";
+import Pango from "gi://Pango";
+
 
 interface AppLauncherItem {
     title: string;
@@ -59,10 +62,6 @@ function updateScroll(itemCursor: Variable<number>, itemScroll: Variable<number>
 
 
 function createAppLauncherItemWidget(index: number, appLauncherItem: AppLauncherItem, itemCursor: Variable<number>, iconSize: number | Binding<any, any, number>) {
-    const checkSelected = (self: Button<any, unknown>) => {
-        self.toggleClassName("app-launcher-item-selected", itemCursor.value == index);
-    }
-
     var child;
     if(appLauncherItem.child != undefined) {
         if(appLauncherItem.icon != undefined) {
@@ -89,16 +88,15 @@ function createAppLauncherItemWidget(index: number, appLauncherItem: AppLauncher
 
     return Widget.Button({
         className: "app-launcher-item",
+        class_name: itemCursor.bind().transform(x => `app-launcher-item${x == index ? " app-launcher-item-selected" : ""}`),
         child: child,
         onClicked: () => appLauncherItem.onClick(),
         setup: (self) => {
-            checkSelected(self);
-
             self.on("enter-notify-event", () => {
                 itemCursor.value = index;
             });
         }
-    }).hook(itemCursor, checkSelected);
+    })
 }
 
 const applications = await Service.import("applications");
@@ -277,6 +275,8 @@ export function createAppLauncherPopupWindow() {
                         self.hook(itemScroll, () => updateContainer());
                         self.hook(searchInput, () => updateContainer());
                         self.hook(containerWidth, () => updateContainer());
+
+                        self.hook(applications, () => updateContainer());
                         
                         self.hook(app_launcher.item.spacing, () => updateContainer());
                         self.hook(app_launcher.item.icon_size, () => updateContainer());
