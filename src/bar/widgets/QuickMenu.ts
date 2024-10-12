@@ -1,28 +1,27 @@
 import { BarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { StringValidator } from "src/options/validators/stringValidator";
-import { toggleAppLauncherPopupWindow } from "src/popups/AppLauncherPopupWindow";
 
 const defaultProps = {
-    launcher_icon: "󰣇 "
+    power_icon: "󰐥 "
 };
 
 type PropsType = typeof defaultProps;
-export class AppLauncherButton extends BarWidget<PropsType> {
-    constructor() { super("AppLauncherButton", defaultProps); }
+export class QuickMenu extends BarWidget<PropsType> {
+    constructor() { super("QuickMenu", defaultProps); }
     protected _validateProps(props: PropsType, fallback: PropsType): PropsType | undefined {
         return {
-            launcher_icon: StringValidator.create().validate(props.launcher_icon, fallback.launcher_icon) ?? fallback.launcher_icon
+            power_icon: StringValidator.create().validate(props.power_icon, fallback.power_icon) ?? fallback.power_icon
         };
     }
 
     create(monitor: TBarWidgetMonitor, props: PropsType) {
         return Widget.Box({
-            classNames: [ "bar-widget-app-launcher-button" ],
+            classNames: [ "bar-widget-quick-menu" ],
             child: Widget.Button({
                 classNames: [ "bar-button" ],
-                label: props.launcher_icon,
+                label: props.power_icon,
                 onClicked: () => {
-                    toggleAppLauncherPopupWindow(monitor.id);
+
                 }
             })
         });

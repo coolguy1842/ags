@@ -186,7 +186,12 @@ function updateItemContainer(
     ).map((items, index) => Widget.Box({
         spacing: app_launcher.item.spacing.value,
         children: items.map((item, index2) => {
-            return createAppLauncherItemWidget((index * app_launcher.columns.value) + index2 + scrollAmount, item, itemCursor, app_launcher.item.icon_size.value);
+            return createAppLauncherItemWidget(
+                (index * app_launcher.columns.value) + index2 + scrollAmount,
+                item,
+                itemCursor,
+                app_launcher.item.icon_size.value
+            );
         })
     }));
 }

@@ -23,7 +23,7 @@ import Gdk from "gi://Gdk";
 const systemTray = await Service.import("systemtray");
 const defaultProps = {
     background: "#242424A0",
-    popup_icon: "󰄝  ",
+    popup_icon: "󰄝 ",
     enable_favorites: true,
     
     spacing: 3,

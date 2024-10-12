@@ -3,7 +3,7 @@ import { StringValidator } from "src/options/validators/stringValidator";
 
 const defaultProps = {
     color_pick_command: `bash -c 'hyprpicker -r --format=hex -a'`,
-    icon: "󰈊  "
+    icon: "󰈊 "
 };
 
 type PropsType = typeof defaultProps;

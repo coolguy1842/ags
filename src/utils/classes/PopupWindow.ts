@@ -4,12 +4,12 @@ import { Window } from "resource:///com/github/Aylur/ags/widgets/window.js";
 import { Rectangle } from "types/@girs/gdk-3.0/gdk-3.0.cjs";
 import { WindowProps } from "types/widgets/window";
 import { PopupAnimation, TPosition } from "./PopupAnimation";
-import { sleep } from "../utils";
 import { IReloadable } from "src/interfaces/reloadable";
+import { EventHandler } from "../handlers/eventHandler";
+import { sleep } from "../utils";
 
 import Gtk from "gi://Gtk?version=3.0";
 import Widgets from "../widgets/widgets";
-import { EventHandler } from "../handlers/eventHandler";
 
 
 export type PopupPosition = TPosition | Variable<TPosition>;
@@ -202,14 +202,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
         var checkAllocation = true;
         this._activeListeners.push({
             variable: this._childWrapper,
-            listener: this._childWrapper.connect("draw", () => {
-                // make it not have to check the allocation all the time
-                if(!checkAllocation) return;
-                checkAllocation = false
-
-                this._wrapperAllocation.value = this._getWrapperAllocation();
-
-                sleep(100).then(() => checkAllocation = true);
+            listener: this._childWrapper.connect("draw", (self: EventBox<any, any>) => {
+                this._wrapperAllocation.value = self.get_allocation();
             })
         });
 
