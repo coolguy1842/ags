@@ -74,7 +74,7 @@ export class EventHandler<Events extends { [name: string]: TEventData<any> }> {
     }
 
     // shouldnt use this function unless cleaning up
-    unregisterAll() {
+    protected unregisterAll() {
         for(const id of Object.keys(this._registeredEvents)) {
             if(this._registeredEvents[id] == undefined) continue;
             delete this._registeredEvents[id];

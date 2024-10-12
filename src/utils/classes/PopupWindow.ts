@@ -42,7 +42,7 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
     private _lastShowStartPosition: PopupPosition;
 
 
-    private _activeListeners: { variable: any, listener: number, polling: boolean }[];
+    private _activeListeners: { variable: any, listener: number, polling?: boolean }[];
 
     
     private _positionListener?: number;
@@ -100,14 +100,10 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
     private _getWrapperAllocation() {
         const visible = this._window.is_visible();
         if(!visible) {
-            this._window.set_visible(true);
+            return this._wrapperAllocation?.value ?? { x: 0, y: 0, height: 0, width: 0 };
         }
 
         const allocation = this._childWrapper.get_allocation();
-        if(!visible) {
-            this._window.set_visible(false);
-        }
-
         return allocation;
     }
 
@@ -189,11 +185,8 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
         child.visible = true;
         this._child = child;
 
-        this._wrapperAllocation = new Variable(this._getWrapperAllocation(), { poll: [ 100, () => this._getWrapperAllocation() ] });
-        this._wrapperAllocation.stopPoll();
-
-        this._screenBounds = new Variable(this.getScreenBounds(), { poll: [ 1000, () => this.getScreenBounds() ] });
-        this._screenBounds.stopPoll();
+        this._wrapperAllocation = new Variable(this._getWrapperAllocation());
+        this._screenBounds = new Variable(this.getScreenBounds());
 
         this._position = new Variable({ x: 0, y: 0 });
         this._lastPosition = this._position.value;
@@ -206,23 +199,32 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
     load(): void {
         if(this._loaded) return;
 
-        this._wrapperAllocation.startPoll();
-        this._screenBounds.startPoll();
-
+        var checkAllocation = true;
         this._activeListeners.push({
             variable: this._childWrapper,
             listener: this._childWrapper.connect("draw", () => {
+                // make it not have to check the allocation all the time
+                if(!checkAllocation) return;
+                checkAllocation = false
+
                 this._wrapperAllocation.value = this._getWrapperAllocation();
-            }),
-            polling: false
-        })
+
+                sleep(100).then(() => checkAllocation = true);
+            })
+        });
 
         this._position = new Variable({ x: 0, y: 0 });
         this._lastPosition = this._position.value;
 
-        this._activeListeners.push({ variable: this._position,          listener: this._position         .connect("changed", () => this.updateChild()), polling: false });
-        this._activeListeners.push({ variable: this._wrapperAllocation, listener: this._wrapperAllocation.connect("changed", () => this.updateChild()), polling: true });
-        this._activeListeners.push({ variable: this._screenBounds,      listener: this._screenBounds     .connect("changed", () => this.updateChild()), polling: true });
+        this._activeListeners.push({ variable: this._position,          listener: this._position         .connect("changed", () => this.updateChild()) });
+        this._activeListeners.push({ variable: this._wrapperAllocation, listener: this._wrapperAllocation.connect("changed", () => this.updateChild()) });
+        this._activeListeners.push({ variable: this._screenBounds,      listener: this._screenBounds     .connect("changed", () => this.updateChild()) });
+
+        for(const listener of this._activeListeners) {
+            if(listener.polling && listener.variable.startPoll != undefined) {
+                listener.variable.startPoll();
+            }
+        }
 
         this.child = this._child;
 
@@ -238,11 +240,17 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
 
                 this._hiding = false;
                 this._window.set_visible(false);
+
+                this._shouldClose = true;
             },
             hideCancel: () => {
                 this.window.click_through = false;
                 this._hiding = false;
-            }
+
+                this._shouldClose = true;
+            },
+            showComplete: () => { this._shouldClose = true; },
+            showCancel: () => { this._shouldClose = true; }
         })
 
         this.on("animationComplete", (data) => {

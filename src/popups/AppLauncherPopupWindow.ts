@@ -93,6 +93,8 @@ function createAppLauncherItemWidget(index: number, appLauncherItem: AppLauncher
         onClicked: () => appLauncherItem.onClick(),
         setup: (self) => {
             self.on("enter-notify-event", () => {
+                // if(itemCursor.value == index) return;
+                // console.log(`hover ${appLauncherItem.title} ${itemCursor.value} ${index}`);
                 itemCursor.value = index;
             });
         }
@@ -161,17 +163,20 @@ function updateItemContainer(
         ];
     }
     else {
-        launcherItems.value = applications.list.filter(application => application.match(searchInput.value)).map(application => {
-            return {
-                title: `Launch ${application.name}`,
-                icon: Utils.lookUpIcon(application.icon_name ?? undefined, 32)?.load_icon(),
-                
-                onClick: () => {
-                    application.launch();
-                    globals.popupWindows?.AppLauncherPopupWindow.hide();
-                }
-            }
-        });
+        launcherItems.value = applications.list
+                                .filter(application => application.match(searchInput.value))
+                                .sort((a, b) => b.frequency - a.frequency)
+                                .map(application => {
+                                    return {
+                                        title: `Launch ${application.name}`,
+                                        icon: Utils.lookUpIcon(application.icon_name ?? undefined, 32)?.load_icon(),
+                                        
+                                        onClick: () => {
+                                            application.launch();
+                                            globals.popupWindows?.AppLauncherPopupWindow.hide();
+                                        }
+                                    }
+                                });
     }
 
     const scrollAmount = itemScroll.value * app_launcher.columns.value;
