@@ -1,3 +1,18 @@
+
+$bar-quick-menu-hover-box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+$bar-quick-menu-active-box-shadow: 0 0 0 1px rgba(255, 255, 255, 1.0) inset;
+
 .bar-widget-quick-menu {
-    background-color: blue;
+    @include bar-widget;
+
+    background-color: $bar-secondary-background-color;
+    
+    border-radius: $bar-widget-rounding;
+
+    &:hover {
+        box-shadow: $bar-quick-menu-hover-box-shadow;
+    }
+    &.bar-widget-quick-menu-active {
+        box-shadow: $bar-quick-menu-active-box-shadow;
+    }
 }

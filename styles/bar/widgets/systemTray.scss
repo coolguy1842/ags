@@ -1,5 +1,8 @@
 .bar-widget-system-tray {
     @include bar-widget;
+
+    background-color: $bar-secondary-background-color;
+    border-radius: $bar-widget-rounding;
 }
 
 .bar-widget-system-tray-item {

@@ -3,8 +3,8 @@ import { registerGObject } from "resource:///com/github/Aylur/ags/utils/gobject.
 import { globals } from "src/globals";
 import { PspecFlag, PspecType } from "types/utils/gobject";
 
-import GLib from "gi://GLib";
 import GObject from "gi://GObject";
+import Gtk from "gi://Gtk?version=3.0";
 
 export function arraysEqual<T>(a: T[], b: T[]) {
     if(a === b) return true;
@@ -31,17 +31,25 @@ export function getActiveFavorites(favorites: string[]) {
 }
 
 
-export function icon(name: string | null, fallback = "image-missing-symbolic") {
-    if (!name) {
-        return fallback ?? "";
-    }
+export function icon(name: string | null, fallback: string = "image-missing-symbolic", size: number = 16) {
+    const theme = globals.iconTheme ?? Gtk.IconTheme.get_default();
 
-    if (GLib.file_test(name, GLib.FileTest.EXISTS)) {
-        return name;
-    }
+    // if (GLib.file_test(name, GLib.FileTest.EXISTS)) {
+    //     return name;
+    // }
 
-    print(`no icon for "${name}", fallback: "${fallback}"`);
-    return fallback;
+    // print(`no icon for "${name}", fallback: "${fallback}"`);
+    // return fallback;
+
+    return theme.lookup_icon(
+        name,
+        size,
+        Gtk.IconLookupFlags.USE_BUILTIN,
+    ) ?? theme.lookup_icon(
+        theme.get_example_icon_name(),
+        size,
+        Gtk.IconLookupFlags.USE_BUILTIN | Gtk.IconLookupFlags.GENERIC_FALLBACK
+    )!;
 }
 
 export function sleep(time: number) {

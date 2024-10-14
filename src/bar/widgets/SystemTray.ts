@@ -1,7 +1,6 @@
 import { BarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { TrayItem } from "types/service/systemtray";
 
-import { HEXtoCSSRGBA } from "src/utils/colorUtils";
 import { Binding } from "types/service";
 import { globals } from "src/globals";
 import { getActiveFavorites, getTrayItemID } from "src/utils/utils";
@@ -22,12 +21,10 @@ import Gdk from "gi://Gdk";
 
 const systemTray = await Service.import("systemtray");
 const defaultProps = {
-    background: "#242424A0",
-    popup_icon: "󰄝 ",
+    popup_icon: " 󰄝 ",
     enable_favorites: true,
     
     spacing: 3,
-    border_radius: 8,
 
     icon_size: 14,
     
@@ -41,16 +38,14 @@ export class SystemTray extends BarWidget<PropsType> {
     protected _validateProps(props: PropsType, fallback: PropsType): PropsType | undefined {
         return {
             popup_icon: StringValidator.create().validate(props.popup_icon) ?? fallback.popup_icon,
-            background: HEXColorValidator.create().validate(props.background) ?? fallback.background,
             
             enable_favorites: BooleanValidator.create().validate(props.enable_favorites) ?? fallback.enable_favorites,
 
             icon_size: NumberValidator.create({ min: 4, max: 60 }).validate(props.icon_size) ?? fallback.icon_size,
-            border_radius: NumberValidator.create({ min: 0, max: 24 }).validate(props.border_radius) ?? fallback.border_radius,
             spacing: NumberValidator.create({ min: 0, max: 20 }).validate(props.spacing) ?? fallback.spacing,
             
-            horizontal_padding: NumberValidator.create({ min: 0, max: 32 }).validate(props.horizontal_padding) ?? fallback.horizontal_padding,
-            vertical_padding: NumberValidator.create({ min: 0, max: 12 }).validate(props.vertical_padding) ?? fallback.vertical_padding
+            horizontal_padding: NumberValidator.create({ min: 0 }).validate(props.horizontal_padding) ?? fallback.horizontal_padding,
+            vertical_padding: NumberValidator.create({ min: 0 }).validate(props.vertical_padding) ?? fallback.vertical_padding
         };
     }
 
@@ -94,12 +89,7 @@ export class SystemTray extends BarWidget<PropsType> {
         return Widget.Box({
             className: "bar-widget-system-tray",
             spacing: props.spacing + 2,
-            css: `
-                background-color: ${HEXtoCSSRGBA(props.background)};
-
-                padding: ${props.vertical_padding}px ${props.horizontal_padding}px;
-                border-radius: ${props.border_radius}px;
-            `,
+            css: `padding: ${props.vertical_padding}px ${props.horizontal_padding}px;`,
             setup: (self) => updateChildren(self)
         }).hook(systemTray, (self) => updateChildren(self))
             .hook(system_tray!.favorites, (self) => updateChildren(self));
@@ -126,7 +116,7 @@ export function createTrayItem(item: TrayItem, iconSize: number | Binding<any, a
             item.menu?.popup_at_pointer(event);
         },
         onMiddleClick: (_self, event) => onMiddleClick(item, event)
-    })
+    });
 }
 
 export function updateTrayItems(box: Box<Gtk.Widget, unknown>, iconSize: number, trayType: TrayType) {

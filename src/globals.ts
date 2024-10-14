@@ -8,6 +8,7 @@ import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { PopupWindow } from "./utils/classes/PopupWindow";
 import { createSystemTrayPopupWindow } from "./popups/SystemTrayPopupWindow";
 import { createAppLauncherPopupWindow, toggleAppLauncherPopupWindow } from "./popups/AppLauncherPopupWindow";
+import { createQuickMenuPopupWindow } from "./popups/QuickMenuPopupWindow";
 import { getCurrentMonitor } from "./utils/utils";
 
 import GObject from "types/@girs/gobject-2.0/gobject-2.0";
@@ -15,6 +16,7 @@ import GObject from "types/@girs/gobject-2.0/gobject-2.0";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import Gdk from "gi://Gdk";
+import Gtk from "gi://Gtk?version=3.0";
 
 const TEMP_DIR_S = `/tmp/coolguy/ags`;
 
@@ -56,9 +58,12 @@ export class Globals implements IReloadable {
     private _communicationSocketService?: Gio.SocketService;
     private _communicationSocket?: Gio.Socket;
 
+    private _iconTheme?: Gtk.IconTheme;
+
     private _popupWindows?: {
         SystemTrayPopupWindow: ReturnType<typeof createSystemTrayPopupWindow>,
-        AppLauncherPopupWindow: ReturnType<typeof createAppLauncherPopupWindow>
+        AppLauncherPopupWindow: ReturnType<typeof createAppLauncherPopupWindow>,
+        QuickMenuPopupWindow: ReturnType<typeof createQuickMenuPopupWindow>
     };
 
     private _close_socket(path: string) {
@@ -127,7 +132,8 @@ export class Globals implements IReloadable {
 
         this._popupWindows = {
             SystemTrayPopupWindow: createSystemTrayPopupWindow(),
-            AppLauncherPopupWindow: createAppLauncherPopupWindow()
+            AppLauncherPopupWindow: createAppLauncherPopupWindow(),
+            QuickMenuPopupWindow: createQuickMenuPopupWindow()
         };
 
         for(const window of Object.values(this._popupWindows) as PopupWindow<any, unknown>[]) {
@@ -144,8 +150,18 @@ export class Globals implements IReloadable {
         this._communicationSocketService.add_address(address, Gio.SocketType.STREAM, Gio.SocketProtocol.DEFAULT, null);
 
         this._communicationSocketService.connect("incoming", this._on_socket_message);
-
         this._communicationSocketService.start();
+
+
+        // load icon path
+        const iconPath = `${App.configDir}/icons`;
+        const defaultTheme = Gtk.IconTheme.get_default();
+
+        this._iconTheme = Gtk.IconTheme.new();
+        
+        this._iconTheme.add_resource_path(iconPath);
+        this._iconTheme.set_search_path([ ...defaultTheme.get_search_path(), `${iconPath}/symbolic/emblems` ]);
+
         this._loaded = true;
     }
 
@@ -188,6 +204,8 @@ export class Globals implements IReloadable {
     get popupWindows() { return this._popupWindows; }
 
     get communicationSocket() { return this._communicationSocket; }
+
+    get iconTheme() { return this._iconTheme; }
 };
 
 export const globals = new Globals();

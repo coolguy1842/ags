@@ -1,71 +1,46 @@
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
-import { TrayType } from "src/bar/enums/trayType";
-import { updateTrayItems } from "src/bar/widgets/SystemTray";
 import { globals } from "src/globals";
 import { BarPosition } from "src/options/options";
 import { DerivedVariable } from "src/utils/classes/DerivedVariable";
 import { PopupAnimations } from "src/utils/classes/PopupAnimation";
 import { PopupWindow } from "src/utils/classes/PopupWindow";
-import Button from "types/widgets/button";
+import Box from "types/widgets/box";
 
-const systemTray = await Service.import("systemtray");
-export function createSystemTrayPopupWindow() {
+import Button from "types/widgets/button";
+import EventBox from "types/widgets/eventbox";
+import Label from "types/widgets/label";
+
+export function createQuickMenuPopupWindow() {
     return new PopupWindow(
         {
-            name: "system-tray-popup-window",
+            name: "quick-menu-popup-window",
             keymode: "on-demand",
             exclusivity: "exclusive"
         },
         Widget.Box({
-            className: "system-tray",
-            spacing: globals.optionsHandler?.options.system_tray.spacing.bind(),
-            setup: (self) => {
-                const system_tray = globals.optionsHandler?.options.system_tray;
-                if(system_tray == undefined) return;
-
-                const type = TrayType.NON_FAVORITES;
-
-                const updateTray = (self) => {
-                    updateTrayItems(self, system_tray.icon_size.value, type);
-
-                    if(self.children.length <= 0) {
-                        const window = globals.popupWindows?.SystemTrayPopupWindow;
-                        if(!window) return;
-
-                        const animateOptions = window.animationOptions;
-                        window.animationOptions = undefined;
-
-                        window.onceMulti({
-                            "hideCancel": () => window.animationOptions = animateOptions,
-                            "hideComplete": () => window.animationOptions = animateOptions
-                        })
-
-                        globals.popupWindows?.SystemTrayPopupWindow.hide();
-                    }
-                }
-
-                updateTray(self);
-                self.hook(systemTray, updateTray);
-                self.hook(system_tray.favorites, updateTray);
-            }
+            vertical: true,
+            css: "background-color: black;",
+            children: [
+                Widget.Label("test"),
+                Widget.Label("test2")
+            ]
         }),
         { animation: PopupAnimations.Ease, animateTransition: true, duration: 0.4, refreshRate: 165 }
     );
 }
 
-export function toggleSystemTrayPopup(monitor: number, widget: Button<any, unknown>) {
-    const trayPopup = globals.popupWindows?.SystemTrayPopupWindow;
+export function toggleQuickMenuPopup(monitor: number, widget: Button<any, any>) {
+    const quickMenuPopup = globals.popupWindows?.QuickMenuPopupWindow;
     const barPosition = globals.optionsHandler?.options.bar.position;
-    if(!trayPopup || !barPosition) return;
-    if(trayPopup.window.is_visible() && trayPopup.window.monitor == monitor) {
-        trayPopup.hide();
+    if(!quickMenuPopup || !barPosition) return;
+    if(quickMenuPopup.window.is_visible() && quickMenuPopup.window.monitor == monitor) {
+        quickMenuPopup.hide();
 
         return;
     }
 
-
     for(const popup of Object.values(globals.popupWindows ?? {})) {
-        if(popup == trayPopup) continue;
+        if(popup == quickMenuPopup) continue;
 
         popup.hide();
     }
@@ -119,8 +94,8 @@ export function toggleSystemTrayPopup(monitor: number, widget: Button<any, unkno
             position,
             barHeight,
             barPosition,
-            trayPopup.screenBounds,
-            trayPopup.childAllocation
+            quickMenuPopup.screenBounds,
+            quickMenuPopup.childAllocation
         ],
         (position, barHeight, barPosition, screenBounds, childAllocation) => {
             const offset = 10;
@@ -148,8 +123,8 @@ export function toggleSystemTrayPopup(monitor: number, widget: Button<any, unkno
             endDerived,
             barHeight,
             barPosition,
-            trayPopup.screenBounds,
-            trayPopup.childAllocation
+            quickMenuPopup.screenBounds,
+            quickMenuPopup.childAllocation
         ],
         // i have no clue why i need child allocation, when its not there the start position is offset, may be that deriving it here updates it?
         (end, barHeight, barPosition, screenBounds, _childAllocation) => {
@@ -171,7 +146,11 @@ export function toggleSystemTrayPopup(monitor: number, widget: Button<any, unkno
         }
     );
 
+    widget.toggleClassName("bar-widget-quick-menu-active", true);
+
     const onStop = () => {
+        widget.toggleClassName("bar-widget-quick-menu-active", false);
+
         position.stopPoll();
         barHeight.stopPoll();
 
@@ -182,10 +161,10 @@ export function toggleSystemTrayPopup(monitor: number, widget: Button<any, unkno
         barHeight.dispose();
     };
 
-    trayPopup.onceMulti({
+    quickMenuPopup.onceMulti({
         "hideComplete": onStop,
         "cleanup": onStop
     });
 
-    trayPopup.show(monitor, startDerived, endDerived);
+    quickMenuPopup.show(monitor, startDerived, endDerived);
 }

@@ -24,11 +24,15 @@ export function generateOptions() {
         bar: {
             position: option(BarPosition.BOTTOM, ValueInEnumValidator.create(BarPosition)),
             height: option(32, NumberValidator.create({ min: 1 })),
+
+            widget_rounding: option(12, NumberValidator.create({ min: 0, max: 50 })),
     
             outer_padding: option(8, NumberValidator.create({ min: 0 })),
             widget_spacing: option(6, NumberValidator.create({ min: 0 })),
     
             background: option("#000000BF", HEXColorValidator.create()),
+            secondary_background: option("#BDA4A419", HEXColorValidator.create()),
+            
             icon_color: option("#5D93B0FF", HEXColorValidator.create()),
 
             layout: {
@@ -40,7 +44,10 @@ export function generateOptions() {
                     { name: "Clock" }
                 ] as TBarLayout, BarLayoutValidator.create()),
                 right: option([
-                    { name: "SystemTray" }
+                    { name: "ColorPickerButton" },
+                    { name: "ScreenshotButton" },
+                    { name: "SystemTray" },
+                    { name: "QuickMenu" }
                 ] as TBarLayout, BarLayoutValidator.create())
             }
         },

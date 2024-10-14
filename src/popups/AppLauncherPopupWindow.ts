@@ -197,7 +197,7 @@ function updateItemContainer(
 }
 
 export function createAppLauncherPopupWindow() {
-    const { app_launcher } = globals.optionsHandler!.options;
+    const { app_launcher, icons } = globals.optionsHandler!.options;
     const containerWidth = new DerivedVariable(
         [app_launcher.item.icon_size, app_launcher.spacing, app_launcher.columns, app_launcher.item.padding],
         (icon_size, spacing, cols, padding) => {
@@ -230,6 +230,7 @@ export function createAppLauncherPopupWindow() {
             spacing: app_launcher.spacing.bind(),
             children: [
                 Widget.Entry({
+                    primaryIconName: icons.app_launcher.search.bind(),
                     className: "app-launcher-input",
                     onChange: (self) => searchInput.value = self.text ?? "",
                     setup: (self) => {
@@ -262,7 +263,7 @@ export function createAppLauncherPopupWindow() {
                 }),
                 Widget.Label({
                     className: "app-launcher-title",
-                    ellipsize: Pango.EllipsizeMode.END,
+                    ellipsize: Pango.EllipsizeMode.MIDDLE,
                     setup: (self) => {
                         updateTitle(self);
 
@@ -353,6 +354,14 @@ export function toggleAppLauncherPopupWindow(monitor: number) {
         return;
     }
 
+
+    for(const popup of Object.values(globals.popupWindows ?? {})) {
+        if(popup == appLauncherPopup) continue;
+
+        popup.hide();
+    }
+
+    applications.reload();
     const endDerived = new DerivedVariable(
         [
             appLauncherPopup.screenBounds,

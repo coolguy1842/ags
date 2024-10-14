@@ -2,6 +2,9 @@ import { globals } from "./globals";
 import { Bar } from "./bar/bar";
 import { IReloadable } from "./interfaces/reloadable";
 
+import Gtk from "gi://Gtk?version=3.0";
+import Gtk30 from "gi://Gtk?version=3.0";
+
 const hyprland = await Service.import("hyprland");
 
 export class Main implements IReloadable {
@@ -44,7 +47,7 @@ export class Main implements IReloadable {
     load(): void {
         globals.load();
 
-        hyprland.connect("monitor-added", (service, monitorName: string) => {
+        hyprland.connect("monitor-added", (_service, monitorName: string) => {
             const monitor = hyprland.monitors.find(x => x.name == monitorName);
             
             if(monitor) {
@@ -54,7 +57,7 @@ export class Main implements IReloadable {
             }
         });
     
-        hyprland.connect("monitor-removed", (service, monitorName: string) => {
+        hyprland.connect("monitor-removed", (_service, monitorName: string) => {
             const window = App.windows.find(x => x.name?.endsWith(monitorName));
             if(window) {
                 console.log(`${monitorName} removed`);

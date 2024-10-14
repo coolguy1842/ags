@@ -1,3 +1,4 @@
+import Gtk from "gi://Gtk?version=3.0";
 import { OptionValidator } from "src/utils/handlers/optionsHandler";
 
 type TOptions = {};

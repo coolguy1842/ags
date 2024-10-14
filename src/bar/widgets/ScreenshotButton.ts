@@ -3,7 +3,7 @@ import { StringValidator } from "src/options/validators/stringValidator";
 
 const defaultProps = {
     screenshot_command: `bash -c 'grim -g "$(slurp)" - | wl-copy'`,
-    icon: "󰄀 "
+    icon: " 󰄀 "
 };
 
 type PropsType = typeof defaultProps;

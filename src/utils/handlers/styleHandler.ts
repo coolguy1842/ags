@@ -106,6 +106,8 @@ export class StyleHandler implements IReloadable {
 
         return [
             genVariable([ bar.background ], () => $("bar-background-color", HEXtoSCSSRGBA(bar.background.value))),
+            genVariable([ bar.secondary_background ], () => $("bar-secondary-background-color", HEXtoSCSSRGBA(bar.secondary_background.value))),
+            genVariable([ bar.widget_rounding ], () => $("bar-widget-rounding", `${bar.widget_rounding.value}px`)),
             genVariable([ bar.icon_color ], () => $("bar-icon-color", HEXtoSCSSRGBA(bar.icon_color.value))),
             genVariable([ bar.outer_padding ], () => $("bar-outer-padding", `${bar.outer_padding.value}px`)),
 
