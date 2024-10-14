@@ -21,7 +21,6 @@ export function generateOptions() {
             },
             bar: {
                 app_launcher: option("emblem-archlinux-symbolic", IconNameValidator.create()),
-                color_picker: option("emblem-eyedropper-symbolic", IconNameValidator.create()),
                 workspace_dot: option("emblem-dot-symbolic", IconNameValidator.create()),
                 workspace_dot_filled: option("emblem-dot-filled-symbolic", IconNameValidator.create())
             }
@@ -50,8 +49,30 @@ export function generateOptions() {
                     { name: "Clock" }
                 ] as TBarLayout, BarLayoutValidator.create()),
                 right: option([
-                    { name: "ColorPickerButton" },
-                    { name: "ScreenshotButton" },
+                    {
+                        name: "CommandButton",
+                        props: {
+                            display: {
+                                icon: {
+                                    name: "emblem-eyedropper-symbolic",
+                                    size: 14
+                                }
+                            },
+                            command: "bash -c 'hyprpicker -r --format=hex -a'"
+                        }
+                    },
+                    {
+                        name: "CommandButton",
+                        props: {
+                            display: {
+                                icon: {
+                                    name: "emblem-camera-symbolic",
+                                    size: 14
+                                }
+                            },
+                            command: "bash -c 'grim -g \"$(slurp)\" - | wl-copy'"
+                        }
+                    },
                     { name: "SystemTray" },
                     { name: "QuickMenu" }
                 ] as TBarLayout, BarLayoutValidator.create())

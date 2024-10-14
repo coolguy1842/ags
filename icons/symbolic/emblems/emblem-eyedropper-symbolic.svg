@@ -1,1 +1,16 @@
-<svg width="138.3152" height="141.24617" viewBox="0 0 138.3152 141.24617" version="1.1" xmlns="http://www.w3.org/2000/svg"><g style="display:inline" transform="translate(-35.90065,-77.729436)"><path clip-path="none" style="opacity:1;fill:#000000;stroke-width:0.264583" d="m 35.900651,216.69375 c 2.38125,2.26549 4.8496,2.28184 4.8496,2.28184 h 23.351003 c 0,0 3.334422,-0.51244 3.747834,-1.40541 0.413411,-0.89297 68.378252,-68.37825 68.378252,-68.37825 l 6.64766,6.64765 12.56771,-12.56771 -5.49011,-5.4901 19.52956,-19.52956 c 0,0 10.96367,-12.08815 -0.47956,-27.037107 -11.44323,-14.948958 -24.27552,-16.536458 -35.38802,-9.326562 l -19.25663,19.794149 -5.22679,-5.226788 -13.037743,13.037738 6.197313,6.19732 -66.378475,66.37847 z m 79.457679,-88.23854 8.10287,8.10286 -64.095315,64.09531 h -8.49974 v -8.36744 z"/></g></svg>
+<svg width="138.3152" height="141.24617" viewBox="0 0 138.3152 141.24617" xmlns="http://www.w3.org/2000/svg">
+    <g style="display:inline" transform="translate(-35.90065,-77.729436)" fill="#474747">
+        <path
+            clip-path="none"
+            d="
+                m 35.900651,216.69375 c 2.38125,2.26549 4.8496,2.28184 4.8496,2.28184 h 23.351003 c 0,0 3.334422,-0.51244 3.747834,-1.40541 0.413411,-0.89297 68.378252,-68.37825 68.378252,-68.37825 l 6.64766,6.64765 12.56771,-12.56771 -5.49011,-5.4901 19.52956,-19.52956 c 0,0 10.96367,-12.08815 -0.47956,-27.037107 -11.44323,-14.948958 -24.27552,-16.536458 -35.38802,-9.326562 l -19.25663,19.794149 -5.22679,-5.226788 -13.037743,13.037738 6.197313,6.19732 -66.378475,66.37847 z
+                m 79.457679,-88.23854 8.10287,8.10286 -64.095315,64.09531 h -8.49974 v -8.36744 z
+            "
+            style="line-height:normal;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000;text-transform:none;text-orientation:mixed;shape-padding:0;isolation:auto;mix-blend-mode:normal;marker:none"
+            color="#bebebe"
+            font-weight="400"
+            font-family="sans-serif"
+            overflow="visible"
+        />
+    </g>
+</svg>

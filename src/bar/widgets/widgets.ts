@@ -1,8 +1,7 @@
 import { AppLauncherButton } from "./AppLauncherButton";
 import { Clock } from "./Clock";
-import { ColorPickerButton } from "./ColorPickerButton";
+import { CommandButton } from "./CommandButton";
 import { QuickMenu } from "./QuickMenu";
-import { ScreenshotButton } from "./ScreenshotButton";
 import { SystemTray } from "./SystemTray";
 import { WorkspaceSelector } from "./WorkspaceSelector";
 
@@ -11,7 +10,6 @@ export const BarWidgets = {
     Clock: new Clock(),
     SystemTray: new SystemTray(),
     AppLauncherButton: new AppLauncherButton(),
-    ColorPickerButton: new ColorPickerButton(),
-    ScreenshotButton: new ScreenshotButton(),
+    CommandButton: new CommandButton(),
     QuickMenu: new QuickMenu()
 };

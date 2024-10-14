@@ -32,7 +32,7 @@ function initTemp() {
 
 // this is very dirty
 let PathMonitorImport = null;
-let pathMonitor = null;
+let pathMonitors = [];
 async function initHotReloader() {
     try {
         const pathMonitorPath = `${App.configDir}/src/utils/classes/PathMonitor.ts`;
@@ -49,19 +49,26 @@ async function initHotReloader() {
         
         const pathMonitorClass = PathMonitorImport["PathMonitor"];
         const MonitorTypeFlags = PathMonitorImport["MonitorTypeFlags"];
-    
-        pathMonitor = new pathMonitorClass(`${App.configDir}/src`, MonitorTypeFlags["FILE"] | MonitorTypeFlags["RECURSIVE"], (file, fileType, event) => {
+
+        const onChange = (file, fileType, event) => {
             if(event == Gio.FileMonitorEvent.CHANGED) return;
-    
+        
             if(getShouldHotReload()) {
                 console.log("")
                 console.log(`reloading`);
     
                 reloadAGS();
             }
-        });
+        } 
+
+        pathMonitors = [
+            new pathMonitorClass(`${App.configDir}/src`, MonitorTypeFlags["FILE"] | MonitorTypeFlags["RECURSIVE"], onChange),
+            new pathMonitorClass(`${App.configDir}/icons`, MonitorTypeFlags["FILE"] | MonitorTypeFlags["RECURSIVE"], onChange)
+        ];
     
-        pathMonitor.load();
+        for(const pathMonitor of pathMonitors) {
+            pathMonitor.load();
+        }
     }
     catch(err) {
         console.log(err);
