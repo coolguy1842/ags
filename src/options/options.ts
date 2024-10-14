@@ -18,6 +18,12 @@ export function generateOptions() {
         icons: {
             app_launcher: {
                 search: option("system-search-symbolic", IconNameValidator.create())
+            },
+            bar: {
+                app_launcher: option("emblem-archlinux-symbolic", IconNameValidator.create()),
+                color_picker: option("emblem-eyedropper-symbolic", IconNameValidator.create()),
+                workspace_dot: option("emblem-dot-symbolic", IconNameValidator.create()),
+                workspace_dot_filled: option("emblem-dot-filled-symbolic", IconNameValidator.create())
             }
         },
     
