@@ -24,11 +24,6 @@ const defaultProps = {
 
 type PropsType = typeof defaultProps;
 export class WorkspaceSelector extends BarWidget<PropsType> {
-    private loadPixbuf(name: string) {
-        const { bar } = globals.optionsHandler!.options;
-        return icon(name).load_symbolic(HEXtoGdkRGBA(bar.icon_color.value), null, null, null)[0];
-    }
-
     constructor() { super("WorkspaceSelector", defaultProps); }
     protected _validateProps(props: PropsType, fallback: PropsType): PropsType | undefined {
         return {

@@ -1,0 +1,20 @@
+<svg width="47.302612" height="40.258614" viewBox="0 0 47.302612 40.258614" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(-86.424904,-125.84503)" fill="#474747">
+        <path
+            d="m 86.424909,162.89428 v -13.42524 h 4.60025 v 12.01609 h 38.083271 v -12.01609 h 4.61909 v 13.41582 c 0,0 -0.92597,3.52084 -4.26377,3.19783 H 89.95728 c 0,0 -2.727532,-0.0135 -3.532371,-3.18841 z"
+            style="line-height:normal;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000;text-transform:none;text-orientation:mixed;shape-padding:0;isolation:auto;mix-blend-mode:normal;marker:none"
+            color="#bebebe"
+            font-weight="400"
+            font-family="sans-serif"
+            overflow="visible"
+        />
+        <path
+            d="m 107.57872,156.53351 v -21.51575 h -0.35022 l -6.72439,6.72439 h -0.671454 l -2.844466,-2.84447 v -0.32496 l 12.7277,-12.7277 h 0.69007 l 12.70568,12.70568 v 0.36657 l -2.832,2.83199 h -0.67857 l -6.74571,-6.74571 h -0.29598 v 21.56041 z"
+            style="line-height:normal;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000;text-transform:none;text-orientation:mixed;shape-padding:0;isolation:auto;mix-blend-mode:normal;marker:none"
+            color="#bebebe"
+            font-weight="400"
+            font-family="sans-serif"
+            overflow="visible"
+        />
+    </g>
+</svg>

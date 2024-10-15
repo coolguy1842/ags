@@ -1,5 +1,7 @@
 import Gtk from "gi://Gtk?version=3.0";
-import { copyObject } from "src/utils/utils";
+import { globals } from "src/globals";
+import { HEXtoGdkRGBA } from "src/utils/colorUtils";
+import { copyObject, icon } from "src/utils/utils";
 
 export type TBarWidgetMonitor = {
     // plugname e.g DP-1
@@ -9,6 +11,12 @@ export type TBarWidgetMonitor = {
 };
 
 export abstract class BarWidget<TProps extends object> {
+    protected loadPixbuf(name: string) {
+        const { bar } = globals.optionsHandler!.options;
+        return icon(name).load_symbolic(HEXtoGdkRGBA(bar.icon_color.value), null, null, null)[0];
+    }
+
+
     protected _validateProps(props: TProps, fallback: TProps): TProps | undefined {
         return props;
     }

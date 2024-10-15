@@ -21,7 +21,6 @@ import Gdk from "gi://Gdk";
 
 const systemTray = await Service.import("systemtray");
 const defaultProps = {
-    popup_icon: " 󰄝 ",
     enable_favorites: true,
     
     spacing: 3,
@@ -37,8 +36,6 @@ export class SystemTray extends BarWidget<PropsType> {
     constructor() { super("SystemTray", defaultProps); }
     protected _validateProps(props: PropsType, fallback: PropsType): PropsType | undefined {
         return {
-            popup_icon: StringValidator.create().validate(props.popup_icon) ?? fallback.popup_icon,
-            
             enable_favorites: BooleanValidator.create().validate(props.enable_favorites) ?? fallback.enable_favorites,
 
             icon_size: NumberValidator.create({ min: 4, max: 60 }).validate(props.icon_size) ?? fallback.icon_size,
@@ -50,25 +47,54 @@ export class SystemTray extends BarWidget<PropsType> {
     }
 
     create(monitor: TBarWidgetMonitor, props: PropsType) {
-        const system_tray = globals.optionsHandler?.options.system_tray;
+        const { system_tray, bar, icons } = globals.optionsHandler!.options;
 
+        var shouldHaveToggle = true;
         const toggleButton = Widget.Button({
             classNames: [ "bar-widget-system-tray-popup-button", "bar-button" ],
-            label: props.popup_icon,
+            child: Widget.Icon({
+                visible: shouldHaveToggle,
+                setup: (self) => {
+                    const updateIcon = () => {
+                        self.icon = this.loadPixbuf(icons.bar.tray_popup.value);
+                    }
+
+                    updateIcon();
+                    self.hook(bar.icon_color, updateIcon);
+                    self.hook(icons.bar.tray_popup, updateIcon);
+                }
+            }),
             onClicked: (self) => {
                 toggleSystemTrayPopup(monitor.id, self);
             }
         });
 
+        var connectNum: undefined | number = undefined;
         const updateChildren = (self: Box<Gtk.Widget, unknown>) => {
-            var shouldHaveToggle = props.enable_favorites && getActiveFavorites(system_tray?.favorites.value ?? []).length != systemTray.items.length;
-            // hack to hide it
-            toggleButton.label = shouldHaveToggle ? props.popup_icon : "";
+            const activeFavs = getActiveFavorites(system_tray.favorites.value);
+            shouldHaveToggle = props.enable_favorites && activeFavs.length != systemTray.items.length;
+            var shouldHaveBox = systemTray.items.length - activeFavs.length != systemTray.items.length;
+            
+            toggleButton.visible = shouldHaveToggle;
+            if(connectNum) {
+                toggleButton.disconnect(connectNum);
+                connectNum = undefined;
+            }
+
+            connectNum = toggleButton.connect("notify::visible", () => {
+                toggleButton.visible = shouldHaveToggle;
+            });
 
             self.children = [
                 Widget.Box({
+                    visible: shouldHaveBox,
                     spacing: props.spacing,
                     setup: (self) => {
+                        self.connect("notify::visible", () => {
+                            if(self.visible == shouldHaveBox) return;
+                            self.visible = shouldHaveBox;
+                        });
+
                         var type = TrayType.ALL;
                         if(props.enable_favorites) {
                             type = TrayType.FAVORITES;
