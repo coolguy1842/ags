@@ -119,6 +119,13 @@ export function generateOptions() {
 
             rows: option(4, NumberValidator.create({ min: 1 })),
             columns: option(5, NumberValidator.create({ min: 1 }))
+        },
+
+        quick_menu: {
+            background: option("#00000000", HEXColorValidator.create()),
+
+            padding: option(8, NumberValidator.create({ min: 0 })),
+            border_radius: option(12, NumberValidator.create({ min: 0, max: 50 })),
         }
     };
 }

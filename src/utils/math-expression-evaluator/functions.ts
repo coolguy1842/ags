@@ -127,7 +127,23 @@ export const createMathFunctions = (mexp: Mexp) => ({
 	toRadian: function (x: number) {
 		return (x * Math.PI) / 180
 	},
+	not: function (x: number) {
+		// 16 bit limit
+		return (~x >>> 0) & 0xFFFF;
+	},
 	and: function (a: number, b: number) {
 		return a & b
+	},
+	or: function (a: number, b: number) {
+		return a | b
+	},
+	xor: function (a: number, b: number) {
+		return a ^ b
+	},
+	lshift: function (a: number, b: number) {
+		return a << b
+	},
+	rshift: function (a: number, b: number) {
+		return a >> b
 	},
 })

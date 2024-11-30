@@ -60,6 +60,7 @@ export const createTokens = (mexp: Mexp) => {
 		{ token: 'tanh', show: 'tanh', type: 0, value: mexp.math.tanh },
 		{ token: 'atanh', show: 'atanh', type: 0, value: mexp.math.atanh },
 		{ token: 'Mod', show: ' Mod ', type: 2, value: mexp.math.mod },
+		{ token: '%', show: '%', type: 2, value: mexp.math.mod },
 		{ token: '1', show: '1', type: 1, value: '1' },
 		{ token: '2', show: '2', type: 1, value: '2' },
 		{ token: '3', show: '3', type: 1, value: '3' },
@@ -78,6 +79,11 @@ export const createTokens = (mexp: Mexp) => {
 		{ token: 'Pi', show: '&Pi;', type: 12, value: mexp.math.Pi },
 		{ token: 'Pow', show: 'Pow', type: 8, value: Math.pow, numberOfArguments: 2 },
 		{ token: '&', show: '&', type: 9, value: mexp.math.and },
+		{ token: '|', show: '|', type: 9, value: mexp.math.or },
+		{ token: 'xor', show: 'xor', type: 9, value: mexp.math.xor },
+		{ token: '<<', show: '<<', type: 9, value: mexp.math.lshift },
+		{ token: '>>', show: '>>', type: 9, value: mexp.math.rshift },
+		{ token: '~', show: '~', type: 0, value: mexp.math.not },
 	]
 	return rawTokens.map((rawToken) => ({
 		...rawToken,
