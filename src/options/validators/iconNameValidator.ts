@@ -16,6 +16,10 @@ export class IconNameValidator<T extends string> implements OptionValidator<T> {
 
     validate(value: T, _previousValue?: T) {
         if(typeof value != "string") return undefined;
-        return icon(value) ? value : undefined;
+        else if(value == undefined) return undefined;
+
+        // console.log("val: " + value);
+        // return icon(value) ? value : undefined;
+        return value;
     }
 };

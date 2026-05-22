@@ -11,7 +11,7 @@ import Mexp from "src/utils/math-expression-evaluator/index";
 import Box from "types/widgets/box";
 import Label from "types/widgets/label";
 
-import Gtk from "types/@girs/gtk-3.0/gtk-3.0";
+import Gtk from "@girs/gtk-3.0/gtk-3.0";
 import Gdk from "gi://Gdk";
 import GdkPixbuf from "gi://GdkPixbuf";
 import Pango from "gi://Pango";

@@ -4,7 +4,7 @@ import { Options } from "types/variable";
 
 import { Variable} from "resource:///com/github/Aylur/ags/variable.js";
 
-import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
+import Gio from "gi://Gio?version=2.0";
 import { globals } from "src/globals";
 import { registerObject } from "../utils";
 
@@ -129,7 +129,7 @@ export class OptionsHandler<OptionsType extends TOptions> extends Service implem
 
         this._defaultOptionsGenerator = defaultOptionsGenerator;
         this._pathMonitor = new PathMonitor(globals.paths.OPTIONS_PATH, MonitorTypeFlags.FILE, (file, fileType, event) => {
-            if(event == FileMonitorEvent.CHANGED) return;
+            if(event == Gio.FileMonitorEvent.CHANGED) return;
             
             if(this._ignoreChange) {
                 this._ignoreChange = false;

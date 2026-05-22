@@ -1,7 +1,7 @@
 import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
 import { EventBox } from "resource:///com/github/Aylur/ags/widgets/eventbox.js";
 import { Window } from "resource:///com/github/Aylur/ags/widgets/window.js";
-import { Rectangle } from "types/@girs/gdk-3.0/gdk-3.0.cjs";
+import { Rectangle } from "@girs/gdk-3.0/gdk-3.0.cjs";
 import { WindowProps } from "types/widgets/window";
 import { PopupAnimation, TPosition } from "./PopupAnimation";
 import { IReloadable } from "src/interfaces/reloadable";

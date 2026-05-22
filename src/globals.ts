@@ -11,16 +11,17 @@ import { createAppLauncherPopupWindow, toggleAppLauncherPopupWindow } from "./po
 import { createQuickMenuPopupWindow } from "./popups/QuickMenuPopupWindow";
 import { getCurrentMonitor } from "./utils/utils";
 
-import GObject from "types/@girs/gobject-2.0/gobject-2.0";
 
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import Gdk from "gi://Gdk";
 import Gtk from "gi://Gtk?version=3.0";
+import GObject from "@girs/gobject-2.0/gobject-2.0";
 
 const TEMP_DIR_S = `/tmp/coolguy/ags`;
 
 const STYLES_DIR_S = `${App.configDir}/styles`;
+const OPTIONS_DIR_S = `${App.configDir.split("/").slice(0, -1).join("/")}/agsoptions`;
 const OUT_CSS_DIR_S = `${TEMP_DIR_S}/css`;
 
 export class Globals implements IReloadable {
@@ -37,7 +38,7 @@ export class Globals implements IReloadable {
     private _monitorLookups?: { [name: string]: number };
     private _paths = {
         TEMP_DIR: TEMP_DIR_S,
-        OPTIONS_PATH: `${App.configDir}/options.json`,
+        OPTIONS_PATH: `${OPTIONS_DIR_S}/options.json`,
         SOCKET_PATH: `${TEMP_DIR_S}/socket`,
         
         STYLES_DIR: STYLES_DIR_S,
@@ -123,6 +124,11 @@ export class Globals implements IReloadable {
         this._clock = new Variable(GLib.DateTime.new_now_local(), {
             poll: [1000, () => GLib.DateTime.new_now_local()],
         });
+
+        var file = Gio.File.new_for_path(OPTIONS_DIR_S);
+        if(!file.query_exists(null)) {
+            file.make_directory(null);
+        }
 
         this._optionsHandler = new OptionsHandler(generateOptions);
         this._optionsHandler.load();

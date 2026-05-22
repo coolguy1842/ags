@@ -3,7 +3,7 @@ import { IReloadable } from "src/interfaces/reloadable";
 import { MonitorTypeFlags, PathMonitor } from "../classes/PathMonitor";
 import { HEXtoSCSSRGBA } from "../colorUtils";
 
-import { FileMonitorEvent } from "types/@girs/gio-2.0/gio-2.0.cjs";
+import Gio from "gi://Gio?version=2.0";
 import { Variable } from "types/variable";
 import { Option } from "./optionsHandler";
 
@@ -57,7 +57,7 @@ export class StyleHandler implements IReloadable {
 
     constructor() {
         this._monitor = new PathMonitor(`${App.configDir}/styles`, MonitorTypeFlags.FILE | MonitorTypeFlags.RECURSIVE, (file, fileType, event) => {
-            if(event == FileMonitorEvent.CHANGED) return;
+            if(event == Gio.FileMonitorEvent.CHANGED) return;
 
             this.reloadStyles();
         });

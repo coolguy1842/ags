@@ -2,12 +2,7 @@ import { globals } from "src/globals";
 import { BarWidget, TBarWidgetMonitor } from "src/interfaces/barWidget";
 import { NumberValidator } from "src/options/validators/numberValidator";
 import { ValueInEnumValidator } from "src/options/validators/valueInEnumValidator";
-import { HEXtoGdkRGBA } from "src/utils/colorUtils";
-import { arraysEqual, icon } from "src/utils/utils";
-
-import GdkPixbuf from "gi://GdkPixbuf";
-import { Variable } from "resource:///com/github/Aylur/ags/variable.js";
-import { Workspace } from "types/service/hyprland";
+import { arraysEqual } from "src/utils/utils";
 
 const hyprland = await Service.import("hyprland");
 export enum ScrollDirection {

@@ -20,7 +20,7 @@ export function generateOptions() {
                 search: option("system-search-symbolic", IconNameValidator.create())
             },
             bar: {
-                app_launcher: option("emblem-archlinux-symbolic", IconNameValidator.create()),
+                app_launcher: option("emblem-nixos-symbolic", IconNameValidator.create()),
                 workspace_dot: option("emblem-dot-symbolic", IconNameValidator.create()),
                 workspace_dot_filled: option("emblem-dot-filled-symbolic", IconNameValidator.create()),
                 tray_popup: option("emblem-tray-symbolic", IconNameValidator.create()),

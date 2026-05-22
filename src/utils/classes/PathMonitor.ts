@@ -1,13 +1,11 @@
 import { IReloadable } from "src/interfaces/reloadable";
 
-import { FileQueryInfoFlags, FileType } from "types/@girs/gio-2.0/gio-2.0.cjs";
-
 import Gio from "gi://Gio?version=2.0";
 import GLib from "gi://GLib";
 
-type PathMonitorSingleType = { path: string, monitor: Gio.FileMonitor, type: FileType };
+type PathMonitorSingleType = { path: string, monitor: Gio.FileMonitor, type: Gio.FileType };
 export type PathMonitorType = (PathMonitorSingleType[]) | undefined;
-export type PathMonitorCallbackType = (file: Gio.File, fileType: FileType, event: Gio.FileMonitorEvent) => void;
+export type PathMonitorCallbackType = (file: Gio.File, fileType: Gio.FileType, event: Gio.FileMonitorEvent) => void;
 
 export function monitorPath(
     path: string,
@@ -18,17 +16,17 @@ export function monitorPath(
     if(!GLib.file_test(path, GLib.FileTest.EXISTS)) return undefined;
 
     const file = Gio.File.new_for_path(path);
-    const type = file.query_file_type(FileQueryInfoFlags.NONE, null);
+    const type = file.query_file_type(Gio.FileQueryInfoFlags.NONE, null);
     const monitor = file.monitor(flags, null);
 
     monitor.connect("changed", (_monitor, file, _otherfile, event) => callback(file, type, event));
     
-    if(!recursive || (recursive && type != FileType.DIRECTORY)) {
+    if(!recursive || (recursive && type != Gio.FileType.DIRECTORY)) {
         return [{ path, monitor, type }];
     }
 
     const out: PathMonitorSingleType[] = [];
-    out.push({ path: path, type: FileType.DIRECTORY, monitor: monitor });
+    out.push({ path: path, type: Gio.FileType.DIRECTORY, monitor: monitor });
     
     const enumerator = file.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, null);
 
@@ -114,8 +112,8 @@ export class PathMonitor implements IReloadable {
                 default: break;
                 }
 
-                if(!this.shouldMonitorsDirectories() && fileType == FileType.DIRECTORY) return;
-                else if(!this.shouldMonitorsFiles() && fileType == FileType.REGULAR) return;
+                if(!this.shouldMonitorsDirectories() && fileType == Gio.FileType.DIRECTORY) return;
+                else if(!this.shouldMonitorsFiles() && fileType == Gio.FileType.REGULAR) return;
 
                 this._callback(file, fileType, event);
             },

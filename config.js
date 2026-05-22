@@ -41,8 +41,9 @@ async function initHotReloader() {
         Utils.exec([
             'bun', 'build', pathMonitorPath,
             '--outfile', `${pathMonitorCompiledPath}`,
-            '--external', 'resource://*',
-            '--external', 'gi://*',
+            "--external", "resource://*",
+            "--external", "gi://*",
+            "--external", "file://*",
         ]);
 
         PathMonitorImport = await import(`file://${pathMonitorCompiledPath}`);
@@ -83,8 +84,9 @@ async function reloadAGS() {
         await Utils.execAsync([
             'bun', 'build', entry,
             '--outfile', `${outDir}/${outFile}`,
-            '--external', 'resource://*',
-            '--external', 'gi://*',
+            "--external", "resource://*",
+            "--external", "gi://*",
+            "--external", "file://*",
         ]);
 
         if(imported != null) {
@@ -107,8 +109,8 @@ async function reloadAGS() {
 }
 
 initTemp();
-
 reloadAGS();
+
 initHotReloader();
 
 export { };
