@@ -52,8 +52,8 @@ export class WorkspaceSelector extends BarWidget<PropsType> {
                     self.hook(hyprland, updateChildren);
                 }
             }),
-            onScrollDown: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "inverted" ? "-" : "+"}1`),
-            onScrollUp: () => hyprland.messageAsync(`dispatch workspace m${props.scroll_direction == "inverted" ? "+" : "-"}1`)
+            onScrollDown: () => hyprland.messageAsync(`dispatch hl.dsp.focus({ workspace = 'm${props.scroll_direction == "inverted" ? "-" : "+"}1' })`),
+            onScrollUp: () => hyprland.messageAsync(`dispatch hl.dsp.focus({ workspace = 'm${props.scroll_direction == "inverted" ? "+" : "-"}1' })`)
         });
     }
 
@@ -80,7 +80,7 @@ export class WorkspaceSelector extends BarWidget<PropsType> {
                     self.hook(icons.bar.workspace_dot_filled, loadIcon);
                 }
             }),
-            onClicked: () => hyprland.messageAsync(`dispatch workspace ${workspaceID}`),
+            onClicked: () => hyprland.messageAsync(`dispatch hl.dsp.focus({ workspace = '${workspaceID}' })`),
         });
     }
 };
