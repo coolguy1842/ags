@@ -11,6 +11,7 @@ import { sleep } from "../utils";
 import Gtk from "gi://Gtk?version=3.0";
 import Widgets from "../widgets/widgets";
 
+const hyprland = await Service.import("hyprland");
 
 export type PopupPosition = TPosition | Variable<TPosition>;
 export type AnimationOptions = {
@@ -489,11 +490,25 @@ export class PopupWindow<Child extends Gtk.Widget, Attr> extends EventHandler<{
     private getScreenBounds() {
         const screen = this._window.screen;
 
-        if(this._window.monitor >= 0) {
-            return screen.get_monitor_geometry(this._window.monitor)
+        let monitorID = this._window.monitor
+        let scaling = 1;
+
+        if(monitorID < 0) {
+            monitorID = screen.get_monitor_at_window(this._window.window);
         }
 
-        return screen.get_monitor_geometry(screen.get_monitor_at_window(this._window.window));
+        let monitor = hyprland.getMonitor(this._window.monitor);
+        let rect = screen.get_monitor_geometry(this._window.monitor);
+
+        if(monitor != undefined) {
+            rect.x = monitor.width / monitor.scale;
+            rect.y = monitor.height / monitor.scale;
+
+            rect.width = monitor.width / monitor.scale;
+            rect.height = monitor.height / monitor.scale;
+        }
+
+        return rect;
     }
 
     private updateScreenBounds() {
